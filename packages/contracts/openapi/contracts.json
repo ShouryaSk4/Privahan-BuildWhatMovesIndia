@@ -1,0 +1,386 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Parivahan shared contracts (silo modules)",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/identity/{applicant_id}": {
+      "get": {
+        "tags": [
+          "module-3"
+        ],
+        "summary": "Fetch Identity",
+        "operationId": "fetch_identity_identity__applicant_id__get",
+        "parameters": [
+          {
+            "name": "applicant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Applicant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifiedProfile"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/identity/{applicant_id}/mismatches": {
+      "get": {
+        "tags": [
+          "module-3"
+        ],
+        "summary": "Check Mismatch",
+        "operationId": "check_mismatch_identity__applicant_id__mismatches_get",
+        "parameters": [
+          {
+            "name": "applicant_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Applicant Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MismatchCheckResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/match": {
+      "post": {
+        "tags": [
+          "module-4"
+        ],
+        "summary": "Match Video",
+        "operationId": "match_video_match_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VideoMatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VideoMatchResult"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "Mismatch": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "title": "Field"
+          },
+          "fetched_value": {
+            "type": "string",
+            "title": "Fetched Value"
+          },
+          "issue": {
+            "type": "string",
+            "title": "Issue"
+          },
+          "suggested_fix": {
+            "type": "string",
+            "title": "Suggested Fix"
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "fetched_value",
+          "issue",
+          "suggested_fix"
+        ],
+        "title": "Mismatch"
+      },
+      "MismatchCheckResult": {
+        "properties": {
+          "applicant_id": {
+            "type": "string",
+            "title": "Applicant Id"
+          },
+          "mismatches": {
+            "items": {
+              "$ref": "#/components/schemas/Mismatch"
+            },
+            "type": "array",
+            "title": "Mismatches"
+          },
+          "clear_to_submit": {
+            "type": "boolean",
+            "title": "Clear To Submit"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicant_id",
+          "mismatches",
+          "clear_to_submit"
+        ],
+        "title": "MismatchCheckResult"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      },
+      "VerifiedProfile": {
+        "properties": {
+          "applicant_id": {
+            "type": "string",
+            "title": "Applicant Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "dob": {
+            "type": "string",
+            "format": "date",
+            "title": "Dob"
+          },
+          "address": {
+            "type": "string",
+            "title": "Address"
+          },
+          "photo_url": {
+            "type": "string",
+            "title": "Photo Url"
+          },
+          "gps_suggested_rto": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Gps Suggested Rto"
+          },
+          "aadhaar_registered_address": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Aadhaar Registered Address"
+          },
+          "addresses_match": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Addresses Match"
+          },
+          "fetched_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Fetched At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicant_id",
+          "source",
+          "name",
+          "dob",
+          "address",
+          "photo_url",
+          "fetched_at"
+        ],
+        "title": "VerifiedProfile"
+      },
+      "VideoMatchRequest": {
+        "properties": {
+          "applicant_id": {
+            "type": "string",
+            "title": "Applicant Id"
+          },
+          "query": {
+            "type": "string",
+            "title": "Query"
+          },
+          "journey_stage": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Journey Stage"
+          }
+        },
+        "type": "object",
+        "required": [
+          "applicant_id",
+          "query"
+        ],
+        "title": "VideoMatchRequest"
+      },
+      "VideoMatchResult": {
+        "properties": {
+          "video_id": {
+            "type": "string",
+            "title": "Video Id"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "fallback_message": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Fallback Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "video_id",
+          "topic",
+          "confidence"
+        ],
+        "title": "VideoMatchResult"
+      }
+    }
+  }
+}
