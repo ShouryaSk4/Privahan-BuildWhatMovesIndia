@@ -19,6 +19,12 @@ def health() -> dict[str, str]:
     return {"status": "ok", "service": "identity-service"}
 
 
+@app.get("/identity/personas", response_model=list[str])
+def list_personas() -> list[str]:
+    """List available mock citizen personas for testing."""
+    return service.list_personas()
+
+
 @app.get("/identity/fetch/{applicant_id}", response_model=VerifiedProfile)
 def fetch_identity(
     applicant_id: str,

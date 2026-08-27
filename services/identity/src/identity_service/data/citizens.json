@@ -1,0 +1,82 @@
+{
+  "applicant_clean": {
+    "applicant_id": "applicant_clean",
+    "name": "Rohan Verma",
+    "dob": "2003-08-15",
+    "source": "digilocker_aadhaar",
+    "address": "Flat 204, Palm Grove, Indiranagar, Bengaluru, KA - 560038",
+    "aadhaar_registered_address": "Flat 204, Palm Grove, Indiranagar, Bengaluru, KA - 560038",
+    "jurisdiction_rto": "KA-03 Indiranagar",
+    "default_gps_rto": "KA-03 Indiranagar",
+    "photo_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=400",
+    "pan_record": {
+      "name": "Rohan Verma",
+      "dob": "2003-08-15",
+      "status": "active"
+    }
+  },
+  "applicant_student_mover": {
+    "applicant_id": "applicant_student_mover",
+    "name": "Priya Sharma",
+    "dob": "2004-02-10",
+    "source": "digilocker_aadhaar",
+    "address": "Room 102, Kaveri Hostel, Electronic City, Bengaluru, KA - 560100",
+    "aadhaar_registered_address": "House 12, Gomti Nagar, Lucknow, UP - 226010",
+    "jurisdiction_rto": "UP-32 Lucknow",
+    "default_gps_rto": "KA-51 Electronic City",
+    "photo_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400",
+    "pan_record": {
+      "name": "Priya Sharma",
+      "dob": "2004-02-10",
+      "status": "active"
+    }
+  },
+  "applicant_pan_name_mismatch": {
+    "applicant_id": "applicant_pan_name_mismatch",
+    "name": "Vikram Singh Chauhan",
+    "dob": "2001-11-20",
+    "source": "digilocker_aadhaar",
+    "address": "Sector 15, Rohini, Delhi, DL - 110089",
+    "aadhaar_registered_address": "Sector 15, Rohini, Delhi, DL - 110089",
+    "jurisdiction_rto": "DL-08 Rohini",
+    "default_gps_rto": "DL-08 Rohini",
+    "photo_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400",
+    "pan_record": {
+      "name": "Vikram S Chauhan",
+      "dob": "2001-11-20",
+      "status": "active"
+    }
+  },
+  "applicant_minor": {
+    "applicant_id": "applicant_minor",
+    "name": "Aryan Mehta",
+    "dob": "2009-03-15",
+    "source": "digilocker_aadhaar",
+    "address": "B-42, Vasant Vihar, New Delhi, DL - 110057",
+    "aadhaar_registered_address": "B-42, Vasant Vihar, New Delhi, DL - 110057",
+    "jurisdiction_rto": "DL-07 Vasant Vihar",
+    "default_gps_rto": "DL-07 Vasant Vihar",
+    "photo_url": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=400",
+    "pan_record": {
+      "name": "Aryan Mehta",
+      "dob": "2009-03-15",
+      "status": "active"
+    }
+  },
+  "applicant_dob_mismatch": {
+    "applicant_id": "applicant_dob_mismatch",
+    "name": "Ananya Iyer",
+    "dob": "2002-05-14",
+    "source": "digilocker_aadhaar",
+    "address": "Flat 3A, Temple Bells, Mylapore, Chennai, TN - 600004",
+    "aadhaar_registered_address": "Flat 3A, Temple Bells, Mylapore, Chennai, TN - 600004",
+    "jurisdiction_rto": "TN-07 Thiruvanmiyur",
+    "default_gps_rto": "TN-07 Thiruvanmiyur",
+    "photo_url": "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=400",
+    "pan_record": {
+      "name": "Ananya Iyer",
+      "dob": "2002-05-20",
+      "status": "active"
+    }
+  }
+}

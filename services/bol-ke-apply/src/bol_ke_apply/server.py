@@ -10,6 +10,7 @@ import logging
 import os
 
 import httpx
+from contracts.academy import VideoMatchRequest
 
 try:
     # MCP SDK 2.x
@@ -28,7 +29,20 @@ except (ImportError, ModuleNotFoundError):
         description="Conversational front door for Parivahan MVP exposing identity and driving academy tools",
     )
 
-from contracts.academy import VideoMatchRequest
+# Graceful in-process integration when services run in the same Python environment
+try:
+    from identity_service.service import IdentityService
+
+    _in_proc_identity = IdentityService()
+except (ImportError, ModuleNotFoundError, AttributeError):
+    _in_proc_identity = None
+
+try:
+    from academy_service.matcher import VideoMatcher
+
+    _in_proc_matcher = VideoMatcher()
+except (ImportError, ModuleNotFoundError, AttributeError):
+    _in_proc_matcher = None
 
 from bol_ke_apply.llm_client import get_llm_provider
 
@@ -42,7 +56,7 @@ llm = get_llm_provider()
 def fetch_identity(applicant_id: str) -> dict:
     """Fetch verified citizen profile from DigiLocker / Aadhaar e-KYC (Module 3).
 
-    Surfaces both GPS suggested nearest RTO and Aadhaar jurisdiction address.
+    Surfaces both GPS suggested nearest RTO and legal Aadhaar jurisdiction address.
     """
     try:
         with httpx.Client(timeout=3.0) as client:
@@ -52,7 +66,10 @@ def fetch_identity(applicant_id: str) -> dict:
     except httpx.HTTPError as exc:
         logger.debug("Identity service HTTP call fallback: %s", exc)
 
-    # Fallback to local default representation for standalone / disconnected execution
+    if _in_proc_identity:
+        return _in_proc_identity.fetch_identity(applicant_id).model_dump(mode="json")
+
+    # Static fallback for disconnected execution
     return {
         "applicant_id": applicant_id,
         "source": "digilocker_aadhaar",
@@ -64,6 +81,8 @@ def fetch_identity(applicant_id: str) -> dict:
         "aadhaar_registered_address": "100 Feet Road, Indiranagar, Bengaluru, KA - 560038",
         "addresses_match": True,
         "fetched_at": "2026-08-27T12:00:00Z",
+        "age": 24,
+        "age_eligible": True,
     }
 
 
@@ -77,6 +96,9 @@ def check_mismatch(applicant_id: str) -> dict:
                 return resp.json()
     except httpx.HTTPError as exc:
         logger.debug("Mismatch check HTTP call fallback: %s", exc)
+
+    if _in_proc_identity:
+        return _in_proc_identity.check_mismatch(applicant_id).model_dump(mode="json")
 
     return {
         "applicant_id": applicant_id,
@@ -96,15 +118,21 @@ def match_video(
         applicant_id=applicant_id,
         query=query,
         journey_stage=journey_stage,
-    ).model_dump()
+    )
 
     try:
         with httpx.Client(timeout=3.0) as client:
-            resp = client.post(f"{ACADEMY_SERVICE_URL}/academy/match-video", json=payload)
+            resp = client.post(
+                f"{ACADEMY_SERVICE_URL}/academy/match-video",
+                json=payload.model_dump(),
+            )
             if resp.status_code == 200:
                 return resp.json()
     except httpx.HTTPError as exc:
         logger.debug("Academy service HTTP call fallback: %s", exc)
+
+    if _in_proc_matcher:
+        return _in_proc_matcher.match(payload).model_dump(mode="json")
 
     return {
         "video_id": "vid_01_eight_turn",

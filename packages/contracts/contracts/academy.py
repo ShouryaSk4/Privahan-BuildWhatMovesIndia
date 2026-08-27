@@ -29,3 +29,6 @@ class AcademyVideo(BaseModel):
     duration_seconds: int
     video_url: str
     tags: list[str] = Field(default_factory=list)
+    hindi_title: str | None = None
+    hinglish_keywords: list[str] = Field(default_factory=list)
+    thumbnail_url: str | None = None
