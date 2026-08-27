@@ -190,7 +190,8 @@ verification, test results) through Module 5, then asks Module 2 to sync.
 | `GATEWAY_URL` | journey | `http://localhost:8005` | Module 5 base URL |
 | `IDENTITY_SERVICE_URL` / `ACADEMY_SERVICE_URL` | bol-ke-apply | `http://127.0.0.1:8003` / `:8004` | Upstream services for MCP tools |
 | `ACADEMY_LLM_PROVIDER` | academy | `mock` | `gemini` to use Gemini classification (needs `GEMINI_API_KEY`) |
-| `VITE_JOURNEY_URL` / `VITE_GATEWAY_URL` / `VITE_ACADEMY_URL` | web | localhost defaults | Service endpoints |
+| `VITE_JOURNEY_URL` / `VITE_GATEWAY_URL` | web | `http://localhost:8002` / `:8005` | Module 2 / Module 5 endpoints (both send CORS headers) |
+| `VITE_ACADEMY_URL` | web | `/api/academy` (dev proxy) | Module 4 has no CORS headers, so the browser goes through Vite's proxy. To bypass it, set the full route base, e.g. `http://localhost:8004/academy`. |
 
 ---
 
@@ -216,3 +217,21 @@ verification, test results) through Module 5, then asks Module 2 to sync.
 - Module 2's identity client defaults to `IDENTITY_MODE=http` now that Module 3 exists; the
   offline stub mirrors the same three personas so tests never need the network.
 - Module 6's journey-state tools are unblocked and declared in `contracts/mcp_tools.py`.
+- Modules 2 and 5 were renamed from a shared `app` package to `journey_service` /
+  `gateway_service` under `src/` — both had claimed the same top-level module name, which
+  collided in the shared workspace virtualenv.
+- Modules 3 and 4 send no CORS headers (they're internal services), so Module 1 reaches
+  Module 4 through a Vite dev proxy rather than editing another owner's module (§11.2).
+  If Module 3/4 later add CORS middleware, the proxy can simply be dropped.
+
+## Known gaps / next steps
+
+- **Persistence**: Modules 2 and 5 hold state in memory, so restarting a service resets any
+  in-flight journey. A SQLite journal is the obvious next step before a live demo.
+- **`VerifiedProfile` has no jurisdiction RTO code**: Module 3 computes `jurisdiction_rto`
+  internally but doesn't expose it, so Module 2 derives a state code from the Aadhaar address
+  (`resolve_rto_code`). Adding an additive `aadhaar_jurisdiction_rto` field to
+  `VerifiedProfile` would remove that derivation — a request for Module 3's owner.
+- **LL quiz** is 3 fixed questions in the frontend; a real item bank belongs in a service.
+- **Bol Ke Apply** exposes identity + academy tools; the journey-state tools are declared but
+  not yet implemented in Module 6.

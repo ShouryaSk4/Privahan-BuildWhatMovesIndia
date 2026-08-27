@@ -13,8 +13,10 @@ export const JOURNEY_URL =
   import.meta.env.VITE_JOURNEY_URL ?? "http://localhost:8002";
 export const GATEWAY_URL =
   import.meta.env.VITE_GATEWAY_URL ?? "http://localhost:8005";
-export const ACADEMY_URL =
-  import.meta.env.VITE_ACADEMY_URL ?? "http://localhost:8004";
+// Module 4 has no CORS headers, so by default we go through the dev proxy in
+// vite.config.ts (same-origin). This is the base of Module 4's /academy route
+// namespace — to bypass the proxy set VITE_ACADEMY_URL=http://host:8004/academy.
+export const ACADEMY_URL = import.meta.env.VITE_ACADEMY_URL ?? "/api/academy";
 
 export class ApiError extends Error {
   constructor(
@@ -95,7 +97,7 @@ export async function matchAcademyVideo(
   query: string,
   journeyStage?: string,
 ): Promise<VideoMatchResult> {
-  return request<VideoMatchResult>(`${ACADEMY_URL}/academy/match-video`, {
+  return request<VideoMatchResult>(`${ACADEMY_URL}/match-video`, {
     method: "POST",
     body: JSON.stringify({
       applicant_id: applicantId,
