@@ -4,23 +4,20 @@
 # JourneyState mirrors the reference JSON in AGENTS.md §7.4 exactly;
 # every field beyond that reference is additive (§8.3).
 
-from enum import Enum
-
 from pydantic import BaseModel
 
+# JourneyStage is defined once, in contracts.enums (AGENTS.md §6 vocabulary).
+# Re-exported here so journey consumers can import it alongside the state models.
+from contracts.enums import JourneyStage
 
-class JourneyStage(str, Enum):
-    # Shared vocabulary — AGENTS.md §6. Do not create local synonyms.
-    no_licence = "no_licence"
-    ll_application_submitted = "ll_application_submitted"
-    ll_documents_verified = "ll_documents_verified"
-    ll_test_scheduled = "ll_test_scheduled"
-    ll_issued = "ll_issued"
-    practice_window = "practice_window"
-    dl_test_booked = "dl_test_booked"
-    dl_test_result_fail = "dl_test_result_fail"
-    dl_test_result_pass = "dl_test_result_pass"
-    dl_issued = "dl_issued"
+__all__ = [
+    "Certainty",
+    "JourneyEvent",
+    "JourneyStage",
+    "JourneyState",
+    "NextAction",
+    "RequiredDocument",
+]
 
 
 class NextAction(BaseModel):

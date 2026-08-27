@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "identity-service"
+version = "0.1.0"
+description = "Module 3: Zero-Form Identity & Document Service"
+requires-python = ">=3.11"
+dependencies = [
+    "parivahan-contracts",
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.7.0",
+]
+
+[tool.uv.sources]
+parivahan-contracts = { workspace = true }

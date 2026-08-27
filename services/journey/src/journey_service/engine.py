@@ -27,56 +27,56 @@ RULES_DIR = Path(__file__).parent / "rules"
 # Canonical ordering used to decide whether a government-side status is
 # "ahead of" the locally known stage during sync.
 STAGE_ORDER = [
-    JourneyStage.no_licence,
-    JourneyStage.ll_application_submitted,
-    JourneyStage.ll_documents_verified,
-    JourneyStage.ll_test_scheduled,
-    JourneyStage.ll_issued,
-    JourneyStage.practice_window,
-    JourneyStage.dl_test_booked,
-    JourneyStage.dl_test_result_fail,
-    JourneyStage.dl_test_result_pass,
-    JourneyStage.dl_issued,
+    JourneyStage.NO_LICENCE,
+    JourneyStage.LL_APPLICATION_SUBMITTED,
+    JourneyStage.LL_DOCUMENTS_VERIFIED,
+    JourneyStage.LL_TEST_SCHEDULED,
+    JourneyStage.LL_ISSUED,
+    JourneyStage.PRACTICE_WINDOW,
+    JourneyStage.DL_TEST_BOOKED,
+    JourneyStage.DL_TEST_RESULT_FAIL,
+    JourneyStage.DL_TEST_RESULT_PASS,
+    JourneyStage.DL_ISSUED,
 ]
 
 # event -> (allowed source stages, destination stage)
 TRANSITIONS: dict[str, tuple[tuple[JourneyStage, ...], JourneyStage]] = {
     "ll_application_submitted": (
-        (JourneyStage.no_licence,),
-        JourneyStage.ll_application_submitted,
+        (JourneyStage.NO_LICENCE,),
+        JourneyStage.LL_APPLICATION_SUBMITTED,
     ),
     "documents_verified": (
-        (JourneyStage.ll_application_submitted,),
-        JourneyStage.ll_documents_verified,
+        (JourneyStage.LL_APPLICATION_SUBMITTED,),
+        JourneyStage.LL_DOCUMENTS_VERIFIED,
     ),
     "ll_test_scheduled": (
-        (JourneyStage.ll_documents_verified,),
-        JourneyStage.ll_test_scheduled,
+        (JourneyStage.LL_DOCUMENTS_VERIFIED,),
+        JourneyStage.LL_TEST_SCHEDULED,
     ),
     # Delhi's Aadhaar path allows the online test straight after verification,
     # so both verified and scheduled are legal sources.
     "ll_test_passed": (
-        (JourneyStage.ll_documents_verified, JourneyStage.ll_test_scheduled),
-        JourneyStage.ll_issued,
+        (JourneyStage.LL_DOCUMENTS_VERIFIED, JourneyStage.LL_TEST_SCHEDULED),
+        JourneyStage.LL_ISSUED,
     ),
-    "begin_practice": ((JourneyStage.ll_issued,), JourneyStage.practice_window),
-    "dl_test_booked": ((JourneyStage.practice_window,), JourneyStage.dl_test_booked),
-    "dl_test_failed": ((JourneyStage.dl_test_booked,), JourneyStage.dl_test_result_fail),
-    "dl_test_passed": ((JourneyStage.dl_test_booked,), JourneyStage.dl_test_result_pass),
-    "dl_test_rebooked": ((JourneyStage.dl_test_result_fail,), JourneyStage.dl_test_booked),
-    "dl_issued": ((JourneyStage.dl_test_result_pass,), JourneyStage.dl_issued),
+    "begin_practice": ((JourneyStage.LL_ISSUED,), JourneyStage.PRACTICE_WINDOW),
+    "dl_test_booked": ((JourneyStage.PRACTICE_WINDOW,), JourneyStage.DL_TEST_BOOKED),
+    "dl_test_failed": ((JourneyStage.DL_TEST_BOOKED,), JourneyStage.DL_TEST_RESULT_FAIL),
+    "dl_test_passed": ((JourneyStage.DL_TEST_BOOKED,), JourneyStage.DL_TEST_RESULT_PASS),
+    "dl_test_rebooked": ((JourneyStage.DL_TEST_RESULT_FAIL,), JourneyStage.DL_TEST_BOOKED),
+    "dl_issued": ((JourneyStage.DL_TEST_RESULT_PASS,), JourneyStage.DL_ISSUED),
 }
 
 # gateway-normalized government stage -> journey stage (used by sync)
 GOV_STAGE_MAP: dict[str, JourneyStage] = {
-    "received": JourneyStage.ll_application_submitted,
-    "documents_verified": JourneyStage.ll_documents_verified,
-    "ll_test_passed": JourneyStage.ll_issued,
-    "ll_issued": JourneyStage.ll_issued,
-    "dl_test_booked": JourneyStage.dl_test_booked,
-    "dl_test_failed": JourneyStage.dl_test_result_fail,
-    "dl_test_passed": JourneyStage.dl_test_result_pass,
-    "dl_issued": JourneyStage.dl_issued,
+    "received": JourneyStage.LL_APPLICATION_SUBMITTED,
+    "documents_verified": JourneyStage.LL_DOCUMENTS_VERIFIED,
+    "ll_test_passed": JourneyStage.LL_ISSUED,
+    "ll_issued": JourneyStage.LL_ISSUED,
+    "dl_test_booked": JourneyStage.DL_TEST_BOOKED,
+    "dl_test_failed": JourneyStage.DL_TEST_RESULT_FAIL,
+    "dl_test_passed": JourneyStage.DL_TEST_RESULT_PASS,
+    "dl_issued": JourneyStage.DL_ISSUED,
 }
 
 
@@ -97,7 +97,7 @@ class GateError(Exception):
 @dataclass
 class ApplicantRecord:
     applicant_id: str
-    stage: JourneyStage = JourneyStage.no_licence
+    stage: JourneyStage = JourneyStage.NO_LICENCE
     application_number: str | None = None
     ll_issued_at: datetime | None = None
     dl_failed_at: datetime | None = None
@@ -185,9 +185,9 @@ class JourneyEngine:
         self.check_gate(record, event)
 
         now = datetime.now(UTC)
-        if destination == JourneyStage.ll_issued:
+        if destination == JourneyStage.LL_ISSUED:
             record.ll_issued_at = now
-        if destination == JourneyStage.dl_test_result_fail:
+        if destination == JourneyStage.DL_TEST_RESULT_FAIL:
             record.dl_failed_at = now
         record.stage = destination
         record.history.append(event)
@@ -206,9 +206,9 @@ class JourneyEngine:
         if mapped is None:
             return record
         if STAGE_ORDER.index(mapped) > STAGE_ORDER.index(record.stage):
-            if mapped == JourneyStage.ll_issued and record.ll_issued_at is None:
+            if mapped == JourneyStage.LL_ISSUED and record.ll_issued_at is None:
                 record.ll_issued_at = datetime.now(UTC)
-            if mapped == JourneyStage.dl_test_result_fail:
+            if mapped == JourneyStage.DL_TEST_RESULT_FAIL:
                 record.dl_failed_at = datetime.now(UTC)
                 record.failed_checkpoint = failed_checkpoint
             record.stage = mapped
@@ -220,13 +220,13 @@ class JourneyEngine:
     def state(self, applicant_id: str) -> JourneyState:
         record = self.record(applicant_id)
         detail = self.rules.detail(record.stage)
-        if record.stage == JourneyStage.practice_window and record.ll_issued_at is not None:
+        if record.stage == JourneyStage.PRACTICE_WINDOW and record.ll_issued_at is not None:
             day = (datetime.now(UTC) - record.ll_issued_at).days + 1
             detail = (
                 f"Day {min(day, self.rules.practice_window_days)} of "
                 f"{self.rules.practice_window_days} in your practice window. {detail}"
             )
-        if record.stage == JourneyStage.dl_test_result_fail and record.failed_checkpoint:
+        if record.stage == JourneyStage.DL_TEST_RESULT_FAIL and record.failed_checkpoint:
             detail = f"Missed checkpoint: {record.failed_checkpoint}. {detail}"
         return JourneyState(
             applicant_id=applicant_id,
@@ -236,7 +236,7 @@ class JourneyEngine:
             certainty=self.rules.certainty,
             required_documents=(
                 self.rules.required_documents
-                if record.stage == JourneyStage.no_licence
+                if record.stage == JourneyStage.NO_LICENCE
                 else []
             ),
             stage_detail=detail,

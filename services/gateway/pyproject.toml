@@ -17,14 +17,15 @@ dev = [
 ]
 
 [tool.uv.sources]
-parivahan-contracts = { path = "../../packages/contracts", editable = true }
+parivahan-contracts = { workspace = true }
 
 [build-system]
 requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["app"]
+package-dir = { "" = "src" }
+packages = ["gateway_service"]
 
 [tool.ruff]
 line-length = 100

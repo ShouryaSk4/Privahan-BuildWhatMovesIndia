@@ -7,7 +7,7 @@ to government systems only through Module 5.
 """
 
 from contracts.gateway import LLApplicationSubmission, SlotBookingRequest, TestSlot
-from contracts.identity import MismatchCheckResult, VerifiedProfile
+from contracts.identity import Mismatch, MismatchCheckResult, VerifiedProfile
 from contracts.journey import JourneyStage, JourneyState
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +19,7 @@ from .clients.gateway import (
     GatewayUnavailable,
     get_gateway_client,
 )
-from .clients.identity import IdentityClient, get_identity_client
+from .clients.identity import IdentityClient, IdentityUnavailable, get_identity_client
 from .engine import GateError, JourneyEngine, TransitionError, get_engine
 
 app = FastAPI(
@@ -36,6 +36,32 @@ app.add_middleware(
 )
 
 
+# Mismatch fields that describe *jurisdiction*, not bad identity data. These are
+# surfaced for the citizen to resolve (§5.3) instead of blocking the application.
+ADVISORY_MISMATCH_FIELDS = frozenset({"aadhaar_registered_address"})
+
+# Sentinel the citizen sends to mean "file it at my Aadhaar jurisdiction RTO".
+# VerifiedProfile carries the Aadhaar *address* but not its RTO code, so Module 2
+# derives a state code from the address. When Module 3 exposes the jurisdiction
+# RTO directly, resolve from that field instead and drop the derivation.
+AADHAAR_JURISDICTION_CHOICE = "aadhaar_jurisdiction"
+DEFAULT_RTO_CODE = "DL01"
+
+
+def resolve_rto_code(profile: VerifiedProfile, confirmed: str | None) -> str:
+    """Turn the citizen's confirmed choice into the RTO code sent to Module 5."""
+    if confirmed is None:
+        return profile.gps_suggested_rto or DEFAULT_RTO_CODE
+    if confirmed != AADHAAR_JURISDICTION_CHOICE:
+        return confirmed
+    address = profile.aadhaar_registered_address or ""
+    # Addresses end like "... , UP - 226010"; take the two-letter state token.
+    for token in reversed([t.strip() for t in address.replace("-", ",").split(",")]):
+        if len(token) == 2 and token.isalpha():
+            return token.upper()
+    return profile.gps_suggested_rto or DEFAULT_RTO_CODE
+
+
 class EventRequest(BaseModel):
     event: str
 
@@ -49,6 +75,13 @@ class ApplyRequest(BaseModel):
 class VerifiedIdentityView(BaseModel):
     profile: VerifiedProfile
     mismatch_check: MismatchCheckResult
+    # Module 2 owns the advisory-vs-blocking rule so Module 1 never re-implements it.
+    blocking_mismatches: list[Mismatch] = []
+    advisory_mismatches: list[Mismatch] = []
+    clear_to_submit: bool = True
+    # The two RTO choices to offer when jurisdiction and location disagree (§5.3).
+    gps_rto_choice: str | None = None
+    aadhaar_rto_choice: str | None = None
 
 
 class BookingRequest(BaseModel):
@@ -82,9 +115,24 @@ def verified_profile(
     applicant_id: str, identity: IdentityClient = Depends(get_identity_client)
 ) -> VerifiedIdentityView:
     """Module 2's integrated view of Module 3: what is already verified."""
+    try:
+        profile = identity.fetch_identity(applicant_id)
+        mismatch = identity.check_mismatch(applicant_id)
+    except IdentityUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    advisory = [m for m in mismatch.mismatches if m.field in ADVISORY_MISMATCH_FIELDS]
+    blocking = [m for m in mismatch.mismatches if m.field not in ADVISORY_MISMATCH_FIELDS]
     return VerifiedIdentityView(
-        profile=identity.fetch_identity(applicant_id),
-        mismatch_check=identity.check_mismatch(applicant_id),
+        profile=profile,
+        mismatch_check=mismatch,
+        blocking_mismatches=blocking,
+        advisory_mismatches=advisory,
+        clear_to_submit=not blocking,
+        gps_rto_choice=profile.gps_suggested_rto,
+        aadhaar_rto_choice=(
+            AADHAAR_JURISDICTION_CHOICE if profile.addresses_match is False else None
+        ),
     )
 
 
@@ -98,18 +146,29 @@ def apply(
 ) -> JourneyState:
     """Zero-form application: verified identity in, LL application out."""
     record = engine.record(applicant_id)
-    if record.stage != JourneyStage.no_licence:
+    if record.stage != JourneyStage.NO_LICENCE:
         raise HTTPException(status_code=409, detail="An application already exists for this journey.")
 
-    profile = identity.fetch_identity(applicant_id)
-    mismatch = identity.check_mismatch(applicant_id)
-    if not mismatch.clear_to_submit:
+    try:
+        profile = identity.fetch_identity(applicant_id)
+        mismatch = identity.check_mismatch(applicant_id)
+    except IdentityUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    # Module 3 reports the RTO-jurisdiction disagreement as a mismatch entry, which
+    # clears `clear_to_submit`. But §5.3 requires that disagreement to be *surfaced*
+    # for the citizen to resolve, not to block the application — students and recent
+    # movers legitimately hit it. So split the two kinds:
+    #   blocking  — identity data that will not clear the RTO's checks (name, DOB…)
+    #   advisory  — jurisdiction, resolved by the citizen confirming an RTO below
+    blocking = [m for m in mismatch.mismatches if m.field not in ADVISORY_MISMATCH_FIELDS]
+    if blocking:
         raise HTTPException(
             status_code=422,
             detail={
                 "reason": "rejection_prevention",
                 "message": "Submission blocked: fetched records would not clear the RTO's own checks.",
-                "mismatches": [m.model_dump() for m in mismatch.mismatches],
+                "mismatches": [m.model_dump() for m in blocking],
             },
         )
 
@@ -128,7 +187,7 @@ def apply(
                 "aadhaar_registered_address": profile.aadhaar_registered_address,
             },
         )
-    rto_code = body.confirmed_rto_code or "DL01"
+    rto_code = resolve_rto_code(profile, body.confirmed_rto_code)
 
     try:
         result = gateway.submit_ll_application(
@@ -192,7 +251,7 @@ def book_dl_test(
         raise HTTPException(status_code=409, detail="No application on file for this journey.")
     event = (
         "dl_test_rebooked"
-        if record.stage == JourneyStage.dl_test_result_fail
+        if record.stage == JourneyStage.DL_TEST_RESULT_FAIL
         else "dl_test_booked"
     )
     # Enforce rule gates (practice window / retest wait) before touching the gateway.

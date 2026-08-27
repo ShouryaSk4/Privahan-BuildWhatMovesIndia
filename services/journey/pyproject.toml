@@ -17,17 +17,18 @@ dev = [
 ]
 
 [tool.uv.sources]
-parivahan-contracts = { path = "../../packages/contracts", editable = true }
+parivahan-contracts = { workspace = true }
 
 [build-system]
 requires = ["setuptools>=69"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools]
-packages = ["app", "app.clients"]
+package-dir = { "" = "src" }
+packages = ["journey_service", "journey_service.clients"]
 
 [tool.setuptools.package-data]
-app = ["rules/*.json"]
+journey_service = ["rules/*.json"]
 
 [tool.ruff]
 line-length = 100

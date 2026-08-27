@@ -3,8 +3,8 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
-from app.sarathi import reset_client
+from gateway_service.main import app
+from gateway_service.sarathi import reset_client
 
 
 @pytest.fixture()

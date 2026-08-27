@@ -2,12 +2,12 @@
 // backend OpenAPI schemas (AGENTS.md §4.3) — never hand-written duplicates.
 
 import type { components as journeyComponents } from "./types/journey";
-import type { components as contractComponents } from "./types/contracts";
+import type { components as academyComponents } from "./types/academy";
 
 export type JourneyState = journeyComponents["schemas"]["JourneyState"];
 export type VerifiedIdentityView = journeyComponents["schemas"]["VerifiedIdentityView"];
 export type TestSlot = journeyComponents["schemas"]["TestSlot"];
-export type VideoMatchResult = contractComponents["schemas"]["VideoMatchResult"];
+export type VideoMatchResult = academyComponents["schemas"]["VideoMatchResult"];
 
 export const JOURNEY_URL =
   import.meta.env.VITE_JOURNEY_URL ?? "http://localhost:8002";
@@ -95,7 +95,7 @@ export async function matchAcademyVideo(
   query: string,
   journeyStage?: string,
 ): Promise<VideoMatchResult> {
-  return request<VideoMatchResult>(`${ACADEMY_URL}/match`, {
+  return request<VideoMatchResult>(`${ACADEMY_URL}/academy/match-video`, {
     method: "POST",
     body: JSON.stringify({
       applicant_id: applicantId,

@@ -187,6 +187,7 @@ export interface components {
         };
         /**
          * JourneyStage
+         * @description Stable journey stages for the first-time car licence journey.
          * @enum {string}
          */
         JourneyStage: "no_licence" | "ll_application_submitted" | "ll_documents_verified" | "ll_test_scheduled" | "ll_issued" | "practice_window" | "dl_test_booked" | "dl_test_result_fail" | "dl_test_result_pass" | "dl_issued";
@@ -282,12 +283,37 @@ export interface components {
         VerifiedIdentityView: {
             profile: components["schemas"]["VerifiedProfile"];
             mismatch_check: components["schemas"]["MismatchCheckResult"];
+            /**
+             * Blocking Mismatches
+             * @default []
+             */
+            blocking_mismatches: components["schemas"]["Mismatch"][];
+            /**
+             * Advisory Mismatches
+             * @default []
+             */
+            advisory_mismatches: components["schemas"]["Mismatch"][];
+            /**
+             * Clear To Submit
+             * @default true
+             */
+            clear_to_submit: boolean;
+            /** Gps Rto Choice */
+            gps_rto_choice?: string | null;
+            /** Aadhaar Rto Choice */
+            aadhaar_rto_choice?: string | null;
         };
         /** VerifiedProfile */
         VerifiedProfile: {
-            /** Applicant Id */
+            /**
+             * Applicant Id
+             * @description Stable identifier for a citizen across all modules
+             */
             applicant_id: string;
-            /** Source */
+            /**
+             * Source
+             * @description "digilocker_aadhaar" | "pan" | "manual"
+             */
             source: string;
             /** Name */
             name: string;
@@ -300,11 +326,20 @@ export interface components {
             address: string;
             /** Photo Url */
             photo_url: string;
-            /** Gps Suggested Rto */
+            /**
+             * Gps Suggested Rto
+             * @description Suggested nearest RTO based on GPS/device location (convenience only)
+             */
             gps_suggested_rto?: string | null;
-            /** Aadhaar Registered Address */
+            /**
+             * Aadhaar Registered Address
+             * @description Aadhaar-registered address determining legal RTO jurisdiction
+             */
             aadhaar_registered_address?: string | null;
-            /** Addresses Match */
+            /**
+             * Addresses Match
+             * @description True if GPS location matches Aadhaar registered jurisdiction, False otherwise
+             */
             addresses_match?: boolean | null;
             /**
              * Fetched At

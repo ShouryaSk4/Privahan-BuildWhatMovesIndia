@@ -1,17 +1,15 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
 [project]
 name = "parivahan-contracts"
 version = "0.1.0"
-description = "Shared Pydantic contracts — single source of truth for cross-module data shapes (AGENTS.md §7)"
+description = "Single source of truth Pydantic contracts for Parivahan MVP"
 requires-python = ">=3.11"
-dependencies = ["pydantic>=2.7"]
+dependencies = [
+    "pydantic>=2.7.0",
+]
 
-[build-system]
-requires = ["setuptools>=69"]
-build-backend = "setuptools.build_meta"
-
-# The contract files live flat in this directory, exactly where AGENTS.md §7
-# says they live (packages/contracts/identity.py etc.). This mapping publishes
-# them as the importable package `contracts`.
-[tool.setuptools]
+[tool.hatch.build.targets.wheel]
 packages = ["contracts"]
-package-dir = { "contracts" = "." }

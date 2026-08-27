@@ -43,6 +43,20 @@ const baseProfile = {
   fetched_at: "2026-08-27T10:00:00Z",
 };
 
+const ADDRESS_MISMATCH = {
+  field: "aadhaar_registered_address",
+  fetched_value: "House 12, Gomti Nagar, Lucknow, UP - 226010",
+  issue: "Your current device location suggests a different RTO than your Aadhaar jurisdiction.",
+  suggested_fix: "Apply at your Aadhaar jurisdiction RTO, or update your Aadhaar address.",
+};
+
+const NAME_MISMATCH = {
+  field: "name",
+  fetched_value: "Vikram Singh Chauhan",
+  issue: "Aadhaar name differs from PAN record 'Vikram S Chauhan'.",
+  suggested_fix: "Ensure the full name matches government identity databases.",
+};
+
 describe("ReviewConfirm", () => {
   it("surfaces the RTO disagreement and requires an explicit choice", async () => {
     const onConfirm = vi.fn();
@@ -50,7 +64,18 @@ describe("ReviewConfirm", () => {
       <ReviewConfirm
         view={{
           profile: baseProfile,
-          mismatch_check: { applicant_id: "APL-0002", mismatches: [], clear_to_submit: true },
+          // Module 3 flags the jurisdiction gap, but Module 2 classifies it as
+          // advisory — so the citizen chooses instead of being blocked (§5.3).
+          mismatch_check: {
+            applicant_id: "applicant_student",
+            mismatches: [ADDRESS_MISMATCH],
+            clear_to_submit: false,
+          },
+          blocking_mismatches: [],
+          advisory_mismatches: [ADDRESS_MISMATCH],
+          clear_to_submit: true,
+          gps_rto_choice: "KA-03 Indiranagar",
+          aadhaar_rto_choice: "aadhaar_jurisdiction",
         }}
         onConfirm={onConfirm}
         onCancel={() => {}}
@@ -63,29 +88,27 @@ describe("ReviewConfirm", () => {
     await userEvent.click(screen.getByRole("checkbox"));
     expect(submit).toBeDisabled(); // still needs the RTO choice
 
-    await userEvent.click(screen.getByRole("radio", { name: /Aadhaar address/ }));
+    await userEvent.click(screen.getByRole("radio", { name: /Aadhaar jurisdiction/ }));
     expect(submit).toBeEnabled();
     await userEvent.click(submit);
-    expect(onConfirm).toHaveBeenCalledWith("UP32");
+    expect(onConfirm).toHaveBeenCalledWith("aadhaar_jurisdiction");
   });
 
-  it("blocks submission and shows fixes when records mismatch", () => {
+  it("blocks submission and shows fixes when identity records mismatch", () => {
     render(
       <ReviewConfirm
         view={{
           profile: { ...baseProfile, addresses_match: true },
           mismatch_check: {
-            applicant_id: "APL-0009",
+            applicant_id: "applicant_mismatch",
             clear_to_submit: false,
-            mismatches: [
-              {
-                field: "name",
-                fetched_value: "Asha Sharma",
-                issue: "Aadhaar name does not match school records.",
-                suggested_fix: "Attach the name-variation affidavit.",
-              },
-            ],
+            mismatches: [NAME_MISMATCH],
           },
+          blocking_mismatches: [NAME_MISMATCH],
+          advisory_mismatches: [],
+          clear_to_submit: false,
+          gps_rto_choice: "KA-03 Indiranagar",
+          aadhaar_rto_choice: null,
         }}
         onConfirm={() => {}}
         onCancel={() => {}}

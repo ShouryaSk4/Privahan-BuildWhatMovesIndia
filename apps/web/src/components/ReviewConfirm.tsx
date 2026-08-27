@@ -16,13 +16,17 @@ export function ReviewConfirm({
   onCancel: () => void;
   submitting: boolean;
 }) {
-  const { profile, mismatch_check } = view;
+  const { profile } = view;
   const addressesDisagree = profile.addresses_match === false;
   const [rtoChoice, setRtoChoice] = useState<string>("");
   const [confirmed, setConfirmed] = useState(false);
 
-  const blocked = !mismatch_check.clear_to_submit;
+  // Module 2 owns the advisory-vs-blocking rule (§5.3); Module 1 just renders it.
+  const blockingMismatches = view.blocking_mismatches ?? [];
+  const blocked = !view.clear_to_submit;
   const needsRtoChoice = addressesDisagree && rtoChoice === "";
+  const gpsChoice = view.gps_rto_choice ?? profile.gps_suggested_rto ?? "";
+  const aadhaarChoice = view.aadhaar_rto_choice ?? "aadhaar_jurisdiction";
 
   return (
     <section className="card" aria-label="Review your details">
@@ -45,7 +49,7 @@ export function ReviewConfirm({
         <div className="alert alert-error" role="alert">
           <strong>Fix this before applying — it would be rejected later:</strong>
           <ul>
-            {mismatch_check.mismatches.map((m) => (
+            {blockingMismatches.map((m) => (
               <li key={m.field}>
                 <b>{m.field}:</b> {m.issue} <em>{m.suggested_fix}</em>
               </li>
@@ -66,9 +70,9 @@ export function ReviewConfirm({
             <input
               type="radio"
               name="rto"
-              value="DL01"
-              checked={rtoChoice === "DL01"}
-              onChange={() => setRtoChoice("DL01")}
+              value={gpsChoice}
+              checked={rtoChoice === gpsChoice}
+              onChange={() => setRtoChoice(gpsChoice)}
             />
             Near me now — {profile.gps_suggested_rto}
           </label>
@@ -76,11 +80,11 @@ export function ReviewConfirm({
             <input
               type="radio"
               name="rto"
-              value="UP32"
-              checked={rtoChoice === "UP32"}
-              onChange={() => setRtoChoice("UP32")}
+              value={aadhaarChoice}
+              checked={rtoChoice === aadhaarChoice}
+              onChange={() => setRtoChoice(aadhaarChoice)}
             />
-            My Aadhaar address jurisdiction
+            My Aadhaar jurisdiction — {profile.aadhaar_registered_address}
           </label>
         </div>
       )}

@@ -17,9 +17,9 @@ from contracts.gateway import (
 )
 from fastapi.testclient import TestClient
 
-from app.clients.gateway import GatewayClient, get_gateway_client
-from app.engine import get_engine, reset_engine
-from app.main import app
+from journey_service.clients.gateway import GatewayClient, get_gateway_client
+from journey_service.engine import get_engine, reset_engine
+from journey_service.main import app
 
 
 class FakeGatewayClient(GatewayClient):
@@ -70,6 +70,7 @@ def fake_gateway():
 @pytest.fixture()
 def client(fake_gateway, monkeypatch):
     monkeypatch.setenv("JOURNEY_FAST_FORWARD", "1")
+    monkeypatch.setenv("IDENTITY_MODE", "stub")
     reset_engine()
     app.dependency_overrides[get_gateway_client] = lambda: fake_gateway
     yield TestClient(app)
@@ -77,7 +78,7 @@ def client(fake_gateway, monkeypatch):
 
 
 def test_new_applicant_starts_at_no_licence(client):
-    body = client.get("/journey/APL-0001").json()
+    body = client.get("/journey/applicant_001").json()
     assert body["current_stage"] == "no_licence"
     assert body["next_action"]["type"] == "start_application"
     assert body["certainty"] == {"cost_inr": 1350, "eta_days": 21, "visit_count": 1}
@@ -88,11 +89,11 @@ def test_agents_md_7_4_reference_shape(client):
     """The practice_window response must carry the exact §7.4 reference values."""
     engine = get_engine()
     for event in ("ll_application_submitted", "documents_verified", "ll_test_passed", "begin_practice"):
-        engine.apply_event("APL-0001", event)
+        engine.apply_event("applicant_001", event)
 
-    body = client.get("/journey/APL-0001").json()
+    body = client.get("/journey/applicant_001").json()
     reference = {
-        "applicant_id": "APL-0001",
+        "applicant_id": "applicant_001",
         "journey_type": "first_time_licence",
         "current_stage": "practice_window",
         "next_action": {"type": "book_dl_test", "label": "Book your driving test"},
@@ -103,22 +104,22 @@ def test_agents_md_7_4_reference_shape(client):
 
 
 def test_illegal_transition_conflicts(client):
-    res = client.post("/journey/APL-0001/events", json={"event": "dl_test_passed"})
+    res = client.post("/journey/applicant_001/events", json={"event": "dl_test_passed"})
     assert res.status_code == 409
 
 
 def test_zero_form_apply_uses_verified_identity(client, fake_gateway):
-    res = client.post("/journey/APL-0001/apply", json={})
+    res = client.post("/journey/applicant_001/apply", json={})
     assert res.status_code == 200
     body = res.json()
     assert body["current_stage"] == "ll_application_submitted"
     assert body["application_number"] == "DL20260000001"
     # The submission was assembled from Module 3's verified profile, not user input.
-    assert fake_gateway.submissions[0].name == "Asha Sharma"
+    assert fake_gateway.submissions[0].name == "Rohan Verma"
 
 
 def test_rejection_prevention_blocks_mismatched_records(client):
-    res = client.post("/journey/APL-0009/apply", json={})
+    res = client.post("/journey/applicant_mismatch/apply", json={})
     assert res.status_code == 422
     detail = res.json()["detail"]
     assert detail["reason"] == "rejection_prevention"
@@ -126,63 +127,107 @@ def test_rejection_prevention_blocks_mismatched_records(client):
 
 
 def test_rto_disagreement_is_surfaced_not_silently_resolved(client):
-    # Stub convention: applicant ids ending in "2" have GPS/Aadhaar RTO disagreement.
-    res = client.post("/journey/APL-0002/apply", json={})
+    # Stub mirrors Module 3: the student/mover persona has GPS/Aadhaar RTO disagreement.
+    res = client.post("/journey/applicant_student/apply", json={})
     assert res.status_code == 409
     assert res.json()["detail"]["reason"] == "rto_confirmation_required"
 
     # Explicit confirmation resolves it.
-    res = client.post("/journey/APL-0002/apply", json={"confirmed_rto_code": "UP32"})
+    res = client.post("/journey/applicant_student/apply", json={"confirmed_rto_code": "UP32"})
     assert res.status_code == 200
 
 
 def test_practice_window_gate_blocks_early_booking(client, monkeypatch):
     monkeypatch.delenv("JOURNEY_FAST_FORWARD", raising=False)
     engine = get_engine()
-    engine.record("APL-0001").application_number = "DL20260000001"
+    engine.record("applicant_001").application_number = "DL20260000001"
     for event in ("ll_application_submitted", "documents_verified", "ll_test_passed", "begin_practice"):
-        engine.apply_event("APL-0001", event)
+        engine.apply_event("applicant_001", event)
 
-    res = client.post("/journey/APL-0001/dl-test/bookings", json={"slot_id": "DL01-1-9"})
+    res = client.post("/journey/applicant_001/dl-test/bookings", json={"slot_id": "DL01-1-9"})
     assert res.status_code == 409
     assert "practice window" in res.json()["detail"]
 
 
 def test_full_journey_with_fast_forward(client, fake_gateway):
-    client.post("/journey/APL-0001/apply", json={})
+    client.post("/journey/applicant_001/apply", json={})
     fake_gateway.gov_stage = "documents_verified"
-    body = client.post("/journey/APL-0001/sync").json()
+    body = client.post("/journey/applicant_001/sync").json()
     assert body["current_stage"] == "ll_documents_verified"
 
     fake_gateway.gov_stage = "ll_issued"
-    body = client.post("/journey/APL-0001/sync").json()
+    body = client.post("/journey/applicant_001/sync").json()
     assert body["current_stage"] == "ll_issued"
 
-    client.post("/journey/APL-0001/events", json={"event": "begin_practice"})
-    body = client.post("/journey/APL-0001/dl-test/bookings", json={"slot_id": "DL01-1-9"}).json()
+    client.post("/journey/applicant_001/events", json={"event": "begin_practice"})
+    body = client.post("/journey/applicant_001/dl-test/bookings", json={"slot_id": "DL01-1-9"}).json()
     assert body["current_stage"] == "dl_test_booked"
 
     # Failed test syncs in with its checkpoint, feeding Academy coaching.
     fake_gateway.gov_stage = "dl_test_failed"
     fake_gateway.failed_checkpoint = "reverse_parking"
-    body = client.post("/journey/APL-0001/sync").json()
+    body = client.post("/journey/applicant_001/sync").json()
     assert body["current_stage"] == "dl_test_result_fail"
     assert "reverse_parking" in body["stage_detail"]
 
     # Rebook, pass, licence issued.
-    client.post("/journey/APL-0001/dl-test/bookings", json={"slot_id": "DL01-1-9"})
+    client.post("/journey/applicant_001/dl-test/bookings", json={"slot_id": "DL01-1-9"})
     fake_gateway.gov_stage = "dl_issued"
-    body = client.post("/journey/APL-0001/sync").json()
+    body = client.post("/journey/applicant_001/sync").json()
     assert body["current_stage"] == "dl_issued"
     assert body["next_action"]["type"] == "journey_complete"
 
 
 def test_sync_never_regresses_practice_window(client, fake_gateway):
-    client.post("/journey/APL-0001/apply", json={})
+    client.post("/journey/applicant_001/apply", json={})
     fake_gateway.gov_stage = "ll_issued"
-    client.post("/journey/APL-0001/sync")
-    client.post("/journey/APL-0001/events", json={"event": "begin_practice"})
+    client.post("/journey/applicant_001/sync")
+    client.post("/journey/applicant_001/events", json={"event": "begin_practice"})
 
     # Gov side still says ll_issued; local practice_window must survive the sync.
-    body = client.post("/journey/APL-0001/sync").json()
+    body = client.post("/journey/applicant_001/sync").json()
     assert body["current_stage"] == "practice_window"
+
+
+def test_advisory_address_mismatch_does_not_block(client):
+    """§5.3: an RTO-jurisdiction disagreement is surfaced, never a hard block.
+
+    Module 3 reports it as a mismatch (clearing clear_to_submit), so Module 2 must
+    split advisory jurisdiction mismatches from blocking identity mismatches.
+    """
+    view = client.get("/journey/applicant_student/verified-profile").json()
+    assert view["mismatch_check"]["clear_to_submit"] is False  # Module 3's raw verdict
+    assert view["clear_to_submit"] is True  # Module 2: not blocking
+    assert [m["field"] for m in view["advisory_mismatches"]] == ["aadhaar_registered_address"]
+    assert view["blocking_mismatches"] == []
+    assert view["aadhaar_rto_choice"] == "aadhaar_jurisdiction"
+
+    # It routes to RTO confirmation (409), not rejection-prevention (422).
+    res = client.post("/journey/applicant_student/apply", json={})
+    assert res.status_code == 409
+    assert res.json()["detail"]["reason"] == "rto_confirmation_required"
+
+
+def test_blocking_identity_mismatch_still_blocks(client):
+    view = client.get("/journey/applicant_mismatch/verified-profile").json()
+    assert view["clear_to_submit"] is False
+    assert [m["field"] for m in view["blocking_mismatches"]] == ["name"]
+
+
+def test_aadhaar_jurisdiction_choice_resolves_to_state_rto(client, fake_gateway):
+    res = client.post(
+        "/journey/applicant_student/apply",
+        json={"confirmed_rto_code": "aadhaar_jurisdiction"},
+    )
+    assert res.status_code == 200
+    # Stub's Aadhaar address is "... Lucknow, UP - 226010" -> UP jurisdiction.
+    assert fake_gateway.submissions[0].rto_code == "UP"
+
+
+def test_gps_choice_is_passed_through_verbatim(client, fake_gateway):
+    res = client.post(
+        "/journey/applicant_student/apply",
+        json={"confirmed_rto_code": "KA-03 Indiranagar"},
+    )
+    assert res.status_code == 200
+    assert fake_gateway.submissions[0].rto_code == "KA-03 Indiranagar"

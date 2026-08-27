@@ -4,15 +4,15 @@
  */
 
 export interface paths {
-    "/identity/{applicant_id}": {
+    "/health": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Fetch Identity */
-        get: operations["fetch_identity_identity__applicant_id__get"];
+        /** Health */
+        get: operations["health_health_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -21,15 +21,18 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/identity/{applicant_id}/mismatches": {
+    "/academy/videos": {
         parameters: {
             query?: never;
             header?: never;
             path?: never;
             cookie?: never;
         };
-        /** Check Mismatch */
-        get: operations["check_mismatch_identity__applicant_id__mismatches_get"];
+        /**
+         * List Videos
+         * @description Retrieve the full library of Driving Academy video clips.
+         */
+        get: operations["list_videos_academy_videos_get"];
         put?: never;
         post?: never;
         delete?: never;
@@ -38,7 +41,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/match": {
+    "/academy/videos/{video_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Video
+         * @description Retrieve a single video by ID.
+         */
+        get: operations["get_video_academy_videos__video_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/academy/match-video": {
         parameters: {
             query?: never;
             header?: never;
@@ -47,8 +70,11 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Match Video */
-        post: operations["match_video_match_post"];
+        /**
+         * Match Video
+         * @description Match a learner's query or difficulty to the best instructional video.
+         */
+        post: operations["match_video_academy_match_video_post"];
         delete?: never;
         options?: never;
         head?: never;
@@ -59,30 +85,30 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /**
+         * AcademyVideo
+         * @description Metadata model for a Driving Academy curriculum video clip.
+         */
+        AcademyVideo: {
+            /** Video Id */
+            video_id: string;
+            /** Topic */
+            topic: string;
+            /** Title */
+            title: string;
+            /** Description */
+            description: string;
+            /** Duration Seconds */
+            duration_seconds: number;
+            /** Video Url */
+            video_url: string;
+            /** Tags */
+            tags?: string[];
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
-        };
-        /** Mismatch */
-        Mismatch: {
-            /** Field */
-            field: string;
-            /** Fetched Value */
-            fetched_value: string;
-            /** Issue */
-            issue: string;
-            /** Suggested Fix */
-            suggested_fix: string;
-        };
-        /** MismatchCheckResult */
-        MismatchCheckResult: {
-            /** Applicant Id */
-            applicant_id: string;
-            /** Mismatches */
-            mismatches: components["schemas"]["Mismatch"][];
-            /** Clear To Submit */
-            clear_to_submit: boolean;
         };
         /** ValidationError */
         ValidationError: {
@@ -96,35 +122,6 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
-        };
-        /** VerifiedProfile */
-        VerifiedProfile: {
-            /** Applicant Id */
-            applicant_id: string;
-            /** Source */
-            source: string;
-            /** Name */
-            name: string;
-            /**
-             * Dob
-             * Format: date
-             */
-            dob: string;
-            /** Address */
-            address: string;
-            /** Photo Url */
-            photo_url: string;
-            /** Gps Suggested Rto */
-            gps_suggested_rto?: string | null;
-            /** Aadhaar Registered Address */
-            aadhaar_registered_address?: string | null;
-            /** Addresses Match */
-            addresses_match?: boolean | null;
-            /**
-             * Fetched At
-             * Format: date-time
-             */
-            fetched_at: string;
         };
         /** VideoMatchRequest */
         VideoMatchRequest: {
@@ -141,7 +138,10 @@ export interface components {
             video_id: string;
             /** Topic */
             topic: string;
-            /** Confidence */
+            /**
+             * Confidence
+             * @description Confidence score between 0.0 and 1.0
+             */
             confidence: number;
             /** Fallback Message */
             fallback_message?: string | null;
@@ -155,12 +155,54 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
-    fetch_identity_identity__applicant_id__get: {
+    health_health_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: string;
+                    };
+                };
+            };
+        };
+    };
+    list_videos_academy_videos_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademyVideo"][];
+                };
+            };
+        };
+    };
+    get_video_academy_videos__video_id__get: {
         parameters: {
             query?: never;
             header?: never;
             path: {
-                applicant_id: string;
+                video_id: string;
             };
             cookie?: never;
         };
@@ -172,7 +214,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["VerifiedProfile"];
+                    "application/json": components["schemas"]["AcademyVideo"];
                 };
             };
             /** @description Validation Error */
@@ -186,38 +228,7 @@ export interface operations {
             };
         };
     };
-    check_mismatch_identity__applicant_id__mismatches_get: {
-        parameters: {
-            query?: never;
-            header?: never;
-            path: {
-                applicant_id: string;
-            };
-            cookie?: never;
-        };
-        requestBody?: never;
-        responses: {
-            /** @description Successful Response */
-            200: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["MismatchCheckResult"];
-                };
-            };
-            /** @description Validation Error */
-            422: {
-                headers: {
-                    [name: string]: unknown;
-                };
-                content: {
-                    "application/json": components["schemas"]["HTTPValidationError"];
-                };
-            };
-        };
-    };
-    match_video_match_post: {
+    match_video_academy_match_video_post: {
         parameters: {
             query?: never;
             header?: never;

@@ -15,7 +15,9 @@ import { LicenceCard } from "./components/LicenceCard";
 import { LLQuiz } from "./components/LLQuiz";
 import { ReviewConfirm } from "./components/ReviewConfirm";
 
-const APPLICANT_ID_PATTERN = /^[A-Za-z0-9-]{4,24}$/;
+// Module 3 keys its e-KYC store on ids like "applicant_001" — case- and
+// underscore-sensitive, so the id is passed through exactly as typed.
+const APPLICANT_ID_PATTERN = /^[A-Za-z0-9_-]{4,32}$/;
 
 function describeError(e: unknown): string {
   if (e instanceof ApiError) {
@@ -29,7 +31,7 @@ function describeError(e: unknown): string {
 
 export default function App() {
   const [applicantId, setApplicantId] = useState("");
-  const [idInput, setIdInput] = useState("APL-0001");
+  const [idInput, setIdInput] = useState("applicant_001");
   const [idError, setIdError] = useState<string | null>(null);
   const [state, setState] = useState<JourneyState | null>(null);
   const [review, setReview] = useState<VerifiedIdentityView | null>(null);
@@ -60,9 +62,9 @@ export default function App() {
   }
 
   function enter() {
-    const id = idInput.trim().toUpperCase();
+    const id = idInput.trim();
     if (!APPLICANT_ID_PATTERN.test(id)) {
-      setIdError("Use 4–24 letters, digits or dashes — e.g. APL-0001.");
+      setIdError("Use 4–32 letters, digits, dashes or underscores — e.g. applicant_001.");
       return;
     }
     setIdError(null);
@@ -105,8 +107,9 @@ export default function App() {
           />
           {idError && <p className="alert alert-error">{idError}</p>}
           <p className="muted small">
-            Demo hints: an ID ending in <b>2</b> shows the two-RTO disagreement; ending in{" "}
-            <b>9</b> shows a blocking document mismatch.
+            Demo personas: <b>applicant_001</b> is a clean journey,{" "}
+            <b>applicant_student</b> shows the two-RTO disagreement, and{" "}
+            <b>applicant_mismatch</b> shows a blocked application with the fix.
           </p>
           <button className="btn primary" onClick={enter}>Continue</button>
         </section>

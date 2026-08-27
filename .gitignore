@@ -64,4 +64,5 @@ dist-ssr/
 .DS_Store
 Thumbs.db
 
-# Generated OpenAPI schemas are build artifacts of the contracts
+# Generated OpenAPI schemas (build artifacts)
+packages/contracts/openapi/

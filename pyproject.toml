@@ -1,0 +1,60 @@
+[project]
+name = "parivahan-mvp"
+version = "0.1.0"
+description = "Parivahan MVP - Citizen-experience and orchestration layer over Sarathi/Vahan"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv.workspace]
+members = [
+    "packages/contracts",
+    "services/identity",
+    "services/academy",
+    "services/bol-ke-apply",
+    "services/journey",
+    "services/gateway",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0",
+    "ruff>=0.5.0",
+    # All six modules installed into the root venv so `uv sync` once gives you a
+    # working tree-wide `uv run pytest` / `uv run ruff check .`.
+    "parivahan-contracts",
+    "identity-service",
+    "academy-service",
+    "bol-ke-apply",
+    "parivahan-journey",
+    "parivahan-gateway",
+]
+
+[tool.uv.sources]
+parivahan-contracts = { workspace = true }
+identity-service = { workspace = true }
+academy-service = { workspace = true }
+bol-ke-apply = { workspace = true }
+parivahan-journey = { workspace = true }
+parivahan-gateway = { workspace = true }
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+# B008: Depends() in argument defaults is FastAPI's canonical DI pattern.
+ignore = ["B008"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+# Module 2 and Module 5 own their own pytest roots (they run standalone per §8.6),
+# so the workspace run covers contracts and the Module 3/4/6 services.
+testpaths = [
+    "packages/contracts",
+    "services/identity",
+    "services/academy",
+    "services/bol-ke-apply",
+]
