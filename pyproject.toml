@@ -1,0 +1,31 @@
+[project]
+name = "parivahan-mvp"
+version = "0.1.0"
+description = "Parivahan MVP - Citizen-experience and orchestration layer over Sarathi/Vahan"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv.workspace]
+members = [
+    "packages/contracts",
+    "services/identity",
+    "services/academy",
+    "services/bol-ke-apply",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "httpx>=0.27.0",
+    "ruff>=0.5.0",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["packages", "services"]
