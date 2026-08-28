@@ -28,6 +28,11 @@ class VerifiedProfile(BaseModel):
         description="True if GPS location matches Aadhaar registered jurisdiction, False otherwise",
     )
     fetched_at: datetime
+    age: int | None = Field(default=None, description="Computed age in years")
+    age_eligible: bool | None = Field(
+        default=None,
+        description="True if age >= 18 for first-time car driving licence",
+    )
 
 
 class Mismatch(BaseModel):
@@ -35,6 +40,7 @@ class Mismatch(BaseModel):
     fetched_value: str
     issue: str
     suggested_fix: str
+    severity: str = Field(default="error", description='"error" (blocks submission) or "warning"')
 
 
 class MismatchCheckResult(BaseModel):

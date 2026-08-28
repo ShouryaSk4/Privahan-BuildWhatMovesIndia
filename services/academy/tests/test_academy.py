@@ -24,6 +24,11 @@ def test_catalog_has_10_curated_topics():
     assert "hill start" in topics
     assert "clutch control" in topics
     assert "steering" in topics
+    assert "lane change" in topics
+    assert "parallel parking" in topics
+    assert "emergency braking" in topics
+    assert "mirror and signal checks" in topics
+    assert "gradient descent" in topics
 
 
 def test_match_eight_turn_query():
@@ -40,10 +45,25 @@ def test_match_eight_turn_query():
     assert data["video_id"] == "vid_01_eight_turn"
 
 
-def test_match_hill_start_query():
+def test_match_hinglish_clutch_query():
+    """Verify Hinglish queries are correctly mapped to clutch control."""
     payload = {
         "applicant_id": "app_123",
-        "query": "Car rolls backward when starting uphill on the slope ramp",
+        "query": "clutch kaise chhodna hai gadi bar bar band ho jaati hai",
+        "journey_stage": "practice_window",
+    }
+    response = client.post("/academy/match-video", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["topic"] == "clutch control"
+    assert data["confidence"] > 0.5
+
+
+def test_match_hinglish_hill_start_query():
+    """Verify Hinglish queries for hill start incline rollback."""
+    payload = {
+        "applicant_id": "app_123",
+        "query": "chadhai par gadi peeche ja rahi hai handbrake kaise lagaye",
         "journey_stage": "practice_window",
     }
     response = client.post("/academy/match-video", json=payload)
@@ -53,16 +73,29 @@ def test_match_hill_start_query():
     assert data["confidence"] > 0.5
 
 
-def test_match_clutch_control_query():
+def test_match_hindi_script_query():
+    """Verify Hindi Devanagari queries are correctly classified."""
     payload = {
         "applicant_id": "app_123",
-        "query": "My engine keeps stalling when releasing the clutch",
+        "query": "रिवर्स पार्किंग का सही तरीका बताएं",
         "journey_stage": "practice_window",
     }
     response = client.post("/academy/match-video", json=payload)
     assert response.status_code == 200
     data = response.json()
-    assert data["topic"] == "clutch control"
+    assert data["topic"] == "reverse parking"
+    assert data["confidence"] > 0.5
+
+
+def test_match_hinglish_gradient_descent_query():
+    payload = {
+        "applicant_id": "app_123",
+        "query": "dhalaan se utarna hai brake garam ho jata hai",
+    }
+    response = client.post("/academy/match-video", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert data["topic"] == "gradient descent"
     assert data["confidence"] > 0.5
 
 
@@ -74,5 +107,5 @@ def test_match_unknown_fallback():
     response = client.post("/academy/match-video", json=payload)
     assert response.status_code == 200
     data = response.json()
-    assert data["confidence"] < 0.5
+    assert data["confidence"] < 0.4
     assert data["fallback_message"] is not None

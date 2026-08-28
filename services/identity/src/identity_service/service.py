@@ -5,65 +5,61 @@ rejection prevention mismatch checks, and strict separation of GPS nearest RTO v
 Aadhaar jurisdiction RTO.
 """
 
+import json
+import logging
 from datetime import UTC, date, datetime
+from pathlib import Path
 
 from contracts.enums import IdentitySource
 from contracts.identity import Mismatch, MismatchCheckResult, VerifiedProfile
 
-# Mock database simulating DigiLocker / UIDAI e-KYC records and PAN cross-reference
-MOCK_IDENTITY_STORE: dict[str, dict] = {
-    "applicant_001": {
-        "name": "Rohan Verma",
-        "dob": date(2003, 8, 15),
-        "source": IdentitySource.DIGILOCKER_AADHAAR,
-        "address": "Flat 204, Palm Grove, Whitefield, Bengaluru, KA - 560066",
-        "aadhaar_registered_address": "Flat 204, Palm Grove, Whitefield, Bengaluru, KA - 560066",
-        "jurisdiction_rto": "KA-53 KR Puram",
-        "photo_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300",
-        "pan_record": {
-            "name": "Rohan Verma",
-            "dob": date(2003, 8, 15),
-            "status": "active",
-        },
-    },
-    # Student / Mover case: Aadhaar is Lucknow, but current GPS location is Bengaluru
-    "applicant_student": {
-        "name": "Priya Sharma",
-        "dob": date(2004, 2, 10),
-        "source": IdentitySource.DIGILOCKER_AADHAAR,
-        "address": "Room 102, Kaveri Hostel, Electronic City, Bengaluru, KA - 560100",
-        "aadhaar_registered_address": "House 12, Gomti Nagar, Lucknow, UP - 226010",
-        "jurisdiction_rto": "UP-32 Lucknow",
-        "photo_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=300",
-        "pan_record": {
-            "name": "Priya Sharma",
-            "dob": date(2004, 2, 10),
-            "status": "active",
-        },
-    },
-    # Rejection mismatch case: PAN name spelling differs from Aadhaar
-    "applicant_mismatch": {
-        "name": "Vikram Singh Chauhan",
-        "dob": date(2001, 11, 20),
-        "source": IdentitySource.DIGILOCKER_AADHAAR,
-        "address": "Sector 15, Rohini, Delhi, DL - 110089",
-        "aadhaar_registered_address": "Sector 15, Rohini, Delhi, DL - 110089",
-        "jurisdiction_rto": "DL-08 Rohini",
-        "photo_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=300",
-        "pan_record": {
-            "name": "Vikram S Chauhan",
-            "dob": date(2001, 11, 20),
-            "status": "active",
-        },
-    },
-}
+logger = logging.getLogger("identity_service")
+
+DATA_FILE = Path(__file__).parent / "data" / "citizens.json"
+
+
+def _calculate_age(born: date) -> int:
+    today = datetime.now(UTC).date()
+    return today.year - born.year - ((today.month, today.day) < (born.month, born.day))
 
 
 class IdentityService:
     """Service handling identity fetching and rejection prevention."""
 
-    def __init__(self, records: dict[str, dict] | None = None):
-        self._records = records if records is not None else MOCK_IDENTITY_STORE
+    def __init__(self, data_path: Path | None = None):
+        self._data_path = data_path or DATA_FILE
+        self._records: dict[str, dict] = self._load_fixtures()
+
+    def _load_fixtures(self) -> dict[str, dict]:
+        if self._data_path.exists():
+            try:
+                with open(self._data_path, encoding="utf-8") as f:
+                    raw_data = json.load(f)
+                    parsed: dict[str, dict] = {}
+                    for key, val in raw_data.items():
+                        parsed[key] = {
+                            **val,
+                            "dob": date.fromisoformat(val["dob"]),
+                        }
+                        if "pan_record" in val and "dob" in val["pan_record"]:
+                            parsed[key]["pan_record"]["dob"] = date.fromisoformat(
+                                val["pan_record"]["dob"]
+                            )
+                    # Support legacy test aliases
+                    parsed["applicant_001"] = parsed["applicant_clean"]
+                    parsed["applicant_student"] = parsed["applicant_student_mover"]
+                    parsed["applicant_mismatch"] = parsed["applicant_pan_name_mismatch"]
+                    return parsed
+            except (json.JSONDecodeError, OSError, KeyError, ValueError) as exc:
+                logger.warning("Failed to parse fixture file %s: %s", self._data_path, exc)
+
+        return {}
+
+    def get_record(self, applicant_id: str) -> dict | None:
+        return self._records.get(applicant_id)
+
+    def list_personas(self) -> list[str]:
+        return [k for k in self._records if not k.startswith("applicant_00")]
 
     def fetch_identity(
         self,
@@ -78,81 +74,111 @@ class IdentityService:
         record = self._records.get(applicant_id)
         if not record:
             # Generate a realistic mock profile for arbitrary applicant IDs
+            now_utc = datetime.now(UTC)
+            mock_dob = date(2002, 1, 1)
+            age = _calculate_age(mock_dob)
             return VerifiedProfile(
                 applicant_id=applicant_id,
                 source=IdentitySource.DIGILOCKER_AADHAAR,
                 name=f"Applicant {applicant_id.replace('_', ' ').title()}",
-                dob=date(2002, 1, 1),
+                dob=mock_dob,
                 address="100 Feet Road, Koramangala, Bengaluru, KA - 560034",
                 aadhaar_registered_address="100 Feet Road, Koramangala, Bengaluru, KA - 560034",
                 gps_suggested_rto=gps_suggested_rto or "KA-01 Koramangala",
                 addresses_match=True,
                 photo_url="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=300",
-                fetched_at=datetime.now(UTC),
+                fetched_at=now_utc,
+                age=age,
+                age_eligible=age >= 18,
             )
 
+        dob: date = record["dob"]
+        age = _calculate_age(dob)
         aadhaar_addr = record.get("aadhaar_registered_address", record["address"])
-        suggested_rto = gps_suggested_rto or "KA-03 Indiranagar"
+        suggested_rto = gps_suggested_rto or record.get("default_gps_rto", "KA-03 Indiranagar")
         jurisdiction_rto = record.get("jurisdiction_rto", "KA-03 Indiranagar")
 
-        # Flag whether device/GPS location aligns with Aadhaar jurisdiction
-        addresses_match = suggested_rto.split("-")[0] == jurisdiction_rto.split("-")[0]
+        # Compare State prefix (e.g. KA, UP, DL, TN)
+        suggested_state = suggested_rto.split("-")[0].strip().upper()
+        jurisdiction_state = jurisdiction_rto.split("-")[0].strip().upper()
+        addresses_match = suggested_state == jurisdiction_state
 
         return VerifiedProfile(
             applicant_id=applicant_id,
             source=record["source"],
             name=record["name"],
-            dob=record["dob"],
+            dob=dob,
             address=record["address"],
             photo_url=record["photo_url"],
             gps_suggested_rto=suggested_rto,
             aadhaar_registered_address=aadhaar_addr,
             addresses_match=addresses_match,
             fetched_at=datetime.now(UTC),
+            age=age,
+            age_eligible=age >= 18,
         )
 
     def check_mismatch(self, applicant_id: str) -> MismatchCheckResult:
-        """Performs Rejection-Prevention checks against secondary sources (e.g. PAN)."""
+        """Performs Rejection-Prevention checks against secondary sources and rules."""
+        profile = self.fetch_identity(applicant_id)
         record = self._records.get(applicant_id)
         mismatches: list[Mismatch] = []
 
+        # 1. Age Eligibility Check (LMV licence requires minimum age 18)
+        if profile.age is not None and profile.age < 18:
+            mismatches.append(
+                Mismatch(
+                    field="dob",
+                    fetched_value=profile.dob.isoformat(),
+                    issue=f"Applicant age is {profile.age}. Motor Vehicles Act requires age 18 or above for a Light Motor Vehicle (LMV) driving licence.",
+                    suggested_fix="You are eligible to apply once you reach 18 years of age. (Or apply for non-geared 50cc two-wheeler at age 16 with parental consent).",
+                    severity="error",
+                )
+            )
+
+        # 2. PAN Cross-Verification
         if record and "pan_record" in record:
             pan = record["pan_record"]
             # Check name consistency
-            if pan["name"] != record["name"]:
+            if pan.get("name") and pan["name"].strip().lower() != record["name"].strip().lower():
                 mismatches.append(
                     Mismatch(
                         field="name",
                         fetched_value=record["name"],
                         issue=f"Aadhaar name '{record['name']}' differs from PAN record '{pan['name']}'.",
-                        suggested_fix="Ensure full name matches government identity databases or upload gazette notification.",
+                        suggested_fix="Ensure full name matches across government identity databases or upload a gazette notification / marriage certificate.",
+                        severity="error",
                     )
                 )
 
             # Check DOB consistency
-            if pan["dob"] != record["dob"]:
+            if pan.get("dob") and pan["dob"] != record["dob"]:
                 mismatches.append(
                     Mismatch(
                         field="dob",
                         fetched_value=record["dob"].isoformat(),
                         issue=f"Aadhaar DOB '{record['dob']}' differs from PAN DOB '{pan['dob']}'.",
-                        suggested_fix="Update PAN record or attach Class 10 marksheet as definitive birth certificate proof.",
+                        suggested_fix="Update PAN record with income tax portal or attach Class 10 marksheet as definitive birth certificate proof.",
+                        severity="error",
                     )
                 )
 
-        # Rejection prevention rule: If addresses do not match jurisdiction state, warn citizen
-        profile = self.fetch_identity(applicant_id)
+        # 3. GPS vs Aadhaar Jurisdiction Mismatch (Student / Mover scenario)
         if profile.addresses_match is False:
             mismatches.append(
                 Mismatch(
                     field="aadhaar_registered_address",
                     fetched_value=str(profile.aadhaar_registered_address),
-                    issue=f"Your current device location suggests {profile.gps_suggested_rto}, but your Aadhaar jurisdiction is in another state/district.",
-                    suggested_fix="You can apply at your Aadhaar jurisdiction RTO, or update your Aadhaar address with current local residence proof.",
+                    issue=f"Your current device location suggests {profile.gps_suggested_rto}, but your Aadhaar jurisdiction is in another state ({profile.aadhaar_registered_address}).",
+                    suggested_fix="You can apply at your legal Aadhaar jurisdiction RTO, or update your Aadhaar address with local residence proof (e.g. rental agreement or hostel certificate).",
+                    severity="warning",
                 )
             )
 
-        clear_to_submit = len(mismatches) == 0
+        # clear_to_submit is False if any blocking 'error' exists
+        has_blocking_errors = any(m.severity == "error" for m in mismatches)
+        clear_to_submit = not has_blocking_errors
+
         return MismatchCheckResult(
             applicant_id=applicant_id,
             mismatches=mismatches,
