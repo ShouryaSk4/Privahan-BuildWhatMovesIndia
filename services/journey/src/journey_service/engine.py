@@ -138,7 +138,7 @@ class Rules:
     """One state's rules, loaded from JSON. Data-driven by design (§3.3)."""
 
     def __init__(self, state_code: str = "delhi") -> None:
-        raw = json.loads((RULES_DIR / f"{state_code}.json").read_text())
+        raw = json.loads((RULES_DIR / f"{state_code}.json").read_text(encoding="utf-8"))
         self.raw = raw
         self.certainty = Certainty(**raw["certainty"])
         self.practice_window_days: int = raw["practice_window_days"]

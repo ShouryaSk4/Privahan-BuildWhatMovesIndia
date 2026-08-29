@@ -183,6 +183,8 @@ class GeminiLLMProvider(BaseLLMProvider):
 
 def get_llm_provider(name: str | None = None) -> BaseLLMProvider:
     provider_name = (name or os.getenv("BOL_KE_APPLY_LLM_PROVIDER", "gemini")).lower()
+    if provider_name == "mock":
+        return MockLLMProvider()
     has_key = bool(os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))
     if provider_name == "gemini" or has_key:
         return GeminiLLMProvider()
