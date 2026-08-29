@@ -1554,6 +1554,317 @@ input[type="checkbox"] {
 }
 
 /* ==========================================================================
+   Landscape-First Desktop UI & Progression Styles
+   ========================================================================== */
+
+.landscape-journey-container {
+  background: white;
+  border-bottom: 1px solid var(--line);
+  padding: 0.75rem 1rem;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.landscape-journey-scroll {
+  max-width: 78rem;
+  margin: 0 auto;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.landscape-journey-steps {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  min-width: 820px;
+}
+
+.landscape-journey-step {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+  flex: 1;
+  opacity: 0.55;
+  transition: all 0.2s ease;
+}
+
+.landscape-journey-step.current {
+  opacity: 1;
+}
+
+.landscape-journey-step.done {
+  opacity: 0.9;
+}
+
+.landscape-step-marker {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #475569;
+  font-size: 0.75rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.landscape-journey-step.done .landscape-step-marker {
+  background: #16a34a;
+  color: white;
+}
+
+.landscape-journey-step.current .landscape-step-marker {
+  background: var(--gov-navy);
+  color: white;
+  box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.2);
+}
+
+.landscape-step-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.landscape-step-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--gov-navy);
+  white-space: nowrap;
+}
+
+.landscape-step-sub {
+  font-size: 0.68rem;
+  color: var(--ink-muted);
+  white-space: nowrap;
+}
+
+.landscape-step-connector {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 0.5rem;
+}
+
+.landscape-journey-step.done .landscape-step-connector {
+  background: #16a34a;
+}
+
+/* Category Selection Grid */
+.category-selection-card {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-sm);
+}
+
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.15rem;
+  margin-top: 1.25rem;
+}
+
+.category-option-card {
+  border: 2px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+  background: white;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.category-option-card:hover {
+  border-color: var(--gov-blue);
+  background: #f8fafc;
+}
+
+.category-option-card.selected {
+  border-color: var(--gov-navy);
+  background: #eff6ff;
+  box-shadow: 0 0 0 1px var(--gov-navy);
+}
+
+.category-icon-wrap {
+  font-size: 2rem;
+  margin-bottom: 0.35rem;
+}
+
+.category-tag-popular {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.68rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid #fde68a;
+}
+
+.category-eligibility {
+  font-size: 0.76rem;
+  color: #475569;
+  background: rgba(241, 245, 249, 0.8);
+  padding: 0.35rem 0.6rem;
+  border-radius: 4px;
+  margin: 0.6rem 0;
+}
+
+.category-radio-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.6rem;
+  border-top: 1px dashed #e2e8f0;
+}
+
+/* Digital Learner's Licence Certificate (Step 6) */
+.ll-certificate-card {
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+  border: 2px solid #93c5fd;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: 0 4px 12px rgba(30, 58, 138, 0.08);
+  position: relative;
+  overflow: hidden;
+}
+
+.ll-certificate-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(90deg, #f97316 0%, #ffffff 50%, #16a34a 100%);
+}
+
+.ll-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1.5px solid #e2e8f0;
+  padding-bottom: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.ll-qr-mock {
+  width: 54px;
+  height: 54px;
+  border: 1.5px solid #cbd5e1;
+  background: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.ll-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.85rem 1.25rem;
+}
+
+.ll-label {
+  display: block;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #64748b;
+  font-weight: 700;
+  margin-bottom: 0.15rem;
+}
+
+.ll-value {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--gov-navy);
+}
+
+.ll-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px dashed #cbd5e1;
+  padding-top: 0.85rem;
+  margin-top: 1.25rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+/* Track & Support Bottom Bar */
+.track-support-bar {
+  background: #0f172a;
+  color: white;
+  border-top: 1px solid #334155;
+  padding: 0.65rem 1rem;
+  position: sticky;
+  bottom: 0;
+  z-index: 50;
+}
+
+.track-support-container {
+  max-width: 78rem;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.track-support-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+}
+
+.track-support-links {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.track-support-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #e2e8f0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.track-support-btn:hover {
+  background: rgba(255, 255, 255, 0.18);
+  color: white;
+}
+
+.track-support-btn.highlight {
+  background: #1e40af;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.track-support-btn.highlight:hover {
+  background: #2563eb;
+}
+
+/* ==========================================================================
    Responsive Breakpoints
    ========================================================================== */
 

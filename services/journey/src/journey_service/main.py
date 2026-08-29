@@ -215,6 +215,12 @@ def apply(
 
     engine.set_application_number(applicant_id, result.application_number)
     engine.apply_event(applicant_id, "ll_application_submitted")
+    # In Zero-Form verified e-KYC journey, verified digital records pass verification immediately:
+    try:
+        gateway.verify_documents(result.application_number)
+        engine.apply_event(applicant_id, "documents_verified")
+    except Exception:
+        pass
     return engine.state(applicant_id)
 
 

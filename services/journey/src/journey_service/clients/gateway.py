@@ -63,6 +63,13 @@ class GatewayClient:
         res.raise_for_status()
         return SlotBookingResult.model_validate(res.json())
 
+    def verify_documents(self, application_number: str) -> None:
+        try:
+            res = self._request("POST", f"/gov/applications/{application_number}/verify-documents")
+            res.raise_for_status()
+        except Exception:
+            pass
+
 
 def get_gateway_client() -> GatewayClient:
     return GatewayClient()

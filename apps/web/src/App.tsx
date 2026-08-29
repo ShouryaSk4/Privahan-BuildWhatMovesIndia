@@ -8,15 +8,20 @@ import {
   type VerifiedIdentityView,
 } from "./api/client";
 import { AcademyWidget } from "./components/AcademyWidget";
+import { CategorySelector } from "./components/CategorySelector";
 import { DemoPanel } from "./components/DemoPanel";
 import { Header } from "./components/Header";
+import { LandscapeJourneyMap, getActiveStepKey } from "./components/LandscapeJourneyMap";
+import { LearnerLicenceCard } from "./components/LearnerLicenceCard";
 import { LicenceCard } from "./components/LicenceCard";
 import { LLQuiz } from "./components/LLQuiz";
+import { LLTestSelector } from "./components/LLTestSelector";
+import { LoginModal } from "./components/LoginModal";
 import { NavigationBar } from "./components/NavigationBar";
 import { PracticeAcademyView } from "./components/PracticeAcademyView";
 import { ReviewConfirm } from "./components/ReviewConfirm";
+import { TrackSupportBar } from "./components/TrackSupportBar";
 import { VoiceModal } from "./components/VoiceModal";
-import { LoginModal } from "./components/LoginModal";
 
 const APPLICANT_ID_PATTERN = /^[A-Za-z0-9_-]{4,32}$/;
 
@@ -57,23 +62,23 @@ function describeError(e: unknown): string {
 function getStepInfo(stage: string): string {
   switch (stage) {
     case "no_licence":
-      return "Step 1 of 6: e-KYC Identity Verification";
+      return "Step 3/4: License Class & Zero-Form Dossier";
     case "ll_application_submitted":
-      return "Step 2 of 6: Application In Review";
+      return "Step 4: Application Submitted";
     case "ll_documents_verified":
     case "ll_test_scheduled":
-      return "Step 3 of 6: Online Learner's Test (STALL)";
+      return "Step 5: Online/Center Learner's Test (STALL)";
     case "ll_issued":
-      return "Step 4 of 6: Learner's Licence Issued";
+      return "Step 6: Digital Learner's Licence Issued";
     case "practice_window":
-      return "Step 5 of 6: 30-Day Practice & Road Safety Academy";
+      return "Step 7: 30-Day Practice & Road Safety Academy";
     case "dl_test_booked":
-      return "Step 5 of 6: Track Test Scheduled (ADTT)";
+      return "Step 8: Automated Track Test Scheduled (ADTT)";
     case "dl_test_result_fail":
-      return "Step 5 of 6: Skill Remediation & Retest";
+      return "Step 7: Maneuver Remediation & Retest";
     case "dl_test_result_pass":
     case "dl_issued":
-      return "Step 6 of 6: Permanent Driving Licence Issued";
+      return "Step 9: Form 7 Permanent Driving Licence";
     default:
       return "Citizen Application Journey";
   }
@@ -91,6 +96,11 @@ export default function App() {
   const [voiceOpen, setVoiceOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
 
+  // Landscape-First Step Progression State
+  const [selectedCategory, setSelectedCategory] = useState("LMV");
+  const [categoryConfirmed, setCategoryConfirmed] = useState(false);
+  const [onlineTestActive, setOnlineTestActive] = useState(false);
+
   const refresh = useCallback(async (id: string) => {
     setState(await journeyApi.get(id));
   }, []);
@@ -101,39 +111,38 @@ export default function App() {
     }
   }, [applicantId, refresh]);
 
-  async function act(action: () => Promise<void>) {
+  async function act<T>(fn: () => Promise<T>): Promise<T | undefined> {
     setBusy(true);
     setError(null);
     try {
-      await action();
+      return await fn();
     } catch (e) {
       setError(describeError(e));
+      return undefined;
     } finally {
       setBusy(false);
     }
   }
 
-  async function enter(customId?: string, resetFirst = true) {
-    const id = (customId || idInput).trim();
-    if (!APPLICANT_ID_PATTERN.test(id)) {
-      setIdError("Please enter a valid reference ID (4–32 letters, numbers, or dashes) — e.g. applicant_001");
+  function enter(id?: string, resetFirst = true) {
+    const targetId = (id ?? idInput).trim();
+    if (!APPLICANT_ID_PATTERN.test(targetId)) {
+      setIdError("ID must be 4–32 letters, numbers, or underscores (e.g. applicant_001)");
       return;
     }
     setIdError(null);
-    setBusy(true);
-    try {
-      if (resetFirst) {
-        await journeyApi.reset(id).catch(() => null);
-      }
-      const fresh = await journeyApi.get(id);
-      setState(fresh);
-      setApplicantId(id);
-      setReview(null);
-      setSlots(null);
-    } catch (e) {
-      setError(describeError(e));
-    } finally {
-      setBusy(false);
+    setApplicantId(targetId);
+    setReview(null);
+    setSlots(null);
+    setError(null);
+    setCategoryConfirmed(false);
+    setOnlineTestActive(false);
+
+    if (resetFirst) {
+      act(async () => {
+        const fresh = await journeyApi.reset(targetId);
+        setState(fresh);
+      });
     }
   }
 
@@ -143,6 +152,8 @@ export default function App() {
     setReview(null);
     setSlots(null);
     setError(null);
+    setCategoryConfirmed(false);
+    setOnlineTestActive(false);
   }
 
   const activePersona = DEMO_PERSONAS.find((p) => p.id === applicantId);
@@ -154,6 +165,8 @@ export default function App() {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         <Header onOpenVoice={() => setVoiceOpen(true)} onOpenLogin={() => setLoginOpen(true)} />
+
+        <LandscapeJourneyMap currentStep="intent" />
 
         <main className="shell">
           {/* Hero Section */}
@@ -291,6 +304,12 @@ export default function App() {
           </section>
         </main>
 
+        <TrackSupportBar
+          applicantId="portal_visitor"
+          currentStage="no_licence"
+          onOpenVoice={() => setVoiceOpen(true)}
+        />
+
         <VoiceModal
           applicantId={idInput || "applicant_001"}
           isOpen={voiceOpen}
@@ -311,7 +330,7 @@ export default function App() {
   // =========================================================================
   if (!state) {
     return (
-      <div>
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
         <Header
           applicantId={applicantId}
           citizenName={activePersona?.name}
@@ -350,7 +369,7 @@ export default function App() {
   const takingTest = stage === "ll_documents_verified" || stage === "ll_test_scheduled";
 
   // =========================================================================
-  // Screen B: Active Journey Shell (Guaranteed Back Button on Every View)
+  // Screen B: Active Journey Shell (Landscape-First Workflow)
   // =========================================================================
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
@@ -363,15 +382,20 @@ export default function App() {
         onSwitchCitizen={resetToLanding}
       />
 
+      {/* Landscape Horizontal Progression Tracker */}
+      <LandscapeJourneyMap
+        currentStep={getActiveStepKey(stage, !!review, categoryConfirmed)}
+      />
+
       {/* Universal Breadcrumb & Guaranteed Back Navigation */}
       <NavigationBar
         breadcrumbs={[
           { label: "Citizen Home", onClick: resetToLanding },
           { label: `App #${state.application_number || applicantId}`, onClick: () => setReview(null) },
-          { label: review ? "e-KYC Review" : state.next_action.label, active: true },
+          { label: review ? "Zero-Form e-KYC Dossier" : state.next_action.label, active: true },
         ]}
         onBack={review ? () => setReview(null) : resetToLanding}
-        backLabel={review ? "← Return to Application Overview" : "← Return to Citizen Homepage"}
+        backLabel={review ? "← Return to Category Selection" : "← Return to Citizen Homepage"}
         stepInfo={getStepInfo(stage)}
       />
 
@@ -386,7 +410,7 @@ export default function App() {
         {error && <p className="alert alert-error" role="alert">{error}</p>}
 
         {/* ------------------------------------------------------------------
-            Step 1 / Review: Verified e-KYC Dossier
+            Step 4 / Review: Verified e-KYC Dossier
             ------------------------------------------------------------------ */}
         {review ? (
           <ReviewConfirm
@@ -401,101 +425,136 @@ export default function App() {
             }
           />
         ) : (
-          <section className="card" aria-label="Next step">
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.5rem" }}>
-              <h2>{state.next_action.label}</h2>
-              <span className="chip">{getStepInfo(stage)}</span>
-            </div>
-
+          <>
             {/* --------------------------------------------------------------
-                Stage: no_licence (Start Zero-Form Application)
+                Stage: no_licence (Step 3: Category -> Step 4: Zero-Form Apply)
                 -------------------------------------------------------------- */}
             {stage === "no_licence" && (
-              <>
-                <p className="muted" style={{ fontSize: "0.92rem", marginTop: "0.5rem" }}>
-                  Under the Motor Vehicles Act, your eligibility requirements are automatically verified via National Repositories:
-                </p>
-                <ul style={{ margin: "0.85rem 0 1.5rem 1.25rem", fontSize: "0.92rem", color: "var(--ink-secondary)" }}>
-                  {state.required_documents.map((d) => (
-                    <li key={d.code} style={{ margin: "0.35rem 0" }}>
-                      <b>{d.label}</b> {d.satisfied_by_ekyc && <span className="chip">Verified via DigiLocker e-KYC</span>}
-                    </li>
-                  ))}
-                </ul>
+              !categoryConfirmed ? (
+                <CategorySelector
+                  selectedCode={selectedCategory}
+                  onSelect={(code) => setSelectedCategory(code)}
+                  onProceed={() => setCategoryConfirmed(true)}
+                  busy={busy}
+                />
+              ) : (
+                <section className="card" aria-label="Next step">
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.5rem" }}>
+                    <div>
+                      <span className="badge-official">Step 4 of 9 • Zero-Form Licence Engine</span>
+                      <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0.4rem 0 0.2rem" }}>
+                        Review Verified DigiLocker Dossier ({selectedCategory})
+                      </h2>
+                    </div>
+                    <span className="chip status-verified">Aadhaar e-KYC Ready</span>
+                  </div>
 
-                <div className="row">
+                  <p className="muted" style={{ fontSize: "0.92rem", marginTop: "0.5rem" }}>
+                    Under the Motor Vehicles Act, your eligibility requirements are verified instantly from National Repositories:
+                  </p>
+                  <ul style={{ margin: "0.85rem 0 1.5rem 1.25rem", fontSize: "0.92rem", color: "var(--ink-secondary)" }}>
+                    {state.required_documents.map((d) => (
+                      <li key={d.code} style={{ margin: "0.35rem 0" }}>
+                        <b>{d.label}</b> {d.satisfied_by_ekyc && <span className="chip">Verified via DigiLocker e-KYC</span>}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="card-footer">
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      onClick={() => setCategoryConfirmed(false)}
+                      disabled={busy}
+                    >
+                      ← Change Vehicle Class ({selectedCategory})
+                    </button>
+                    <button
+                      className="btn primary"
+                      disabled={busy}
+                      onClick={() =>
+                        act(async () => setReview(await journeyApi.verifiedProfile(applicantId)))
+                      }
+                    >
+                      {busy ? "Authenticating with DigiLocker…" : "Authenticate & Review Verified Profile →"}
+                    </button>
+                  </div>
+                </section>
+              )
+            )}
+
+            {/* --------------------------------------------------------------
+                Stage: ll_application_submitted (Auto-verifying)
+                -------------------------------------------------------------- */}
+            {stage === "ll_application_submitted" && (
+              <div className="card" style={{ textAlign: "center", padding: "2.5rem" }}>
+                <span style={{ fontSize: "2.5rem" }}>⚡</span>
+                <h2 style={{ marginTop: "0.5rem" }}>Verifying Digital Documents…</h2>
+                <p className="muted">
+                  Zero-Form digital records are clearing automated verification via National Transport Registry.
+                </p>
+                <div style={{ marginTop: "1.5rem" }}>
                   <button
                     type="button"
-                    className="btn secondary"
-                    onClick={resetToLanding}
-                    disabled={busy}
-                  >
-                    ← Back to Citizen Homepage
-                  </button>
-                  <button
                     className="btn primary"
-                    disabled={busy}
-                    onClick={() =>
-                      act(async () => setReview(await journeyApi.verifiedProfile(applicantId)))
-                    }
+                    onClick={() => act(async () => setState(await journeyApi.sync(applicantId)))}
                   >
-                    {busy ? "Authenticating with DigiLocker…" : "Authenticate & Review Verified Profile →"}
-                  </button>
-                </div>
-              </>
-            )}
-
-            {/* --------------------------------------------------------------
-                Stage: ll_documents_verified / scheduled (Online Learner Test)
-                -------------------------------------------------------------- */}
-            {takingTest && state.application_number && (
-              <LLQuiz
-                busy={busy}
-                onBack={resetToLanding}
-                onResult={(passed) =>
-                  act(async () => {
-                    if (passed && state.application_number) {
-                      await demoRtoApi.reportTestResult(state.application_number, "ll", true);
-                      setState(await journeyApi.sync(applicantId));
-                    }
-                  })
-                }
-              />
-            )}
-
-            {/* --------------------------------------------------------------
-                Stage: ll_issued (Learner Licence Ready -> Start Practice)
-                -------------------------------------------------------------- */}
-            {stage === "ll_issued" && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1.25rem", marginTop: "0.75rem" }}>
-                <div className="alert alert-good">
-                  <strong>✅ Official Learner's Licence Form 3 Issued Digitally</strong>
-                  <p style={{ marginTop: "0.35rem", fontSize: "0.9rem" }}>
-                    Your Learner's Licence has been recorded in the National Sarathi Registry. Pursuant to Rule 15 of CMVR,
-                    a 30-day skill acquisition practice window is now active.
-                  </p>
-                </div>
-
-                <div className="row">
-                  <button type="button" className="btn secondary" onClick={resetToLanding} disabled={busy}>
-                    ← Back to Citizen Dashboard
-                  </button>
-                  <button
-                    className="btn primary"
-                    disabled={busy}
-                    onClick={() => act(async () => setState(await journeyApi.event(applicantId, "begin_practice")))}
-                  >
-                    Enter 30-Day Practice Window &amp; Access Driving Academy →
+                    Refresh Status →
                   </button>
                 </div>
               </div>
             )}
 
             {/* --------------------------------------------------------------
-                Stage: practice_window / dl_test_result_fail (Practice & Academy)
+                Stage: ll_documents_verified / scheduled (Step 5: LL Test Mode)
+                -------------------------------------------------------------- */}
+            {takingTest && state.application_number && (
+              onlineTestActive ? (
+                <LLQuiz
+                  busy={busy}
+                  onBack={() => setOnlineTestActive(false)}
+                  onResult={(passed) =>
+                    act(async () => {
+                      if (passed && state.application_number) {
+                        await demoRtoApi.reportTestResult(state.application_number, "ll", true);
+                        setState(await journeyApi.sync(applicantId));
+                      }
+                    })
+                  }
+                />
+              ) : (
+                <LLTestSelector
+                  onStartOnlineTest={() => setOnlineTestActive(true)}
+                  onScheduleCenterTest={async () => {
+                    await act(async () => setState(await journeyApi.event(applicantId, "ll_test_scheduled")));
+                    setOnlineTestActive(true);
+                  }}
+                  busy={busy}
+                />
+              )
+            )}
+
+            {/* --------------------------------------------------------------
+                Stage: ll_issued (Step 6: Digital Learner's Licence Certificate)
+                -------------------------------------------------------------- */}
+            {stage === "ll_issued" && (
+              <LearnerLicenceCard
+                applicantId={applicantId}
+                applicationNumber={state.application_number ?? undefined}
+                citizenName={activePersona?.name}
+                vehicleClass={selectedCategory}
+                onProceedToPractice={() =>
+                  act(async () => setState(await journeyApi.event(applicantId, "begin_practice")))
+                }
+                busy={busy}
+              />
+            )}
+
+            {/* --------------------------------------------------------------
+                Stage: practice_window / dl_test_result_fail (Step 7: Academy)
                 -------------------------------------------------------------- */}
             {(stage === "practice_window" || stage === "dl_test_result_fail") && (
-              <>
+              <div className="card" style={{ padding: "1.75rem" }}>
                 {stage === "dl_test_result_fail" && (
                   <div className="alert alert-warn" style={{ marginBottom: "1.25rem" }}>
                     <strong>Automated Test Track Evaluation Notice:</strong>
@@ -506,7 +565,6 @@ export default function App() {
                   </div>
                 )}
 
-                {/* Embedded Road Safety Academy Panel */}
                 <PracticeAcademyView
                   applicantId={applicantId}
                   journeyStage={stage}
@@ -518,9 +576,12 @@ export default function App() {
                 {slots !== null && (
                   <div style={{ marginTop: "1.75rem", paddingTop: "1.25rem", borderTop: "1px solid var(--line)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
-                      <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--gov-navy)", margin: 0 }}>
-                        Select Automated Test Track Appointment (ADTT)
-                      </h3>
+                      <div>
+                        <span className="badge-official">Step 8 of 9 • Automated Track Slot Booking</span>
+                        <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--gov-navy)", margin: "0.2rem 0" }}>
+                          Select Automated Driving Test Track Appointment (ADTT)
+                        </h3>
+                      </div>
                       <button
                         type="button"
                         className="btn ghost"
@@ -548,12 +609,13 @@ export default function App() {
                                 minute: "2-digit",
                               })}
                             </div>
-                            <div style={{ fontSize: "0.75rem", color: "var(--muted)" }}>
-                              Track: {s.rto_code} • {s.capacity_left} slots open
+                            <div className="muted small">
+                              Automated Track · {s.capacity_left} slots left
                             </div>
                           </div>
                           <button
-                            className="btn secondary"
+                            className="btn primary"
+                            style={{ padding: "0.4rem 0.9rem", fontSize: "0.85rem" }}
                             disabled={busy}
                             onClick={() =>
                               act(async () => {
@@ -569,74 +631,124 @@ export default function App() {
                     </ul>
                   </div>
                 )}
-              </>
+              </div>
             )}
 
             {/* --------------------------------------------------------------
-                Stage: Submitted / Booked / Passed (Awaiting Workflow Action)
+                Stage: dl_test_booked (Step 8: Slot Confirmed -> Attend Test)
                 -------------------------------------------------------------- */}
-            {(stage === "ll_application_submitted" ||
-              stage === "dl_test_booked" ||
-              stage === "dl_test_result_pass") && (
-              <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginTop: "0.75rem" }}>
-                <p className="muted" style={{ fontSize: "0.92rem" }}>
-                  Application is active in the National Transport Registry. Awaiting official workflow synchronization.
-                </p>
+            {stage === "dl_test_booked" && (
+              <div className="card" style={{ padding: "1.75rem" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.5rem" }}>
+                  <div>
+                    <span className="badge-official">Step 8 of 9 • Driving Test Confirmed</span>
+                    <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0.4rem 0 0.2rem" }}>
+                      Automated Driving Test Track Appointment Confirmed
+                    </h2>
+                    <p className="muted" style={{ fontSize: "0.9rem" }}>
+                      Your physical driving evaluation slot is confirmed at ADTT Track 1 (Mall Road RTO).
+                    </p>
+                  </div>
+                  <span className="chip status-verified">Appointment Booked ✓</span>
+                </div>
 
-                <div className="row">
+                <div className="alert alert-good" style={{ marginTop: "1rem" }}>
+                  <strong>📍 Physical Attendance Required (Your 1 Required In-Person Visit):</strong>
+                  <ul style={{ margin: "0.5rem 0 0 1.25rem", fontSize: "0.88rem" }}>
+                    <li>Carry your digital/printed Form 3 Learner's Licence.</li>
+                    <li>The evaluation track uses automated overhead high-precision camera sensors.</li>
+                    <li>Maneuvers evaluated: Figure-8 track, Reverse parallel bay parking, Hill start on 18° incline.</li>
+                  </ul>
+                </div>
+
+                <div className="card-footer" style={{ marginTop: "1.5rem" }}>
                   <button type="button" className="btn secondary" onClick={resetToLanding} disabled={busy}>
-                    ← Back to Citizen Homepage
+                    ← Back to Dashboard
                   </button>
                   <button
                     className="btn primary"
                     disabled={busy}
-                    onClick={() => act(async () => setState(await journeyApi.sync(applicantId)))}
+                    onClick={() => act(async () => setState(await journeyApi.event(applicantId, "attend_dl_test")))}
                   >
-                    🔄 Check for Registry Status Updates
+                    Simulate Driving Test Evaluation (ADTT) →
                   </button>
                 </div>
               </div>
             )}
 
             {/* --------------------------------------------------------------
-                Stage: dl_issued (Permanent Driving Licence Card)
+                Stage: dl_test_result_pass / dl_issued (Step 9: Form 7 DL Card)
                 -------------------------------------------------------------- */}
-            {stage === "dl_issued" && state.application_number && (
-              <>
-                <LicenceCard
-                  applicantId={applicantId}
-                  applicationNumber={state.application_number}
-                  onReturnHome={resetToLanding}
-                />
-                <p className="celebrate">
-                  🎉 Permanent Driving Licence (Form 7) Issued Digitally via Parivahan Seva
-                </p>
-              </>
+            {(stage === "dl_test_result_pass" || stage === "dl_issued") && (
+              <section className="card" aria-label="Issued Licence">
+                <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
+                  <span className="badge-official">Step 9 of 9 • National Transport Registry</span>
+                  <div className="celebrate" style={{ marginTop: "0.4rem" }}>
+                    🎉 Permanent Driving Licence Issued!
+                  </div>
+                  <p className="muted" style={{ fontSize: "0.9rem" }}>
+                    All statutory requirements cleared. Your official Form 7 Smart Card is registered in Sarathi.
+                  </p>
+                </div>
+
+                <div className="licence-wrap">
+                  <LicenceCard
+                    applicantId={applicantId}
+                    applicationNumber={state.application_number ?? "DL-01-2026-998822"}
+                    onReturnHome={resetToLanding}
+                  />
+                </div>
+
+                <div className="card-footer">
+                  <button type="button" className="btn secondary" onClick={resetToLanding}>
+                    ← Return to Citizen Homepage
+                  </button>
+                  <button
+                    type="button"
+                    className="btn primary"
+                    onClick={() => alert("Form 7 Smart Card PDF downloaded successfully.")}
+                  >
+                    📥 Download Form 7 Digital Card
+                  </button>
+                </div>
+              </section>
             )}
-          </section>
+          </>
         )}
-
-        {/* Floating Academy Assistant & Dev Simulator */}
-        <DemoPanel state={state} onUpdate={setState} />
-        <AcademyWidget
-          key={stage === "dl_test_result_fail" ? "coach" : "idle"}
-          applicantId={applicantId}
-          journeyStage={stage}
-          initialQuery={
-            stage === "dl_test_result_fail" && state.stage_detail?.includes("checkpoint")
-              ? `I failed at ${state.stage_detail.split("Missed checkpoint: ")[1]?.split(".")[0]?.replaceAll("_", " ") ?? "the test"}`
-              : undefined
-          }
-        />
-
-        {/* Bol Ke Apply Voice Modal */}
-        <VoiceModal
-          applicantId={applicantId}
-          journeyStage={stage}
-          isOpen={voiceOpen}
-          onClose={() => setVoiceOpen(false)}
-        />
       </main>
+
+      {/* Bottom Track & Support Strip */}
+      <TrackSupportBar
+        applicantId={applicantId}
+        applicationNumber={state.application_number ?? undefined}
+        currentStage={stage}
+        onOpenVoice={() => setVoiceOpen(true)}
+      />
+
+      <AcademyWidget
+        applicantId={applicantId}
+        journeyStage={stage}
+      />
+
+      <VoiceModal
+        applicantId={applicantId}
+        journeyStage={stage}
+        isOpen={voiceOpen}
+        onClose={() => setVoiceOpen(false)}
+      />
+
+      <LoginModal
+        isOpen={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onLogin={(id) => enter(id, true)}
+      />
+
+      {state.application_number && (
+        <DemoPanel
+          state={state}
+          onUpdate={(s) => setState(s)}
+        />
+      )}
     </div>
   );
 }

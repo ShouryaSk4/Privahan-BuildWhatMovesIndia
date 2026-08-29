@@ -47,6 +47,9 @@ class FakeGatewayClient(GatewayClient):
             failed_checkpoint=self.failed_checkpoint,
         )
 
+    def verify_documents(self, application_number: str) -> None:
+        self.gov_stage = "documents_verified"
+
     def list_dl_test_slots(self, rto_code):
         return [
             TestSlot(
@@ -113,7 +116,7 @@ def test_zero_form_apply_uses_verified_identity(client, fake_gateway):
     res = client.post("/journey/applicant_001/apply", json={})
     assert res.status_code == 200
     body = res.json()
-    assert body["current_stage"] == "ll_application_submitted"
+    assert body["current_stage"] == "ll_documents_verified"
     assert body["application_number"] == "DL20260000001"
     # The submission was assembled from Module 3's verified profile, not user input.
     assert fake_gateway.submissions[0].name == "Rohan Verma"
