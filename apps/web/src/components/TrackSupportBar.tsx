@@ -66,13 +66,6 @@ export function TrackSupportBar({
             <button
               type="button"
               className="track-support-btn"
-              onClick={() => setActiveModal("fee")}
-            >
-              💳 Fee &amp; Payment History
-            </button>
-            <button
-              type="button"
-              className="track-support-btn"
               onClick={() => setActiveModal("appointment")}
             >
               📅 Appointment History
@@ -95,7 +88,6 @@ export function TrackSupportBar({
               <h3 style={{ fontSize: "1.15rem", fontWeight: 700, margin: 0, color: "var(--gov-navy)" }}>
                 {activeModal === "status" && "📄 Application Status Tracking"}
                 {activeModal === "docs" && "📋 Verified Document Repository"}
-                {activeModal === "fee" && "💳 Statutory Fee & Payment History"}
                 {activeModal === "appointment" && "📅 Appointment & Track Booking"}
               </h3>
               <button type="button" className="btn ghost" onClick={() => setActiveModal(null)}>✕</button>
@@ -124,30 +116,6 @@ export function TrackSupportBar({
                   <span>✓ <strong>Age Eligibility (18+ Proof)</strong></span>
                   <span className="chip" style={{ background: "#dcfce7", color: "#166534" }}>Verified</span>
                 </div>
-              </div>
-            )}
-
-            {activeModal === "fee" && (
-              <div style={{ fontSize: "0.88rem" }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", margin: "0.5rem 0" }}>
-                  <thead>
-                    <tr style={{ background: "#f1f5f9", textAlign: "left" }}>
-                      <th style={{ padding: "6px 8px" }}>Component (Rule 32 CMVR)</th>
-                      <th style={{ padding: "6px 8px", textAlign: "right" }}>Statutory Amount</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr><td style={{ padding: "6px 8px" }}>Learner's Licence Application Fee</td><td style={{ textAlign: "right" }}>₹150</td></tr>
-                    <tr><td style={{ padding: "6px 8px" }}>STALL Computerized Knowledge Test</td><td style={{ textAlign: "right" }}>₹50</td></tr>
-                    <tr><td style={{ padding: "6px 8px" }}>Driving Licence Issue Fee</td><td style={{ textAlign: "right" }}>₹200</td></tr>
-                    <tr><td style={{ padding: "6px 8px" }}>Automated Test Track (ADTT) Fee</td><td style={{ textAlign: "right" }}>₹300</td></tr>
-                    <tr><td style={{ padding: "6px 8px" }}>Form 7 Smart Card / PVC Printing</td><td style={{ textAlign: "right" }}>₹200</td></tr>
-                    <tr style={{ fontWeight: 700, borderTop: "2px solid #cbd5e1" }}>
-                      <td style={{ padding: "8px" }}>Total Government Fee (Paid via BharatKosh)</td>
-                      <td style={{ padding: "8px", textAlign: "right", color: "#166534" }}>₹1,350</td>
-                    </tr>
-                  </tbody>
-                </table>
               </div>
             )}
 

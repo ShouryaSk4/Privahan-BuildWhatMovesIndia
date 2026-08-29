@@ -52,7 +52,7 @@ export function VoiceModal({
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
-      text: "नमस्ते! मैं 'बोल के अप्लाई' सहायक हूँ (Powered by Gemini AI)। आप बोलकर या लिखकर RTO नियम, टेस्ट ट्रैक तकनीक, फीस या अपना आवेदन स्टेटस पूछ सकते हैं।",
+      text: "नमस्ते! मैं 'बोल के अप्लाई' सहायक हूँ (Powered by Gemini AI)। आप बोलकर या लिखकर RTO नियम, ड्राइविंग टेस्ट ट्रैक तकनीक या अपना आवेदन स्टेटस पूछ सकते हैं।",
     },
   ]);
   const [inputText, setInputText] = useState("");
@@ -256,9 +256,9 @@ export function VoiceModal({
               type="button"
               className="btn secondary"
               style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem", borderRadius: "999px", whiteSpace: "nowrap" }}
-              onClick={() => handleSend("Licence banwane ka official fee kitna lagta hai?")}
+              onClick={() => handleSend("Mera next step kya hai?")}
             >
-              💰 Official Fees
+              📋 What's Next
             </button>
           </div>
 
