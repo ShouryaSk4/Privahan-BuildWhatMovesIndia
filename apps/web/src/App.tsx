@@ -287,7 +287,7 @@ export default function App() {
                   <div className="task-card-icon">🎙️</div>
                   <div className="task-card-title">बोल के अप्लाई (Voice Assistant)</div>
                   <div className="task-card-desc">
-                    Powered by Gemini AI. Speak in Hindi, English, or Hinglish to check status, verify identity, or ask RTO rule questions.
+                    Speak in Hindi, English, or Hinglish to check your application status, verify identity, or ask RTO rule questions.
                   </div>
                 </div>
                 <div className="task-card-action">Open Voice Assistant →</div>

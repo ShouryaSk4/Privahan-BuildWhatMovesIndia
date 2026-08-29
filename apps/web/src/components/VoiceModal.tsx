@@ -52,7 +52,7 @@ export function VoiceModal({
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
-      text: "नमस्ते! मैं 'बोल के अप्लाई' सहायक हूँ (Powered by Gemini AI)। आप बोलकर या लिखकर RTO नियम, ड्राइविंग टेस्ट ट्रैक तकनीक या अपना आवेदन स्टेटस पूछ सकते हैं।",
+      text: "नमस्ते! मैं 'बोल के अप्लाई' सहायक हूँ। आप बोलकर या लिखकर RTO नियम, ड्राइविंग टेस्ट ट्रैक तकनीक या अपना आवेदन स्टेटस पूछ सकते हैं।",
     },
   ]);
   const [inputText, setInputText] = useState("");
@@ -159,10 +159,7 @@ export function VoiceModal({
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
             <span style={{ fontSize: "1.25rem" }}>🎙️</span>
             <div>
-              <h3 style={{ fontSize: "1rem", fontWeight: 700, margin: 0 }}>बोल के अप्लाई — Gemini Voice Assistant</h3>
-              <p style={{ fontSize: "0.72rem", color: "#cbd5e1", margin: 0 }}>
-                Speak in Hindi, English or Hinglish • Powered by Gemini 2.5 Flash Lite &amp; MoRTH MCP
-              </p>
+              <h3 style={{ fontSize: "1rem", fontWeight: 700, margin: 0 }}>बोल के अप्लाई (Bol Ke Apply)</h3>
             </div>
           </div>
           <button
