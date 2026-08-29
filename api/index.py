@@ -4,14 +4,26 @@ The frontend calls same-origin paths (/journey, /gov, /identity, /academy,
 /bol); vercel.json rewrites them here and this dispatcher hands each request
 to the owning module's FastAPI app. Module boundaries stay intact — this file
 only routes, it never reaches into a module.
-
-Serverless caveat (documented in the README): the SQLite state lives in /tmp,
-which persists per warm instance but not across cold starts or instances. For
-durable state, host the services on a persistent box and point the frontend's
-VITE_* URLs at it.
 """
 
 import os
+import sys
+from pathlib import Path
+
+ROOT_DIR = Path(__file__).resolve().parent.parent
+
+# Add all internal package source directories to sys.path for Vercel serverless execution
+src_paths = [
+    ROOT_DIR / "packages" / "contracts",
+    ROOT_DIR / "services" / "identity" / "src",
+    ROOT_DIR / "services" / "academy" / "src",
+    ROOT_DIR / "services" / "bol-ke-apply" / "src",
+    ROOT_DIR / "services" / "journey" / "src",
+    ROOT_DIR / "services" / "gateway" / "src",
+]
+for p in src_paths:
+    if p.exists() and str(p) not in sys.path:
+        sys.path.insert(0, str(p))
 
 # Serverless filesystems are read-only outside /tmp, and sibling services are
 # reached by calling this same deployment back over HTTP.
