@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "installCommand": "npm install -g pnpm && pnpm install",
+  "buildCommand": "pnpm --dir apps/web build",
+  "outputDirectory": "apps/web/dist",
+  "rewrites": [
+    { "source": "/journey/:path*", "destination": "/api/index" },
+    { "source": "/gov/:path*", "destination": "/api/index" },
+    { "source": "/identity/:path*", "destination": "/api/index" },
+    { "source": "/academy/:path*", "destination": "/api/index" },
+    { "source": "/bol/:path*", "destination": "/api/index" },
+    { "source": "/healthz", "destination": "/api/index" }
+  ]
+}
