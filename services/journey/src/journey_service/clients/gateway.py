@@ -77,5 +77,45 @@ class GatewayClient:
             pass
 
 
-def get_gateway_client() -> GatewayClient:
+class DirectGatewayClient:
+    """Direct in-memory gateway client for serverless/monolithic execution."""
+
+    def __init__(self) -> None:
+        from gateway_service.sarathi import get_client
+        self._client = get_client()
+
+    def submit_ll_application(self, submission: LLApplicationSubmission) -> GovSubmissionResult:
+        return self._client.submit_ll_application(submission)
+
+    def get_application_status(self, application_number: str) -> GovApplicationStatus:
+        from gateway_service.sarathi import SarathiError
+        try:
+            return self._client.get_application_status(application_number)
+        except SarathiError as exc:
+            raise GatewayRejection(str(exc)) from exc
+
+    def list_dl_test_slots(self, rto_code: str) -> list[TestSlot]:
+        return self._client.list_dl_test_slots(rto_code)
+
+    def book_dl_test(self, request: SlotBookingRequest) -> SlotBookingResult:
+        from gateway_service.sarathi import SarathiError
+        try:
+            return self._client.book_dl_test(request)
+        except SarathiError as exc:
+            raise GatewayRejection(str(exc)) from exc
+
+    def verify_documents(self, application_number: str) -> None:
+        try:
+            self._client.verify_documents(application_number)
+        except Exception:
+            pass
+
+
+def get_gateway_client() -> GatewayClient | DirectGatewayClient:
+    mode = os.environ.get("GATEWAY_MODE", "").lower()
+    if mode == "direct" or os.environ.get("VERCEL") or os.environ.get("VERCEL_URL"):
+        try:
+            return DirectGatewayClient()
+        except ImportError:
+            pass
     return GatewayClient()

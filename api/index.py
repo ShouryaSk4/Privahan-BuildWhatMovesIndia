@@ -28,6 +28,7 @@ for p in src_paths:
 # Serverless filesystems are read-only outside /tmp, and sibling services are
 # reached directly in-process or over HTTP.
 os.environ["IDENTITY_MODE"] = "direct"
+os.environ["GATEWAY_MODE"] = "direct"
 os.environ.setdefault("JOURNEY_DB", "/tmp/journey.sqlite3")
 os.environ.setdefault("GATEWAY_DB", "/tmp/gateway.sqlite3")
 os.environ.setdefault("JOURNEY_FAST_FORWARD", "1")  # demo: collapse waiting periods
