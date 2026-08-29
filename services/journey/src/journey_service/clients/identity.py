@@ -101,12 +101,15 @@ class DirectIdentityClient:
     """Calls identity_service directly without loopback HTTP calls."""
 
     def fetch_identity(self, applicant_id: str) -> VerifiedProfile:
-        from identity_service.service import fetch_identity as svc_fetch
-        return svc_fetch(applicant_id, gps_suggested_rto=DEFAULT_GPS_SUGGESTED_RTO)
+        from identity_service.main import service
+        return service.fetch_identity(
+            applicant_id=applicant_id,
+            gps_suggested_rto=DEFAULT_GPS_SUGGESTED_RTO,
+        )
 
     def check_mismatch(self, applicant_id: str) -> MismatchCheckResult:
-        from identity_service.service import check_mismatches as svc_check
-        return svc_check(applicant_id)
+        from identity_service.main import service
+        return service.check_mismatch(applicant_id=applicant_id)
 
 
 class HttpIdentityClient:
