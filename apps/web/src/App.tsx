@@ -8,10 +8,8 @@ import {
   type VerifiedIdentityView,
 } from "./api/client";
 import { AcademyWidget } from "./components/AcademyWidget";
-import { CertaintyBanner } from "./components/CertaintyBanner";
 import { DemoPanel } from "./components/DemoPanel";
 import { Header } from "./components/Header";
-import { JourneyRail } from "./components/JourneyRail";
 import { LicenceCard } from "./components/LicenceCard";
 import { LLQuiz } from "./components/LLQuiz";
 import { NavigationBar } from "./components/NavigationBar";
@@ -378,9 +376,6 @@ export default function App() {
       />
 
       <main className="shell">
-        <CertaintyBanner certainty={state.certainty} />
-        <JourneyRail currentStage={stage} />
-
         {state.stage_detail && (
           <div className="stage-detail-banner">
             <span>ℹ️</span>
