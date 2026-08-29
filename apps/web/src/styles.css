@@ -963,6 +963,229 @@ body {
   margin-top: 1rem;
 }
 
+.proctored-quiz-shell {
+  background: white;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.proctor-hud-bar {
+  background: #0f172a;
+  color: white;
+  padding: 0.75rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  border-bottom: 2px solid #1e3a8a;
+}
+
+.proctor-hud-status {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+}
+
+.hud-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #22c55e;
+}
+
+.hud-indicator.pulse {
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+  animation: pulse-green 1.8s infinite;
+}
+
+@keyframes pulse-green {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); }
+}
+
+.hud-badge-chrome {
+  background: rgba(255, 255, 255, 0.12);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  color: #86efac;
+}
+
+.proctor-hud-metrics {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  font-size: 0.78rem;
+  color: #cbd5e1;
+  flex-wrap: wrap;
+}
+
+.hud-metric strong {
+  color: white;
+}
+
+.hud-metric.warning {
+  color: #fca5a5;
+}
+
+.hud-metric.warning strong {
+  color: #ef4444;
+}
+
+.proctor-violation-banner {
+  background: #fef2f2;
+  border: 2px solid #ef4444;
+  color: #991b1b;
+  padding: 0.9rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  animation: modalPop 0.2s ease-out;
+}
+
+.proctor-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1.5rem;
+  padding: 1.5rem;
+}
+
+@media (max-width: 860px) {
+  .proctor-layout-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.proctor-questions-column {
+  display: flex;
+  flex-direction: column;
+}
+
+.proctor-exam-banner {
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.proctor-feed-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.proctor-webcam-card {
+  background: #0f172a;
+  color: white;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  border: 1.5px solid #334155;
+  box-shadow: var(--shadow-md);
+}
+
+.webcam-card-header {
+  padding: 0.6rem 0.85rem;
+  background: #1e293b;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #ef4444;
+  display: inline-block;
+  animation: pulse-red 1.5s infinite;
+}
+
+@keyframes pulse-red {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.webcam-viewport {
+  position: relative;
+  width: 100%;
+  height: 190px;
+  background: #020617;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.webcam-video-element {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror */
+}
+
+.webcam-placeholder {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  font-size: 0.85rem;
+}
+
+.face-bounding-box {
+  position: absolute;
+  top: 15%;
+  left: 20%;
+  right: 20%;
+  bottom: 20%;
+  border: 2px dashed #22c55e;
+  border-radius: 8px;
+  pointer-events: none;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 4px;
+}
+
+.face-box-label {
+  background: rgba(34, 197, 94, 0.85);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 3px;
+}
+
+.webcam-telemetry-body {
+  padding: 0.85rem;
+  font-size: 0.78rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  background: #1e293b;
+  border-top: 1px solid #334155;
+}
+
+.telemetry-row {
+  display: flex;
+  justify-content: space-between;
+  color: #cbd5e1;
+}
+
+.proctor-rules-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: var(--radius-md);
+  padding: 0.85rem;
+}
+
 .quiz-q {
   border: 1px solid var(--line);
   border-radius: var(--radius-md);
