@@ -115,7 +115,7 @@ export function LearnerLicenceCard({
           disabled={busy}
           style={{ padding: "0.65rem 1.4rem" }}
         >
-          {busy ? "Loading Academy…" : "Enter 30-Day Practice Window & Academy →"}
+          {busy ? "Loading Slots…" : "Select Appointment Date & Time for Driving Test →"}
         </button>
       </div>
     </div>

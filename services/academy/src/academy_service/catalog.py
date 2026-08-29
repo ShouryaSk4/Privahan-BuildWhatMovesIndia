@@ -15,7 +15,7 @@ ACADEMY_VIDEO_CATALOG: list[AcademyVideo] = [
         hindi_title="फिगर-8 ड्राइविंग ट्रैक पर कार चलाना सीखें",
         description="Master steering wheel hand-over-hand technique and track entry/exit reference points for the RTO 8-track test.",
         duration_seconds=185,
-        video_url="https://assets.parivahan.internal/videos/academy/01_eight_turn.mp4",
+        video_url="/videos/eight_turn.mp4",
         thumbnail_url="https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=400",
         tags=[
             "8-turn",
@@ -47,7 +47,7 @@ ACADEMY_VIDEO_CATALOG: list[AcademyVideo] = [
         hindi_title="रिवर्स पार्किंग और बे पार्किंग का सही तरीका",
         description="Learn mirror alignment, 45-degree angle entry, and smooth reversing without touching track cones or curbs.",
         duration_seconds=210,
-        video_url="https://assets.parivahan.internal/videos/academy/02_reverse_parking.mp4",
+        video_url="/videos/reverse_parking.mp4",
         thumbnail_url="https://images.unsplash.com/photo-1506521781263-d8422e82f27a?w=400",
         tags=[
             "reverse parking",
@@ -74,7 +74,7 @@ ACADEMY_VIDEO_CATALOG: list[AcademyVideo] = [
         hindi_title="चढ़ाई / ढलान पर बिना पीछे खिसके गाड़ी उठाना",
         description="Coordinate handbrake and clutch biting point to take off smoothly uphill on the RTO incline ramp without rollback.",
         duration_seconds=195,
-        video_url="https://assets.parivahan.internal/videos/academy/03_hill_start.mp4",
+        video_url="/videos/hill_start.mp4",
         thumbnail_url="https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=400",
         tags=[
             "hill start",

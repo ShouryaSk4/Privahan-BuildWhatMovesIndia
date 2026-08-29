@@ -20,6 +20,7 @@ import { LoginModal } from "./components/LoginModal";
 import { NavigationBar } from "./components/NavigationBar";
 import { PracticeAcademyView } from "./components/PracticeAcademyView";
 import { ReviewConfirm } from "./components/ReviewConfirm";
+import { SlotBookingPicker } from "./components/SlotBookingPicker";
 import { TrackSupportBar } from "./components/TrackSupportBar";
 import { VoiceModal } from "./components/VoiceModal";
 
@@ -100,6 +101,7 @@ export default function App() {
   const [selectedCategory, setSelectedCategory] = useState("LMV");
   const [categoryConfirmed, setCategoryConfirmed] = useState(false);
   const [onlineTestActive, setOnlineTestActive] = useState(false);
+  const [bookedSlotLabel, setBookedSlotLabel] = useState("29 Sep 2026 at 10:00 AM");
 
   const refresh = useCallback(async (id: string) => {
     setState(await journeyApi.get(id));
@@ -535,146 +537,51 @@ export default function App() {
             )}
 
             {/* --------------------------------------------------------------
-                Stage: ll_issued (Step 6: Digital Learner's Licence Certificate)
+                Slot Booking Screen (Step 7: Pick Appointment Date & Time)
                 -------------------------------------------------------------- */}
-            {stage === "ll_issued" && (
+            {slots !== null ? (
+              <SlotBookingPicker
+                slots={slots}
+                onConfirmBooking={(slotId, label) =>
+                  act(async () => {
+                    setBookedSlotLabel(label);
+                    setState(await journeyApi.book(applicantId, slotId));
+                    setSlots(null);
+                  })
+                }
+                onBack={() => setSlots(null)}
+                busy={busy}
+              />
+            ) : stage === "ll_issued" ? (
+              /* --------------------------------------------------------------
+                 Stage: ll_issued (Step 6: Digital Learner's Licence Certificate)
+                 -------------------------------------------------------------- */
               <LearnerLicenceCard
                 applicantId={applicantId}
                 applicationNumber={state.application_number ?? undefined}
                 citizenName={activePersona?.name}
                 vehicleClass={selectedCategory}
                 onProceedToPractice={() =>
-                  act(async () => setState(await journeyApi.event(applicantId, "begin_practice")))
+                  act(async () => {
+                    setSlots(await journeyApi.slots(applicantId));
+                  })
                 }
                 busy={busy}
               />
-            )}
-
-            {/* --------------------------------------------------------------
-                Stage: practice_window / dl_test_result_fail (Step 7: Academy)
-                -------------------------------------------------------------- */}
-            {(stage === "practice_window" || stage === "dl_test_result_fail") && (
-              <div className="card" style={{ padding: "1.75rem" }}>
-                {stage === "dl_test_result_fail" && (
-                  <div className="alert alert-warn" style={{ marginBottom: "1.25rem" }}>
-                    <strong>Automated Test Track Evaluation Notice:</strong>
-                    <p style={{ marginTop: "0.35rem", fontSize: "0.9rem" }}>
-                      The test track sensors detected an infraction during your evaluation. You can review the targeted maneuver lessons
-                      below and schedule your re-test at zero penalty.
-                    </p>
-                  </div>
-                )}
-
-                <PracticeAcademyView
-                  applicantId={applicantId}
-                  journeyStage={stage}
-                  busy={busy}
-                  onBookSlot={() => act(async () => setSlots(await journeyApi.slots(applicantId)))}
-                />
-
-                {/* Slot Booking Grid */}
-                {slots !== null && (
-                  <div style={{ marginTop: "1.75rem", paddingTop: "1.25rem", borderTop: "1px solid var(--line)" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
-                      <div>
-                        <span className="badge-official">Step 8 of 9 • Automated Track Slot Booking</span>
-                        <h3 style={{ fontSize: "1.1rem", fontWeight: 800, color: "var(--gov-navy)", margin: "0.2rem 0" }}>
-                          Select Automated Driving Test Track Appointment (ADTT)
-                        </h3>
-                      </div>
-                      <button
-                        type="button"
-                        className="btn ghost"
-                        style={{ fontSize: "0.8rem" }}
-                        onClick={() => setSlots(null)}
-                      >
-                        Hide Slots ✕
-                      </button>
-                    </div>
-
-                    <p className="muted small">
-                      Available evaluation appointments at RTO Mall Road Track (DL01) — Pick any slot:
-                    </p>
-
-                    <ul className="slots">
-                      {slots.slice(0, 6).map((s) => (
-                        <li key={s.slot_id}>
-                          <div>
-                            <div style={{ fontWeight: 700, color: "var(--gov-navy)" }}>
-                              {new Date(s.starts_at).toLocaleString("en-IN", {
-                                weekday: "short",
-                                day: "numeric",
-                                month: "short",
-                                hour: "numeric",
-                                minute: "2-digit",
-                              })}
-                            </div>
-                            <div className="muted small">
-                              Automated Track · {s.capacity_left} slots left
-                            </div>
-                          </div>
-                          <button
-                            className="btn primary"
-                            style={{ padding: "0.4rem 0.9rem", fontSize: "0.85rem" }}
-                            disabled={busy}
-                            onClick={() =>
-                              act(async () => {
-                                setState(await journeyApi.book(applicantId, s.slot_id));
-                                setSlots(null);
-                              })
-                            }
-                          >
-                            Book Slot
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* --------------------------------------------------------------
-                Stage: dl_test_booked (Step 8: Slot Confirmed -> Attend Test)
-                -------------------------------------------------------------- */}
-            {stage === "dl_test_booked" && (
-              <div className="card" style={{ padding: "1.75rem" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.5rem" }}>
-                  <div>
-                    <span className="badge-official">Step 8 of 9 • Driving Test Confirmed</span>
-                    <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0.4rem 0 0.2rem" }}>
-                      Automated Driving Test Track Appointment Confirmed
-                    </h2>
-                    <p className="muted" style={{ fontSize: "0.9rem" }}>
-                      Your physical driving evaluation slot is confirmed at ADTT Track 1 (Mall Road RTO).
-                    </p>
-                  </div>
-                  <span className="chip status-verified">Appointment Booked ✓</span>
-                </div>
-
-                <div className="alert alert-good" style={{ marginTop: "1rem" }}>
-                  <strong>📍 Physical Attendance Required (Your 1 Required In-Person Visit):</strong>
-                  <ul style={{ margin: "0.5rem 0 0 1.25rem", fontSize: "0.88rem" }}>
-                    <li>Carry your digital/printed Form 3 Learner's Licence.</li>
-                    <li>The evaluation track uses automated overhead high-precision camera sensors.</li>
-                    <li>Maneuvers evaluated: Figure-8 track, Reverse parallel bay parking, Hill start on 18° incline.</li>
-                  </ul>
-                </div>
-
-                <div className="card-footer" style={{ marginTop: "1.5rem" }}>
-                  <button type="button" className="btn secondary" onClick={resetToLanding} disabled={busy}>
-                    ← Back to Dashboard
-                  </button>
-                  <button
-                    className="btn primary"
-                    disabled={busy}
-                    onClick={() => act(async () => setState(await journeyApi.event(applicantId, "attend_dl_test")))}
-                  >
-                    Simulate Driving Test Evaluation (ADTT) →
-                  </button>
-                </div>
-              </div>
-            )}
+            ) : (stage === "practice_window" || stage === "dl_test_booked" || stage === "dl_test_result_fail") ? (
+              /* --------------------------------------------------------------
+                 Stage: practice_window / dl_test_booked (Step 8: AI Driving Academy Hub)
+                 -------------------------------------------------------------- */
+              <PracticeAcademyView
+                applicantId={applicantId}
+                journeyStage={stage}
+                bookedSlotLabel={bookedSlotLabel}
+                onProceedToTest={() =>
+                  act(async () => setState(await journeyApi.event(applicantId, "attend_dl_test")))
+                }
+                busy={busy}
+              />
+            ) : null}
 
             {/* --------------------------------------------------------------
                 Stage: dl_test_result_pass / dl_issued (Step 9: Form 7 DL Card)
