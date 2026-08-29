@@ -8,6 +8,7 @@ import {
   type VerifiedIdentityView,
 } from "./api/client";
 import { AcademyWidget } from "./components/AcademyWidget";
+import { AuthVerificationView, type VerifiedCitizenData } from "./components/AuthVerificationView";
 import { CategorySelector } from "./components/CategorySelector";
 import { DemoPanel } from "./components/DemoPanel";
 import { Header } from "./components/Header";
@@ -98,6 +99,8 @@ export default function App() {
   const [loginOpen, setLoginOpen] = useState(false);
 
   // Landscape-First Step Progression State
+  const [authFlowActive, setAuthFlowActive] = useState(false);
+  const [verifiedData, setVerifiedData] = useState<VerifiedCitizenData | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("LMV");
   const [categoryConfirmed, setCategoryConfirmed] = useState(false);
   const [onlineTestActive, setOnlineTestActive] = useState(false);
@@ -154,6 +157,8 @@ export default function App() {
     setReview(null);
     setSlots(null);
     setError(null);
+    setAuthFlowActive(false);
+    setVerifiedData(null);
     setCategoryConfirmed(false);
     setOnlineTestActive(false);
   }
@@ -161,7 +166,50 @@ export default function App() {
   const activePersona = DEMO_PERSONAS.find((p) => p.id === applicantId);
 
   // =========================================================================
-  // Screen A: Task-First Citizen Homepage (Before Sign-In)
+  // Screen A2: Step 2 — Citizen Mobile & DigiLocker e-KYC Verification
+  // =========================================================================
+  if (!applicantId && authFlowActive) {
+    return (
+      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+        <Header onOpenVoice={() => setVoiceOpen(true)} onReset={resetToLanding} />
+        <LandscapeJourneyMap currentStep="login" />
+        <NavigationBar
+          breadcrumbs={[
+            { label: "Citizen Home", onClick: resetToLanding },
+            { label: "Step 2: e-KYC & Mobile Auth", active: true },
+          ]}
+          onBack={resetToLanding}
+          backLabel="← Return to Citizen Homepage"
+          stepInfo="Step 2 of 9: Citizen Verification & Document Retrieval"
+        />
+        <main className="shell">
+          <AuthVerificationView
+            busy={busy}
+            onBack={resetToLanding}
+            onVerified={(data) => {
+              setVerifiedData(data);
+              setAuthFlowActive(false);
+              setIdInput(data.applicantId);
+              enter(data.applicantId, true);
+            }}
+          />
+        </main>
+        <TrackSupportBar
+          applicantId="portal_visitor"
+          currentStage="no_licence"
+          onOpenVoice={() => setVoiceOpen(true)}
+        />
+        <VoiceModal
+          applicantId="applicant_001"
+          isOpen={voiceOpen}
+          onClose={() => setVoiceOpen(false)}
+        />
+      </div>
+    );
+  }
+
+  // =========================================================================
+  // Screen A: Task-First Citizen Homepage (Step 1: Portal Landing)
   // =========================================================================
   if (!applicantId) {
     return (
@@ -176,7 +224,7 @@ export default function App() {
             <p className="hero-eyebrow">Ministry of Road Transport &amp; Highways · Government of India</p>
             <h1>What would you like to do today?</h1>
             <p className="sub">
-              Access official transport and licensing services with zero paperwork, transparent statutory fees under Rule 32 CMVR,
+              Access official transport and licensing services with zero paperwork, transparent statutory rules,
               and instant verification through DigiLocker &amp; Aadhaar e-KYC.
             </p>
 
@@ -184,17 +232,14 @@ export default function App() {
             <div className="task-cards-grid">
               <div
                 className="task-card featured"
-                onClick={() => {
-                  setIdInput("applicant_001");
-                  enter("applicant_001", true);
-                }}
+                onClick={() => setAuthFlowActive(true)}
               >
                 <div>
                   <div className="task-card-badge">✨ Most Popular</div>
                   <div className="task-card-icon">🚗</div>
-                  <div className="task-card-title">Apply for New Driving Licence (LMV)</div>
+                  <div className="task-card-title">Apply for New Driving Licence</div>
                   <div className="task-card-desc">
-                    Zero-form e-KYC application for first-time car licence. Starts fresh with online learner's test, 30-day safety academy &amp; automated track booking.
+                    Zero-form e-KYC application. Authenticate via mobile OTP to fetch Aadhaar &amp; PAN records, take online learner's test &amp; book automated track test.
                   </div>
                 </div>
                 <div className="task-card-action">Start Zero-Form Application →</div>
@@ -435,6 +480,7 @@ export default function App() {
               !categoryConfirmed ? (
                 <CategorySelector
                   selectedCode={selectedCategory}
+                  existingLicence={verifiedData?.existingLicence}
                   onSelect={(code) => setSelectedCategory(code)}
                   onProceed={() => setCategoryConfirmed(true)}
                   busy={busy}

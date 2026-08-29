@@ -70,8 +70,16 @@ export function ReviewConfirm({
             <dd>UIDAI Aadhaar / DigiLocker</dd>
           </div>
           <div>
-            <dt>Photo & Biometrics</dt>
-            <dd>On file from Aadhaar</dd>
+            <dt>PAN Cross-Check</dt>
+            <dd style={{ color: "#166534", fontWeight: 600 }}>✓ Verified (Income Tax Dept)</dd>
+          </div>
+          <div>
+            <dt>Existing Active Licence</dt>
+            <dd style={{ color: "#0369a1", fontWeight: 600 }}>🏍️ MCWG (DL-0420210087654)</dd>
+          </div>
+          <div>
+            <dt>Applying To Add</dt>
+            <dd style={{ color: "var(--gov-navy)", fontWeight: 700 }}>🚗 LMV (Four-Wheeler Car)</dd>
           </div>
         </dl>
       </div>
