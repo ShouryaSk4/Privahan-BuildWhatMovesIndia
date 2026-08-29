@@ -18,6 +18,7 @@ import { NavigationBar } from "./components/NavigationBar";
 import { PracticeAcademyView } from "./components/PracticeAcademyView";
 import { ReviewConfirm } from "./components/ReviewConfirm";
 import { VoiceModal } from "./components/VoiceModal";
+import { LoginModal } from "./components/LoginModal";
 
 const APPLICANT_ID_PATTERN = /^[A-Za-z0-9_-]{4,32}$/;
 
@@ -90,6 +91,7 @@ export default function App() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [voiceOpen, setVoiceOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   const refresh = useCallback(async (id: string) => {
     setState(await journeyApi.get(id));
@@ -113,14 +115,28 @@ export default function App() {
     }
   }
 
-  function enter(customId?: string) {
+  async function enter(customId?: string, resetFirst = true) {
     const id = (customId || idInput).trim();
     if (!APPLICANT_ID_PATTERN.test(id)) {
       setIdError("Please enter a valid reference ID (4–32 letters, numbers, or dashes) — e.g. applicant_001");
       return;
     }
     setIdError(null);
-    setApplicantId(id);
+    setBusy(true);
+    try {
+      if (resetFirst) {
+        await journeyApi.reset(id).catch(() => null);
+      }
+      const fresh = await journeyApi.get(id);
+      setState(fresh);
+      setApplicantId(id);
+      setReview(null);
+      setSlots(null);
+    } catch (e) {
+      setError(describeError(e));
+    } finally {
+      setBusy(false);
+    }
   }
 
   function resetToLanding() {
@@ -139,7 +155,7 @@ export default function App() {
   if (!applicantId) {
     return (
       <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-        <Header onOpenVoice={() => setVoiceOpen(true)} />
+        <Header onOpenVoice={() => setVoiceOpen(true)} onOpenLogin={() => setLoginOpen(true)} />
 
         <main className="shell">
           {/* Hero Section */}
@@ -157,7 +173,7 @@ export default function App() {
                 className="task-card featured"
                 onClick={() => {
                   setIdInput("applicant_001");
-                  enter("applicant_001");
+                  enter("applicant_001", true);
                 }}
               >
                 <div>
@@ -165,7 +181,7 @@ export default function App() {
                   <div className="task-card-icon">🚗</div>
                   <div className="task-card-title">Apply for New Driving Licence (LMV)</div>
                   <div className="task-card-desc">
-                    Zero-form e-KYC application for first-time car licence. Includes online learner's test, 30-day safety academy &amp; automated track booking.
+                    Zero-form e-KYC application for first-time car licence. Starts fresh with online learner's test, 30-day safety academy &amp; automated track booking.
                   </div>
                 </div>
                 <div className="task-card-action">Start Zero-Form Application →</div>
@@ -175,7 +191,7 @@ export default function App() {
                 className="task-card"
                 onClick={() => {
                   setIdInput("applicant_student");
-                  enter("applicant_student");
+                  enter("applicant_student", true);
                 }}
               >
                 <div>
@@ -192,7 +208,7 @@ export default function App() {
                 className="task-card"
                 onClick={() => {
                   setIdInput("applicant_mismatch");
-                  enter("applicant_mismatch");
+                  enter("applicant_mismatch", true);
                 }}
               >
                 <div>
@@ -213,7 +229,7 @@ export default function App() {
                   <div className="task-card-icon">🎙️</div>
                   <div className="task-card-title">बोल के अप्लाई (Voice Assistant)</div>
                   <div className="task-card-desc">
-                    Speak in Hindi, English, or Hinglish to check your application status, verify identity, or ask road safety questions.
+                    Powered by Gemini AI. Speak in Hindi, English, or Hinglish to check status, verify identity, or ask RTO rule questions.
                   </div>
                 </div>
                 <div className="task-card-action">Open Voice Assistant →</div>
@@ -238,14 +254,14 @@ export default function App() {
                     className={`persona-chip-btn ${idInput === p.id ? "active" : ""}`}
                     onClick={() => {
                       setIdInput(p.id);
-                      enter(p.id);
+                      enter(p.id, true);
                     }}
                   >
                     <div>
                       <div className="persona-chip-name">{p.name}</div>
                       <div className="persona-chip-tag">{p.tag} • {p.location}</div>
                     </div>
-                    <span style={{ fontSize: "0.85rem", color: "var(--gov-blue)", fontWeight: 800 }}>Start →</span>
+                    <span style={{ fontSize: "0.85rem", color: "var(--gov-blue)", fontWeight: 800 }}>Start Fresh →</span>
                   </button>
                 ))}
               </div>
@@ -258,13 +274,14 @@ export default function App() {
               <div style={{ display: "flex", gap: "0.65rem", marginTop: "0.4rem", flexWrap: "wrap" }}>
                 <input
                   id="applicant"
+                  type="text"
                   value={idInput}
                   placeholder="e.g. applicant_001"
                   onChange={(e) => setIdInput(e.target.value)}
-                  onKeyDown={(e) => e.key === "Enter" && enter()}
+                  onKeyDown={(e) => e.key === "Enter" && enter(undefined, false)}
                   style={{ flex: 1, minWidth: "16rem" }}
                 />
-                <button className="btn primary" onClick={() => enter()} style={{ whiteSpace: "nowrap" }}>
+                <button className="btn primary" onClick={() => enter(undefined, false)} style={{ whiteSpace: "nowrap" }}>
                   Continue Application →
                 </button>
               </div>
@@ -280,6 +297,12 @@ export default function App() {
           applicantId={idInput || "applicant_001"}
           isOpen={voiceOpen}
           onClose={() => setVoiceOpen(false)}
+        />
+
+        <LoginModal
+          isOpen={loginOpen}
+          onClose={() => setLoginOpen(false)}
+          onLogin={(id) => enter(id, true)}
         />
       </div>
     );

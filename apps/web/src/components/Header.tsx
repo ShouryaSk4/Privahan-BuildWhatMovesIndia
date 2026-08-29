@@ -5,6 +5,7 @@ export function Header({
   applicationNumber,
   citizenName,
   onOpenVoice,
+  onOpenLogin,
   onReset,
   onSwitchCitizen,
 }: {
@@ -12,6 +13,7 @@ export function Header({
   applicationNumber?: string | null;
   citizenName?: string;
   onOpenVoice?: () => void;
+  onOpenLogin?: () => void;
   onReset?: () => void;
   onSwitchCitizen?: () => void;
 }) {
@@ -79,7 +81,19 @@ export function Header({
                 </button>
               </div>
             ) : (
-              <span className="badge-official">e-KYC Ready</span>
+              <>
+                <span className="badge-official">e-KYC Ready</span>
+                {onOpenLogin && (
+                  <button
+                    type="button"
+                    className="btn secondary"
+                    onClick={onOpenLogin}
+                    style={{ minHeight: "36px", padding: "0.35rem 0.85rem", fontSize: "0.82rem" }}
+                  >
+                    🔐 Sign-In (OTP)
+                  </button>
+                )}
+              </>
             )}
 
             {onOpenVoice && (

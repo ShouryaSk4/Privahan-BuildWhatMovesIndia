@@ -21,13 +21,12 @@ try:
         instructions="Conversational front door for Parivahan MVP exposing identity and driving academy tools",
     )
 except (ImportError, ModuleNotFoundError):
-    # MCP SDK 1.x fallback
     from mcp.server.fastmcp import FastMCP  # type: ignore
 
-    mcp = FastMCP(
-        "BolKeApply",
-        description="Conversational front door for Parivahan MVP exposing identity and driving academy tools",
-    )
+    try:
+        mcp = FastMCP("BolKeApply")
+    except Exception:
+        mcp = FastMCP()
 
 # Graceful in-process integration when services run in the same Python environment
 try:

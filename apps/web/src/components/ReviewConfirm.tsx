@@ -18,15 +18,15 @@ export function ReviewConfirm({
 }) {
   const { profile } = view;
   const addressesDisagree = profile.addresses_match === false;
+  const gpsChoice = view.gps_rto_choice ?? profile.gps_suggested_rto ?? "";
+  const aadhaarChoice = view.aadhaar_rto_choice ?? "aadhaar_jurisdiction";
+
   const [rtoChoice, setRtoChoice] = useState<string>("");
   const [confirmed, setConfirmed] = useState(false);
 
-  // Module 2 owns the advisory-vs-blocking rule (§5.3); Module 1 just renders it.
   const blockingMismatches = view.blocking_mismatches ?? [];
   const blocked = !view.clear_to_submit;
-  const needsRtoChoice = addressesDisagree && rtoChoice === "";
-  const gpsChoice = view.gps_rto_choice ?? profile.gps_suggested_rto ?? "";
-  const aadhaarChoice = view.aadhaar_rto_choice ?? "aadhaar_jurisdiction";
+  const needsRtoChoice = addressesDisagree && !rtoChoice;
 
   return (
     <section className="card" aria-label="Review your details">
@@ -93,53 +93,75 @@ export function ReviewConfirm({
       )}
 
       {addressesDisagree && !blocked && (
-        <div className="alert alert-warn">
-          <strong>Two different RTOs apply to you.</strong>
-          <p>
-            Your current device location suggests <b>{profile.gps_suggested_rto}</b>, but your
-            Aadhaar-registered address is <b>{profile.aadhaar_registered_address}</b>. Pursuant to Motor Vehicle Rules, choose
-            your preferred RTO jurisdiction:
-          </p>
-          <label>
-            <input
-              type="radio"
-              name="rto"
-              value={gpsChoice}
-              checked={rtoChoice === gpsChoice}
-              onChange={() => setRtoChoice(gpsChoice)}
-            />
-            Near me now — {profile.gps_suggested_rto}
-          </label>
-          <label>
-            <input
-              type="radio"
-              name="rto"
-              value={aadhaarChoice}
-              checked={rtoChoice === aadhaarChoice}
-              onChange={() => setRtoChoice(aadhaarChoice)}
-            />
-            My Aadhaar jurisdiction — {profile.aadhaar_registered_address}
-          </label>
+        <div className="alert-rto-section">
+          <div className="alert-rto-header">
+            <strong>⚠️ Two different RTOs apply to you.</strong>
+            <p>
+              Your device GPS location suggests <b>{profile.gps_suggested_rto}</b>, but your
+              Aadhaar registered address is in <b>{profile.aadhaar_registered_address}</b>. Pursuant to Motor Vehicles Rules, choose your preferred Licensing Authority:
+            </p>
+          </div>
+
+          <div className="rto-choice-grid">
+            <label
+              className={`rto-choice-card ${rtoChoice === gpsChoice ? "selected" : ""}`}
+              onClick={() => setRtoChoice(gpsChoice)}
+            >
+              <input
+                type="radio"
+                name="rto"
+                value={gpsChoice}
+                checked={rtoChoice === gpsChoice}
+                onChange={() => setRtoChoice(gpsChoice)}
+                aria-label={`Near me now — ${profile.gps_suggested_rto}`}
+              />
+              <div className="rto-choice-content">
+                <div className="rto-choice-title">📍 Current Device Location (Convenience RTO)</div>
+                <div className="rto-choice-name">Near me now — {profile.gps_suggested_rto}</div>
+                <div className="rto-choice-desc">Recommended if you currently reside or work near this area.</div>
+              </div>
+            </label>
+
+            <label
+              className={`rto-choice-card ${rtoChoice === aadhaarChoice ? "selected" : ""}`}
+              onClick={() => setRtoChoice(aadhaarChoice)}
+            >
+              <input
+                type="radio"
+                name="rto"
+                value={aadhaarChoice}
+                checked={rtoChoice === aadhaarChoice}
+                onChange={() => setRtoChoice(aadhaarChoice)}
+                aria-label={`My Aadhaar jurisdiction — ${profile.aadhaar_registered_address}`}
+              />
+              <div className="rto-choice-content">
+                <div className="rto-choice-title">🏛️ Aadhaar Permanent Address (Statutory Jurisdiction)</div>
+                <div className="rto-choice-name">My Aadhaar jurisdiction — {profile.aadhaar_registered_address}</div>
+                <div className="rto-choice-desc">Official permanent jurisdiction mapped to your Aadhaar records.</div>
+              </div>
+            </label>
+          </div>
         </div>
       )}
 
       {!blocked && (
-        <label className="confirm-check">
+        <label className={`confirm-check ${confirmed ? "checked" : ""}`}>
           <input
             type="checkbox"
             checked={confirmed}
             onChange={(e) => setConfirmed(e.target.checked)}
           />
-          These details are correct and mine.
+          <span>These details are correct and mine.</span>
         </label>
       )}
 
-      <div className="row">
-        <button className="btn secondary" onClick={onCancel} disabled={submitting}>
-          Back
+      <div className="card-footer">
+        <button type="button" className="btn secondary" onClick={onCancel} disabled={submitting}>
+          ← Back
         </button>
         {!blocked && (
           <button
+            type="button"
             className="btn primary"
             disabled={!confirmed || needsRtoChoice || submitting}
             onClick={() => onConfirm(addressesDisagree ? rtoChoice : undefined)}
