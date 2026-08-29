@@ -71,3 +71,12 @@ services/*/data/*.sqlite3
 
 # Build artifacts
 apps/web/tsconfig.tsbuildinfo
+
+# Media & Screen Recordings (Root Demo Captures)
+*.pek
+*.prproj
+Adobe Premiere Pro Audio Previews/
+Adobe Premiere Pro Auto-Save/
+Recording *.mp4
+A001_*.mp4
+BWMI.mp4
