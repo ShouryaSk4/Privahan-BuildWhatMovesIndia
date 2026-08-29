@@ -21,6 +21,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/identity/personas": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Personas
+         * @description List available mock citizen personas for testing.
+         */
+        get: operations["list_personas_identity_personas_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/identity/fetch/{applicant_id}": {
         parameters: {
             query?: never;
@@ -80,6 +100,12 @@ export interface components {
             issue: string;
             /** Suggested Fix */
             suggested_fix: string;
+            /**
+             * Severity
+             * @description "error" (blocks submission) or "warning"
+             * @default error
+             */
+            severity: string;
         };
         /** MismatchCheckResult */
         MismatchCheckResult: {
@@ -146,6 +172,16 @@ export interface components {
              * Format: date-time
              */
             fetched_at: string;
+            /**
+             * Age
+             * @description Computed age in years
+             */
+            age?: number | null;
+            /**
+             * Age Eligible
+             * @description True if age >= 18 for first-time car driving licence
+             */
+            age_eligible?: boolean | null;
         };
     };
     responses: never;
@@ -174,6 +210,26 @@ export interface operations {
                     "application/json": {
                         [key: string]: string;
                     };
+                };
+            };
+        };
+    };
+    list_personas_identity_personas_get: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": string[];
                 };
             };
         };

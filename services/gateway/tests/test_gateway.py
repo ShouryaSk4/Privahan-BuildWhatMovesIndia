@@ -8,7 +8,8 @@ from gateway_service.sarathi import reset_client
 
 
 @pytest.fixture()
-def client():
+def client(monkeypatch):
+    monkeypatch.setenv("GATEWAY_DB", ":memory:")
     reset_client()
     return TestClient(app)
 

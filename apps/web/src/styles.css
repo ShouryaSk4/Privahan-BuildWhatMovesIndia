@@ -269,6 +269,66 @@ input:focus-visible, select:focus-visible { outline: 3px solid #8fb0e8; outline-
   .certainty-value { font-size: 1.05rem; }
 }
 
+/* -- Personas -------------------------------------------------------------- */
+.personas { display: grid; gap: 0.5rem; margin-bottom: 1rem; }
+.persona {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  text-align: left;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.6rem 0.9rem;
+  background: var(--surface);
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.persona span { color: var(--muted); font-size: 0.8rem; }
+.persona.active { border-color: var(--accent); box-shadow: 0 0 0 2px #1e4b9e33; }
+
+.btn.inline { padding: 0 0.3rem; font-size: 0.85rem; text-decoration: underline; }
+
+/* -- Voice assistant -------------------------------------------------------- */
+.voice-fab {
+  position: fixed;
+  bottom: 1rem;
+  right: 12.5rem;
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+  border-radius: 999px;
+  padding: 0.6rem 1.1rem;
+}
+.voice-panel {
+  position: fixed;
+  bottom: 1rem;
+  right: 12.5rem;
+  width: min(22rem, calc(100vw - 2rem));
+  height: 26rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px #17243b22;
+  z-index: 20;
+}
+.voice-bot { align-self: flex-start; max-width: 90%; }
+.voice-bot p { background: #f0f3f8; border-radius: 10px 10px 10px 2px; padding: 0.4rem 0.8rem; margin: 0 0 0.2rem; }
+.voice-note { padding: 0 0.9rem; }
+.mic.listening { background: var(--red); color: #fff; border-color: var(--red); }
+@media (max-width: 700px) {
+  .voice-fab, .voice-panel { right: 1rem; bottom: 4.5rem; }
+}
+
+/* -- Print: the licence card becomes the page ------------------------------- */
+@media print {
+  body * { visibility: hidden; }
+  .print-zone, .print-zone * { visibility: visible; }
+  .print-zone { position: absolute; inset: 1rem auto auto 1rem; }
+  .print-zone .confetti, .print-zone .print-hide { display: none; }
+}
+
 /* -- Zero-form stat ------------------------------------------------------- */
 .zero-form-stat {
   display: inline-block;

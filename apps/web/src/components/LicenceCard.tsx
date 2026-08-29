@@ -30,7 +30,7 @@ export function LicenceCard({
     d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
   return (
-    <div className="licence-wrap">
+    <div className="licence-wrap print-zone">
       <div className="confetti" aria-hidden="true">
         {Array.from({ length: 24 }, (_, i) => (
           <span
@@ -81,6 +81,9 @@ export function LicenceCard({
         </div>
         <footer>Issued digitally via Parivahan Seva · Zero forms · One visit</footer>
       </div>
+      <button className="btn secondary print-hide" onClick={() => window.print()}>
+        🖨️ Print / save licence as PDF
+      </button>
     </div>
   );
 }

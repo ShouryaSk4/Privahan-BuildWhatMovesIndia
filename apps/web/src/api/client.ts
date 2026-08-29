@@ -13,10 +13,11 @@ export const JOURNEY_URL =
   import.meta.env.VITE_JOURNEY_URL ?? "http://localhost:8002";
 export const GATEWAY_URL =
   import.meta.env.VITE_GATEWAY_URL ?? "http://localhost:8005";
-// Module 4 has no CORS headers, so by default we go through the dev proxy in
-// vite.config.ts (same-origin). This is the base of Module 4's /academy route
-// namespace — to bypass the proxy set VITE_ACADEMY_URL=http://host:8004/academy.
+// Modules 4 and 6 have no CORS headers, so by default we go through the dev
+// proxy in vite.config.ts (same-origin). These are the bases of their route
+// namespaces — bypass with e.g. VITE_ACADEMY_URL=http://host:8004/academy.
 export const ACADEMY_URL = import.meta.env.VITE_ACADEMY_URL ?? "/api/academy";
+export const BOL_URL = import.meta.env.VITE_BOL_URL ?? "/api/bol";
 
 export class ApiError extends Error {
   constructor(
@@ -58,6 +59,10 @@ export const journeyApi = {
     }),
   sync: (applicantId: string) =>
     request<JourneyState>(`${JOURNEY_URL}/journey/${applicantId}/sync`, {
+      method: "POST",
+    }),
+  reset: (applicantId: string) =>
+    request<JourneyState>(`${JOURNEY_URL}/journey/${applicantId}/reset`, {
       method: "POST",
     }),
   slots: (applicantId: string) =>

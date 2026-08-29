@@ -9,7 +9,6 @@ same protocol and change only `get_client()`.
 
 from __future__ import annotations
 
-import itertools
 from datetime import UTC, datetime, timedelta
 from typing import Protocol
 
@@ -22,6 +21,8 @@ from contracts.gateway import (
     TestResultReport,
     TestSlot,
 )
+
+from .store import KeyValueStore
 
 
 class SarathiError(Exception):
@@ -66,22 +67,39 @@ class MockSarathiClient:
     """
 
     def __init__(self) -> None:
-        self._applications: dict[str, GovApplicationStatus] = {}
-        self._bookings: dict[str, SlotBookingResult] = {}
-        self._slot_capacity: dict[str, int] = {}
-        self._app_seq = itertools.count(1)
-        self._booking_seq = itertools.count(1)
+        self._store = KeyValueStore()
+        self._applications: dict[str, GovApplicationStatus] = {
+            key.removeprefix("app:"): GovApplicationStatus.model_validate(raw)
+            for key, raw in self._store.all("app:").items()
+        }
+        self._bookings: dict[str, SlotBookingResult] = {
+            key.removeprefix("bk:"): SlotBookingResult.model_validate(raw)
+            for key, raw in self._store.all("bk:").items()
+        }
+        self._slot_capacity: dict[str, int] = {
+            key.removeprefix("slot:"): raw["n"] for key, raw in self._store.all("slot:").items()
+        }
+
+    def _save_application(self, status: GovApplicationStatus) -> None:
+        self._applications[status.application_number] = status
+        self._store.put(f"app:{status.application_number}", status.model_dump(mode="json"))
+
+    def _save_slot(self, slot_id: str, capacity: int) -> None:
+        self._slot_capacity[slot_id] = capacity
+        self._store.put(f"slot:{slot_id}", {"n": capacity})
 
     # -- LL application -------------------------------------------------
 
     def submit_ll_application(self, submission: LLApplicationSubmission) -> GovSubmissionResult:
         now = datetime.now(UTC)
-        application_number = f"DL{now.year}{next(self._app_seq):07d}"
-        self._applications[application_number] = GovApplicationStatus(
-            application_number=application_number,
-            applicant_id=submission.applicant_id,
-            stage="received",
-            updated_at=now,
+        application_number = f"DL{now.year}{self._store.next_seq('application'):07d}"
+        self._save_application(
+            GovApplicationStatus(
+                application_number=application_number,
+                applicant_id=submission.applicant_id,
+                stage="received",
+                updated_at=now,
+            )
         )
         return GovSubmissionResult(
             application_number=application_number, status="received", submitted_at=now
@@ -104,7 +122,10 @@ class MockSarathiClient:
         for day in range(1, 8):
             for hour in (9, 11, 14):
                 slot_id = f"{rto_code}-{day}-{hour}"
-                capacity = self._slot_capacity.setdefault(slot_id, 5)
+                capacity = self._slot_capacity.get(slot_id)
+                if capacity is None:
+                    capacity = 5
+                    self._save_slot(slot_id, capacity)
                 if capacity > 0:
                     slots.append(
                         TestSlot(
@@ -125,7 +146,7 @@ class MockSarathiClient:
         capacity = self._slot_capacity.get(request.slot_id, 0)
         if capacity <= 0:
             raise SarathiError(f"Slot {request.slot_id} has no capacity left")
-        self._slot_capacity[request.slot_id] = capacity - 1
+        self._save_slot(request.slot_id, capacity - 1)
 
         rto_code = request.slot_id.rsplit("-", 2)[0]
         slot = TestSlot(
@@ -135,9 +156,10 @@ class MockSarathiClient:
             capacity_left=capacity - 1,
         )
         booking = SlotBookingResult(
-            booking_id=f"BK{next(self._booking_seq):07d}", slot=slot, confirmed=True
+            booking_id=f"BK{self._store.next_seq('booking'):07d}", slot=slot, confirmed=True
         )
         self._bookings[booking.booking_id] = booking
+        self._store.put(f"bk:{booking.booking_id}", booking.model_dump(mode="json"))
         self._advance(request.application_number, "dl_test_booked")
         return booking
 
@@ -164,7 +186,7 @@ class MockSarathiClient:
                 return self._advance(report.application_number, "dl_issued")
             failed = self._advance(report.application_number, "dl_test_failed")
             failed = failed.model_copy(update={"failed_checkpoint": report.failed_checkpoint})
-            self._applications[report.application_number] = failed
+            self._save_application(failed)
             return failed
         raise SarathiError(f"Unknown test type: {report.test_type}")
 
@@ -177,7 +199,7 @@ class MockSarathiClient:
         updated = current.model_copy(
             update={"stage": stage, "updated_at": datetime.now(UTC)}
         )
-        self._applications[application_number] = updated
+        self._save_application(updated)
         return updated
 
 

@@ -13,7 +13,7 @@ import logging
 import os
 
 from bol_ke_apply.llm_client import get_llm_provider
-from bol_ke_apply.server import check_mismatch, fetch_identity, match_video
+from bol_ke_apply.server import check_mismatch, fetch_identity, match_video, whats_next
 
 logger = logging.getLogger("bol_ke_apply_agent")
 
@@ -67,6 +67,45 @@ class BolKeApplyAgent:
         """Process a citizen voice utterance / message and trigger MCP tools as needed."""
         msg_lower = message.lower()
         lang = _detect_language(message)
+
+        # 0. Intent: Journey status / what's next (Module 2 — live since 28 Aug 2026).
+        # Checked first: "check my application status" must not fall through to the
+        # mismatch intent via its "check" keyword.
+        journey_keywords = [
+            "status",
+            "application",
+            "stage",
+            "journey",
+            "next",
+            "aage",
+            "kahan",
+            "kab tak",
+            "progress",
+            "स्टेटस",
+            "आवेदन",
+            "स्थिति",
+            "कहां",
+            "आगे",
+        ]
+        if any(kw in msg_lower for kw in journey_keywords):
+            result = whats_next(applicant_id=applicant_id)
+            stage = str(result.get("current_stage", "no_licence")).replace("_", " ")
+            action = (result.get("next_action") or {}).get("label", "Start your application")
+            if lang == "hindi":
+                reply = f"आपका आवेदन अभी '{stage}' चरण में है। अगला कदम: {action}।"
+            elif lang == "hinglish":
+                reply = f"Aapka application abhi '{stage}' stage par hai. Agla step: {action}."
+            else:
+                reply = f"Your application is currently at the '{stage}' stage. Next step: {action}."
+            if result.get("fallback"):
+                reply += f" ({result['fallback']})"
+            return {
+                "reply": reply,
+                "tool_called": "whats_next",
+                "tool_result": result,
+                "language": lang,
+                "audio_url": self.provider.synthesize_speech(reply),
+            }
 
         # 1. Intent: Driving Academy / Video Match
         driving_academy_keywords = [

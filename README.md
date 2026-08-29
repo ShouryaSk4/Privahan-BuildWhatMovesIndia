@@ -70,7 +70,7 @@ Shared Single Source of Truth:
 | Academy (M4) | 8004 | http://localhost:8004 | `POST /academy/match-video`, `GET /academy/videos` |
 | Gateway (M5) | 8005 | http://localhost:8005 | `POST /gov/ll-applications`, `GET /gov/dl-test/slots` |
 | Web (M1) | 5173 | http://localhost:5173 | — |
-| Bol Ke Apply (M6) | stdio | — | MCP tools over stdio |
+| Bol Ke Apply (M6) | 8006 | http://localhost:8006 | `POST /chat`, `GET /tools`, `POST /tools/whats_next` (plus MCP over stdio) |
 
 ---
 
@@ -105,11 +105,19 @@ pnpm --dir apps/web dev
 `JOURNEY_FAST_FORWARD=1` collapses the 30-day practice and 7-day retest waits so the whole
 journey is demoable in minutes. Leave it unset to enforce the real waiting periods.
 
-### Module 6 — Bol Ke Apply (MCP server)
+### Module 6 — Bol Ke Apply
 
 ```bash
+# HTTP agent (the web app's voice widget talks to this), port 8006
+uv run uvicorn bol_ke_apply.api:app --port 8006
+
+# or the MCP server over stdio
 uv run --package bol-ke-apply python -m bol_ke_apply.server
 ```
+
+The agent answers in Hindi/Hinglish/English and now includes the journey-state
+tool `whats_next` (Module 2 exists, so AGENTS.md §2's hold is lifted): asking
+"mera application status kya hai" returns the citizen's real stage and next step.
 
 ---
 
@@ -224,14 +232,29 @@ verification, test results) through Module 5, then asks Module 2 to sync.
   Module 4 through a Vite dev proxy rather than editing another owner's module (§11.2).
   If Module 3/4 later add CORS middleware, the proxy can simply be dropped.
 
+## Demo-reliability features (added 28 Aug 2026)
+
+- **Journeys survive restarts.** Modules 2 and 5 persist state to SQLite
+  (`services/*/data/*.sqlite3`, gitignored). Override paths with `JOURNEY_DB` /
+  `GATEWAY_DB`; tests use `:memory:`.
+- **Personas are reusable.** `POST /journey/{id}/reset` (and the "Reset demo" button in the
+  web header) forgets one journey so a shared demo persona can be walked again — without it,
+  one visitor completing a journey consumed the persona for everyone.
+- **The voice widget is real.** The web app's 🎙️ बोल के अप्लाई panel sends free text (or
+  speech, where the browser supports it, with a graceful message when it doesn't) to Module
+  6's `/chat`; replies show which MCP tool ran. Nothing is canned in the frontend.
+- **The licence card prints.** "Print / save licence as PDF" uses a print stylesheet that
+  isolates the card — a real export, not an alert claiming one.
+- Mismatch severity is honored end to end: Module 3 grades mismatches
+  (`severity: "error" | "warning"`), Module 2 blocks only on errors and routes warnings to
+  the RTO-choice flow (§5.3).
+
 ## Known gaps / next steps
 
-- **Persistence**: Modules 2 and 5 hold state in memory, so restarting a service resets any
-  in-flight journey. A SQLite journal is the obvious next step before a live demo.
 - **`VerifiedProfile` has no jurisdiction RTO code**: Module 3 computes `jurisdiction_rto`
   internally but doesn't expose it, so Module 2 derives a state code from the Aadhaar address
   (`resolve_rto_code`). Adding an additive `aadhaar_jurisdiction_rto` field to
-  `VerifiedProfile` would remove that derivation — a request for Module 3's owner.
+  `VerifiedProfile` would remove that derivation.
 - **LL quiz** is 3 fixed questions in the frontend; a real item bank belongs in a service.
-- **Bol Ke Apply** exposes identity + academy tools; the journey-state tools are declared but
-  not yet implemented in Module 6.
+- **Speech synthesis** (`audio_url`) is a mock-provider stub; wire a real TTS provider via
+  `BOL_KE_APPLY_LLM_PROVIDER` when keys/budget are decided (AGENTS.md §10.4).

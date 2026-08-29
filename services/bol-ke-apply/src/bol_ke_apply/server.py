@@ -49,6 +49,7 @@ from bol_ke_apply.llm_client import get_llm_provider
 logger = logging.getLogger("bol_ke_apply")
 IDENTITY_SERVICE_URL = os.getenv("IDENTITY_SERVICE_URL", "http://127.0.0.1:8003")
 ACADEMY_SERVICE_URL = os.getenv("ACADEMY_SERVICE_URL", "http://127.0.0.1:8004")
+JOURNEY_SERVICE_URL = os.getenv("JOURNEY_SERVICE_URL", "http://127.0.0.1:8002")
 llm = get_llm_provider()
 
 
@@ -139,6 +140,31 @@ def match_video(
         "topic": "8-turn",
         "confidence": 0.85,
         "fallback_message": None,
+    }
+
+
+@mcp.tool()
+def whats_next(applicant_id: str) -> dict:
+    """Get the citizen's current journey stage and next action (Module 2).
+
+    Journey-state tools were held back until Module 2 existed (AGENTS.md §2);
+    Module 2 merged on 28 Aug 2026, so this tool is now live.
+    """
+    try:
+        with httpx.Client(timeout=3.0) as client:
+            resp = client.get(f"{JOURNEY_SERVICE_URL}/journey/{applicant_id}")
+            if resp.status_code == 200:
+                return resp.json()
+    except httpx.HTTPError as exc:
+        logger.debug("Journey service HTTP call fallback: %s", exc)
+
+    return {
+        "applicant_id": applicant_id,
+        "journey_type": "first_time_licence",
+        "current_stage": "no_licence",
+        "next_action": {"type": "start_application", "label": "Start your licence application"},
+        "certainty": {"cost_inr": 1350, "eta_days": 21, "visit_count": 1},
+        "fallback": "Journey service unreachable — showing the journey's starting state.",
     }
 
 

@@ -9,7 +9,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
 from bol_ke_apply.agent import BolKeApplyAgent
-from bol_ke_apply.server import check_mismatch, fetch_identity, match_video
+from bol_ke_apply.server import check_mismatch, fetch_identity, match_video, whats_next
 
 app = FastAPI(
     title="Bol Ke Apply — Voice & Conversational Front Door",
@@ -78,6 +78,11 @@ def list_tools() -> list[dict]:
                 "journey_stage": "string | None",
             },
         },
+        {
+            "name": "whats_next",
+            "description": "Get the citizen's journey stage and next action (Module 2)",
+            "parameters": {"applicant_id": "string"},
+        },
     ]
 
 
@@ -98,6 +103,15 @@ def tool_match_video(req: ToolMatchVideoRequest) -> dict:
         query=req.query,
         journey_stage=req.journey_stage,
     )
+
+
+class ToolWhatsNextRequest(BaseModel):
+    applicant_id: str
+
+
+@app.post("/tools/whats_next")
+def tool_whats_next(req: ToolWhatsNextRequest) -> dict:
+    return whats_next(applicant_id=req.applicant_id)
 
 
 @app.get("/", response_class=HTMLResponse)

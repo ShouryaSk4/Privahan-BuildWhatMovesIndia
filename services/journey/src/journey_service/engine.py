@@ -22,6 +22,8 @@ from contracts.journey import (
     RequiredDocument,
 )
 
+from .store import KeyValueStore
+
 RULES_DIR = Path(__file__).parent / "rules"
 
 # Canonical ordering used to decide whether a government-side status is
@@ -104,6 +106,33 @@ class ApplicantRecord:
     failed_checkpoint: str | None = None
     history: list[str] = field(default_factory=list)
 
+    def to_dict(self) -> dict:
+        return {
+            "applicant_id": self.applicant_id,
+            "stage": self.stage.value,
+            "application_number": self.application_number,
+            "ll_issued_at": self.ll_issued_at.isoformat() if self.ll_issued_at else None,
+            "dl_failed_at": self.dl_failed_at.isoformat() if self.dl_failed_at else None,
+            "failed_checkpoint": self.failed_checkpoint,
+            "history": self.history,
+        }
+
+    @classmethod
+    def from_dict(cls, raw: dict) -> ApplicantRecord:
+        return cls(
+            applicant_id=raw["applicant_id"],
+            stage=JourneyStage(raw["stage"]),
+            application_number=raw.get("application_number"),
+            ll_issued_at=(
+                datetime.fromisoformat(raw["ll_issued_at"]) if raw.get("ll_issued_at") else None
+            ),
+            dl_failed_at=(
+                datetime.fromisoformat(raw["dl_failed_at"]) if raw.get("dl_failed_at") else None
+            ),
+            failed_checkpoint=raw.get("failed_checkpoint"),
+            history=list(raw.get("history", [])),
+        )
+
 
 class Rules:
     """One state's rules, loaded from JSON. Data-driven by design (§3.3)."""
@@ -132,7 +161,11 @@ def _fast_forward() -> bool:
 class JourneyEngine:
     def __init__(self, rules: Rules | None = None) -> None:
         self.rules = rules or Rules()
-        self._records: dict[str, ApplicantRecord] = {}
+        self.store = KeyValueStore()
+        # Journeys survive restarts: hydrate from the store on boot.
+        self._records: dict[str, ApplicantRecord] = {
+            key: ApplicantRecord.from_dict(raw) for key, raw in self.store.all().items()
+        }
 
     # -- records -----------------------------------------------------------
 
@@ -141,8 +174,22 @@ class JourneyEngine:
             self._records[applicant_id] = ApplicantRecord(applicant_id=applicant_id)
         return self._records[applicant_id]
 
+    def save(self, record: ApplicantRecord) -> None:
+        self.store.put(record.applicant_id, record.to_dict())
+
+    def set_application_number(self, applicant_id: str, application_number: str) -> None:
+        record = self.record(applicant_id)
+        record.application_number = application_number
+        self.save(record)
+
+    def reset_applicant(self, applicant_id: str) -> None:
+        """Demo reset: forget one journey so a persona can be walked again."""
+        self._records.pop(applicant_id, None)
+        self.store.delete(applicant_id)
+
     def reset(self) -> None:
-        self._records.clear()
+        for applicant_id in list(self._records):
+            self.reset_applicant(applicant_id)
 
     # -- gates ---------------------------------------------------------------
 
@@ -191,6 +238,7 @@ class JourneyEngine:
             record.dl_failed_at = now
         record.stage = destination
         record.history.append(event)
+        self.save(record)
         return record
 
     def sync_from_gov(
@@ -213,6 +261,7 @@ class JourneyEngine:
                 record.failed_checkpoint = failed_checkpoint
             record.stage = mapped
             record.history.append(f"sync:{gov_stage}")
+            self.save(record)
         return record
 
     # -- projection ----------------------------------------------------------

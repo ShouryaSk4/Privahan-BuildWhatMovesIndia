@@ -40,6 +40,15 @@ app.add_middleware(
 # surfaced for the citizen to resolve (§5.3) instead of blocking the application.
 ADVISORY_MISMATCH_FIELDS = frozenset({"aadhaar_registered_address"})
 
+
+def is_advisory(m: Mismatch) -> bool:
+    """Module 3 now grades mismatches (severity: "error" blocks, "warning" advises).
+
+    Prefer that grading; the field-based rule remains as a fallback for older
+    payloads where severity defaults to "error" on jurisdiction entries.
+    """
+    return m.severity == "warning" or m.field in ADVISORY_MISMATCH_FIELDS
+
 # Sentinel the citizen sends to mean "file it at my Aadhaar jurisdiction RTO".
 # VerifiedProfile carries the Aadhaar *address* but not its RTO code, so Module 2
 # derives a state code from the address. When Module 3 exposes the jurisdiction
@@ -121,8 +130,8 @@ def verified_profile(
     except IdentityUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
-    advisory = [m for m in mismatch.mismatches if m.field in ADVISORY_MISMATCH_FIELDS]
-    blocking = [m for m in mismatch.mismatches if m.field not in ADVISORY_MISMATCH_FIELDS]
+    advisory = [m for m in mismatch.mismatches if is_advisory(m)]
+    blocking = [m for m in mismatch.mismatches if not is_advisory(m)]
     return VerifiedIdentityView(
         profile=profile,
         mismatch_check=mismatch,
@@ -161,7 +170,7 @@ def apply(
     # movers legitimately hit it. So split the two kinds:
     #   blocking  — identity data that will not clear the RTO's checks (name, DOB…)
     #   advisory  — jurisdiction, resolved by the citizen confirming an RTO below
-    blocking = [m for m in mismatch.mismatches if m.field not in ADVISORY_MISMATCH_FIELDS]
+    blocking = [m for m in mismatch.mismatches if not is_advisory(m)]
     if blocking:
         raise HTTPException(
             status_code=422,
@@ -204,8 +213,21 @@ def apply(
     except GatewayUnavailable as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
-    record.application_number = result.application_number
+    engine.set_application_number(applicant_id, result.application_number)
     engine.apply_event(applicant_id, "ll_application_submitted")
+    return engine.state(applicant_id)
+
+
+@app.post("/journey/{applicant_id}/reset", response_model=JourneyState)
+def reset_journey(
+    applicant_id: str, engine: JourneyEngine = Depends(get_engine)
+) -> JourneyState:
+    """Demo reset: forget this journey so the persona can be walked again.
+
+    Demo personas are shared records; without this, one visitor completing a
+    journey consumes the persona for everyone until a restart.
+    """
+    engine.reset_applicant(applicant_id)
     return engine.state(applicant_id)
 
 

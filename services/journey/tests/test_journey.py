@@ -71,6 +71,7 @@ def fake_gateway():
 def client(fake_gateway, monkeypatch):
     monkeypatch.setenv("JOURNEY_FAST_FORWARD", "1")
     monkeypatch.setenv("IDENTITY_MODE", "stub")
+    monkeypatch.setenv("JOURNEY_DB", ":memory:")
     reset_engine()
     app.dependency_overrides[get_gateway_client] = lambda: fake_gateway
     yield TestClient(app)
@@ -140,7 +141,7 @@ def test_rto_disagreement_is_surfaced_not_silently_resolved(client):
 def test_practice_window_gate_blocks_early_booking(client, monkeypatch):
     monkeypatch.delenv("JOURNEY_FAST_FORWARD", raising=False)
     engine = get_engine()
-    engine.record("applicant_001").application_number = "DL20260000001"
+    engine.set_application_number("applicant_001", "DL20260000001")
     for event in ("ll_application_submitted", "documents_verified", "ll_test_passed", "begin_practice"):
         engine.apply_event("applicant_001", event)
 

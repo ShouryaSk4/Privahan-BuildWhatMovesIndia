@@ -66,3 +66,8 @@ Thumbs.db
 
 # Generated OpenAPI schemas (build artifacts)
 packages/contracts/openapi/
+# Runtime state (journeys survive restarts; never commit)
+services/*/data/*.sqlite3
+
+# Build artifacts
+apps/web/tsconfig.tsbuildinfo

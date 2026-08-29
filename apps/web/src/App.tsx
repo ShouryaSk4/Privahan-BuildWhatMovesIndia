@@ -14,6 +14,7 @@ import { JourneyRail } from "./components/JourneyRail";
 import { LicenceCard } from "./components/LicenceCard";
 import { LLQuiz } from "./components/LLQuiz";
 import { ReviewConfirm } from "./components/ReviewConfirm";
+import { VoiceWidget } from "./components/VoiceWidget";
 
 // Module 3 keys its e-KYC store on ids like "applicant_001" — case- and
 // underscore-sensitive, so the id is passed through exactly as typed.
@@ -98,7 +99,24 @@ export default function App() {
           </div>
         </div>
         <section className="card" aria-label="Sign in">
-          <label htmlFor="applicant">Applicant ID</label>
+          <p className="muted" style={{ marginTop: 0 }}>Pick a verified demo citizen:</p>
+          <div className="personas">
+            {[
+              { id: "applicant_001", name: "Rohan Verma", note: "Clean journey · Bengaluru" },
+              { id: "applicant_student", name: "Priya Sharma", note: "Inter-state mover · two-RTO choice" },
+              { id: "applicant_mismatch", name: "Vikram Singh Chauhan", note: "PAN mismatch · blocked with fix" },
+            ].map((p) => (
+              <button
+                key={p.id}
+                className={`persona ${idInput === p.id ? "active" : ""}`}
+                onClick={() => setIdInput(p.id)}
+              >
+                <b>{p.name}</b>
+                <span>{p.note}</span>
+              </button>
+            ))}
+          </div>
+          <label htmlFor="applicant">Or enter an Applicant ID</label>
           <input
             id="applicant"
             value={idInput}
@@ -106,11 +124,6 @@ export default function App() {
             onKeyDown={(e) => e.key === "Enter" && enter()}
           />
           {idError && <p className="alert alert-error">{idError}</p>}
-          <p className="muted small">
-            Demo personas: <b>applicant_001</b> is a clean journey,{" "}
-            <b>applicant_student</b> shows the two-RTO disagreement, and{" "}
-            <b>applicant_mismatch</b> shows a blocked application with the fix.
-          </p>
           <button className="btn primary" onClick={enter}>Continue</button>
         </section>
       </main>
@@ -135,6 +148,21 @@ export default function App() {
         <span className="muted">
           {applicantId}
           {state.application_number && <> · Application {state.application_number}</>}
+          {" · "}
+          <button
+            className="btn ghost inline"
+            disabled={busy}
+            onClick={() =>
+              act(async () => {
+                setState(await journeyApi.reset(applicantId));
+                setReview(null);
+                setSlots(null);
+              })
+            }
+            title="Forget this journey so the persona can be walked again"
+          >
+            Reset demo
+          </button>
         </span>
       </header>
 
@@ -278,6 +306,7 @@ export default function App() {
       )}
 
       <DemoPanel state={state} onUpdate={setState} />
+      <VoiceWidget applicantId={applicantId} journeyStage={stage} />
       <AcademyWidget
         key={stage === "dl_test_result_fail" ? "coach" : "idle"}
         applicantId={applicantId}
