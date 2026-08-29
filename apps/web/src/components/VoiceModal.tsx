@@ -1,7 +1,7 @@
-// Bol Ke Apply (Module 6) Voice & Conversational Assistant Modal
+// Bol Ke Apply (Module 6) Voice & Conversational Assistant Modal powered by Gemini 2.5 Flash Lite
 
 import { useEffect, useRef, useState } from "react";
-import { JOURNEY_URL } from "../api/client";
+import { BOL_URL } from "../api/client";
 
 interface SpeechRecognitionEvent {
   results: {
@@ -52,7 +52,7 @@ export function VoiceModal({
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
-      text: "नमस्ते! मैं 'बोल के अप्लाई' सहायक हूँ। आप बोलकर या लिखकर अपना आवेदन स्टेटस, ई-केवाईसी विवरण या ड्राइविंग टेस्ट के टिप्स पूछ सकते हैं।",
+      text: "नमस्ते! मैं 'बोल के अप्लाई' सहायक हूँ (Powered by Gemini AI)। आप बोलकर या लिखकर RTO नियम, टेस्ट ट्रैक तकनीक, फीस या अपना आवेदन स्टेटस पूछ सकते हैं।",
     },
   ]);
   const [inputText, setInputText] = useState("");
@@ -111,23 +111,9 @@ export function VoiceModal({
 
     const activeId = applicantId || "applicant_001";
 
-    // Handle common greetings client-side gracefully
-    const lower = query.toLowerCase();
-    if (lower === "hi" || lower === "hello" || lower === "hey" || lower === "namaste" || lower === "नमस्ते") {
-      setMessages((prev) => [
-        ...prev,
-        {
-          sender: "bot",
-          text: `नमस्ते! मैं आपकी ड्राइविंग लाइसेंस प्रक्रिया में कैसे मदद कर सकता हूँ?\n\n• "Mera profile dikhao" — ई-केवाईसी रिकॉर्ड देखें\n• "Check mismatch" — दस्तावेजों की जांच करें\n• "Reverse parking / Hill start" — ड्राइविंग टिप्स सीखें`,
-        },
-      ]);
-      setBusy(false);
-      return;
-    }
-
     try {
-      // Send directly to Bol Ke Apply /chat endpoint (Module 6)
-      const chatUrl = `${JOURNEY_URL}/chat`;
+      // Send query directly to Module 6 Bol Ke Apply (/chat endpoint)
+      const chatUrl = `${BOL_URL}/chat`;
       const res = await fetch(chatUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -151,13 +137,12 @@ export function VoiceModal({
           toolTag: data.tool_called ? `Executed MCP Tool: ${data.tool_called}` : undefined,
         },
       ]);
-    } catch {
-      // Fallback helper in case of connectivity issues
+    } catch (err) {
       setMessages((prev) => [
         ...prev,
         {
           sender: "bot",
-          text: "मैं आपकी सहायता के लिए तैयार हूँ। आप नीचे दिए गए बटनों पर क्लिक करके या बोलकर पूछ सकते हैं।",
+          text: `सॉरी, कनेक्ट करने में समस्या हुई: ${err instanceof Error ? err.message : String(err)}। कृपया दोबारा प्रयास करें।`,
         },
       ]);
     } finally {
@@ -174,9 +159,9 @@ export function VoiceModal({
           <div style={{ display: "flex", alignItems: "center", gap: "0.6rem" }}>
             <span style={{ fontSize: "1.25rem" }}>🎙️</span>
             <div>
-              <h3 style={{ fontSize: "1rem", fontWeight: 700, margin: 0 }}>बोल के अप्लाई — Voice Assistant</h3>
+              <h3 style={{ fontSize: "1rem", fontWeight: 700, margin: 0 }}>बोल के अप्लाई — Gemini Voice Assistant</h3>
               <p style={{ fontSize: "0.72rem", color: "#cbd5e1", margin: 0 }}>
-                Speak in Hindi, English or Hinglish • Powered by Module 6 MCP
+                Speak in Hindi, English or Hinglish • Powered by Gemini 2.5 Flash Lite &amp; MoRTH MCP
               </p>
             </div>
           </div>
@@ -194,7 +179,7 @@ export function VoiceModal({
           <div
             ref={scrollRef}
             style={{
-              height: "230px",
+              height: "250px",
               overflowY: "auto",
               display: "flex",
               flexDirection: "column",
@@ -266,6 +251,14 @@ export function VoiceModal({
               onClick={() => handleSend("8 track pe car kaise modna hai")}
             >
               🔄 8-Track tips
+            </button>
+            <button
+              type="button"
+              className="btn secondary"
+              style={{ fontSize: "0.75rem", padding: "0.35rem 0.65rem", borderRadius: "999px", whiteSpace: "nowrap" }}
+              onClick={() => handleSend("Licence banwane ka official fee kitna lagta hai?")}
+            >
+              💰 Official Fees
             </button>
           </div>
 

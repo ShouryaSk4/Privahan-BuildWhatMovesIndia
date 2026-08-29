@@ -5,6 +5,7 @@ voice/text test console (Web Speech API enabled).
 """
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
@@ -15,6 +16,14 @@ app = FastAPI(
     title="Bol Ke Apply — Voice & Conversational Front Door",
     version="0.1.0",
     description="Module 6: Conversational front door exposing Module 3 and Module 4 via MCP tools.",
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 agent = BolKeApplyAgent()
