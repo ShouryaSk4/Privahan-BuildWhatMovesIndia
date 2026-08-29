@@ -93,20 +93,20 @@ class GeminiLLMProvider(BaseLLMProvider):
             or os.getenv("GOOGLE_API_KEY")
             or ""
         )
-        self.chat_model = chat_model or os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+        self.chat_model = chat_model or os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
         self.tts_model = tts_model or os.getenv("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
-        self.transcribe_model = transcribe_model or os.getenv("GEMINI_TRANSCRIBE_MODEL", "gemini-2.5-flash")
+        self.transcribe_model = transcribe_model or os.getenv("GEMINI_TRANSCRIBE_MODEL", "gemini-3.5-transcribe")
 
     def generate_response(
         self,
         prompt: str,
         system_instruction: str | None = None,
     ) -> str:
-        if not self.api_key:
-            return MockLLMProvider().generate_response(prompt, system_instruction)
+        # Try distinct models in order
+        candidates = [self.chat_model, "gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash", "gemini-flash-lite-latest"]
+        seen = set()
+        models_to_try = [m for m in candidates if m and not (m in seen or seen.add(m))]
 
-        # Try gemini-2.5-flash-lite, fallback to gemini-2.5-flash or gemini-flash-latest
-        models_to_try = [self.chat_model, "gemini-2.5-flash-lite", "gemini-2.5-flash", "gemini-flash-latest"]
         for m in models_to_try:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
             payload: dict = {
@@ -116,13 +116,13 @@ class GeminiLLMProvider(BaseLLMProvider):
                 payload["systemInstruction"] = {"parts": [{"text": system_instruction}]}
 
             try:
-                with httpx.Client(timeout=12.0) as client:
+                with httpx.Client(timeout=8.0) as client:
                     resp = client.post(url, json=payload)
                     if resp.status_code == 200:
                         data = resp.json()
-                        candidates = data.get("candidates", [])
-                        if candidates:
-                            parts = candidates[0].get("content", {}).get("parts", [])
+                        cand_list = data.get("candidates", [])
+                        if cand_list:
+                            parts = cand_list[0].get("content", {}).get("parts", [])
                             if parts and "text" in parts[0]:
                                 return parts[0]["text"].strip()
             except Exception as exc:
@@ -131,14 +131,14 @@ class GeminiLLMProvider(BaseLLMProvider):
         return MockLLMProvider().generate_response(prompt, system_instruction)
 
     def synthesize_speech(self, text: str) -> str | None:
-        """Synthesize speech using Gemini TTS if available."""
+        """Synthesize speech using Gemini TTS if available (with rapid fallback to browser TTS)."""
         if not self.api_key:
-            return MockLLMProvider().synthesize_speech(text)
+            return None
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.tts_model}:generateContent?key={self.api_key}"
         try:
-            with httpx.Client(timeout=10.0) as client:
-                resp = client.post(url, json={"contents": [{"parts": [{"text": text}]}]})
+            with httpx.Client(timeout=2.0) as client:
+                resp = client.post(url, json={"contents": [{"parts": [{"text": text[:200]}]}]})
                 if resp.status_code == 200:
                     audio_b64 = resp.json().get("audioContent", "")
                     if audio_b64:

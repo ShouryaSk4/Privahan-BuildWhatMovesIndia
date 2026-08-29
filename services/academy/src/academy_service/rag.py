@@ -37,7 +37,7 @@ class ManualRAGEngine:
         self.chunks: list[dict[str, Any]] = []
         self.chunk_tokens: list[list[str]] = []
         self.api_key = os.getenv("GEMINI_API_KEY", "")
-        self.model = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
+        self.model = os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
         self._load_manual()
 
     def _load_manual(self) -> None:
