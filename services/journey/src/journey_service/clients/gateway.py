@@ -34,7 +34,13 @@ class GatewayClient:
 
     def _request(self, method: str, path: str, **kwargs) -> httpx.Response:
         try:
-            res = httpx.request(method, f"{self.base_url}{path}", timeout=10, **kwargs)
+            res = httpx.request(
+                method,
+                f"{self.base_url}{path}",
+                timeout=10,
+                follow_redirects=True,
+                **kwargs,
+            )
         except httpx.HTTPError as exc:
             raise GatewayUnavailable(
                 f"Integration Gateway unreachable at {self.base_url}: {exc}"

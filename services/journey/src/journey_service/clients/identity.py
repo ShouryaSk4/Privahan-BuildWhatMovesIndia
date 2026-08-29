@@ -97,6 +97,18 @@ class StubIdentityClient:
         )
 
 
+class DirectIdentityClient:
+    """Calls identity_service directly without loopback HTTP calls."""
+
+    def fetch_identity(self, applicant_id: str) -> VerifiedProfile:
+        from identity_service.service import fetch_identity as svc_fetch
+        return svc_fetch(applicant_id, gps_suggested_rto=DEFAULT_GPS_SUGGESTED_RTO)
+
+    def check_mismatch(self, applicant_id: str) -> MismatchCheckResult:
+        from identity_service.service import check_mismatches as svc_check
+        return svc_check(applicant_id)
+
+
 class HttpIdentityClient:
     """Talks to the real Module 3 service."""
 
@@ -105,7 +117,12 @@ class HttpIdentityClient:
 
     def _get(self, path: str, **params) -> dict:
         try:
-            res = httpx.get(f"{self.base_url}{path}", params=params or None, timeout=10)
+            res = httpx.get(
+                f"{self.base_url}{path}",
+                params=params or None,
+                timeout=10,
+                follow_redirects=True,
+            )
         except httpx.HTTPError as exc:
             raise IdentityUnavailable(
                 f"Identity Service unreachable at {self.base_url}: {exc}"
@@ -131,7 +148,16 @@ class HttpIdentityClient:
 
 
 def get_identity_client() -> IdentityClient:
-    """Module 3 is merged, so HTTP is the default; set IDENTITY_MODE=stub to go offline."""
-    if os.environ.get("IDENTITY_MODE", "http").lower() == "stub":
+    """Module 3 client factory. Direct in serverless, HTTP in multi-process."""
+    mode = os.environ.get("IDENTITY_MODE", "").lower()
+    if mode == "stub":
         return StubIdentityClient()
+    if mode == "direct":
+        return DirectIdentityClient()
+    # In Vercel serverless / combined runtime, Direct in-memory invocation is 100% reliable
+    if os.environ.get("VERCEL") or os.environ.get("VERCEL_URL"):
+        try:
+            return DirectIdentityClient()
+        except ImportError:
+            pass
     return HttpIdentityClient(os.environ.get("IDENTITY_URL", "http://localhost:8003"))
