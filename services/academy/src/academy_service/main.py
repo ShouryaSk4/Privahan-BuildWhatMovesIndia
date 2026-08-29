@@ -1,18 +1,26 @@
 """FastAPI entrypoint for Module 4 (Driving Academy Assistant)."""
 
-from contracts.academy import AcademyVideo, VideoMatchRequest, VideoMatchResult
+from contracts.academy import (
+    AcademyAskRequest,
+    AcademyAskResponse,
+    AcademyVideo,
+    VideoMatchRequest,
+    VideoMatchResult,
+)
 from fastapi import FastAPI, HTTPException
 
 from academy_service.catalog import get_all_videos, get_video_by_id
 from academy_service.matcher import VideoMatcher
+from academy_service.rag import ManualRAGEngine
 
 app = FastAPI(
     title="Parivahan Driving Academy Assistant",
     version="0.1.0",
-    description="Module 4: AI-assisted Driving Academy matching learner queries to ~10 curated skill clips.",
+    description="Module 4: AI-assisted Driving Academy matching learner queries and RAG over the official RTO Complete Driving Manual.",
 )
 
 matcher = VideoMatcher()
+rag_engine = ManualRAGEngine(matcher=matcher)
 
 
 @app.get("/health")
@@ -39,6 +47,12 @@ def get_video(video_id: str) -> AcademyVideo:
 def match_video(request: VideoMatchRequest) -> VideoMatchResult:
     """Match a learner's query or difficulty to the best instructional video."""
     return matcher.match(request)
+
+
+@app.post("/academy/ask", response_model=AcademyAskResponse)
+def ask_manual(request: AcademyAskRequest) -> AcademyAskResponse:
+    """Answer learner questions using RAG over the official RTO Complete Driving Manual."""
+    return rag_engine.ask(request)
 
 
 if __name__ == "__main__":

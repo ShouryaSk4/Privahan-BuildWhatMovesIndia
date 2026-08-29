@@ -105,12 +105,34 @@ export const demoRtoApi = {
     }),
 };
 
+export interface AcademyAskResponse {
+  query: string;
+  answer: string;
+  source_sections: string[];
+  matched_video?: VideoMatchResult | null;
+}
+
 export async function matchAcademyVideo(
   applicantId: string,
   query: string,
   journeyStage?: string,
 ): Promise<VideoMatchResult> {
   return request<VideoMatchResult>(`${ACADEMY_URL}/match-video`, {
+    method: "POST",
+    body: JSON.stringify({
+      applicant_id: applicantId,
+      query,
+      journey_stage: journeyStage ?? null,
+    }),
+  });
+}
+
+export async function askAcademyManual(
+  applicantId: string,
+  query: string,
+  journeyStage?: string,
+): Promise<AcademyAskResponse> {
+  return request<AcademyAskResponse>(`${ACADEMY_URL}/ask`, {
     method: "POST",
     body: JSON.stringify({
       applicant_id: applicantId,

@@ -1,13 +1,13 @@
-// Driving Academy chat widget (Module 1 responsibility; matching itself is
-// Module 4's job). Features interactive real HTML5 video pop-ups and playback.
+// Driving Academy chat widget (Module 1 & 4 integration).
+// Powered by RTO Complete Driving Manual RAG and interactive real HTML5 video pop-ups.
 
 import { useRef, useState } from "react";
-import { matchAcademyVideo, type VideoMatchResult } from "../api/client";
+import { askAcademyManual, type AcademyAskResponse, type VideoMatchResult } from "../api/client";
 import { localVideoMatch } from "../academyFallback";
 
 type ChatEntry =
   | { kind: "user"; text: string }
-  | { kind: "match"; result: VideoMatchResult };
+  | { kind: "assistant"; answer: string; sources: string[]; video?: VideoMatchResult | null };
 
 function resolveVideoUrl(result: VideoMatchResult): string {
   if (result.video_url && result.video_url.startsWith("/videos/")) {
@@ -48,15 +48,36 @@ export function AcademyWidget({
     setBusy(true);
     setEntries((e) => [...e, { kind: "user", text }]);
     setQuery("");
-    let result: VideoMatchResult;
+
     try {
-      result = await matchAcademyVideo(applicantId, text, journeyStage);
+      const resp: AcademyAskResponse = await askAcademyManual(applicantId, text, journeyStage);
+      setEntries((e) => [
+        ...e,
+        {
+          kind: "assistant",
+          answer: resp.answer,
+          sources: resp.source_sections,
+          video: resp.matched_video,
+        },
+      ]);
     } catch {
-      result = localVideoMatch(text);
+      // Local fallback if academy service is offline
+      const match = localVideoMatch(text);
+      setEntries((e) => [
+        ...e,
+        {
+          kind: "assistant",
+          answer:
+            match.fallback_message ||
+            `Based on the RTO Driving Competency Manual, practice the ${match.topic} maneuver maintaining precise vehicle control.`,
+          sources: ["RTO Driving Competency Manual"],
+          video: match.video_id ? match : null,
+        },
+      ]);
+    } finally {
+      setBusy(false);
+      queueMicrotask(() => logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" }));
     }
-    setEntries((e) => [...e, { kind: "match", result }]);
-    setBusy(false);
-    queueMicrotask(() => logRef.current?.scrollTo({ top: logRef.current.scrollHeight, behavior: "smooth" }));
   }
 
   return (
@@ -68,7 +89,7 @@ export function AcademyWidget({
               <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                 <span>🛣️ Driving Academy</span>
                 <span className="chip" style={{ fontSize: "0.68rem", background: "#22c55e", color: "white", padding: "1px 6px" }}>
-                  AI Video Coach
+                  RTO Manual RAG Active
                 </span>
               </div>
               <button className="btn ghost" onClick={() => setOpen(false)} aria-label="Close Academy">
@@ -80,14 +101,22 @@ export function AcademyWidget({
               {entries.length === 0 && (
                 <div style={{ padding: "0.25rem 0" }}>
                   <p className="muted" style={{ margin: "0 0 0.75rem", fontSize: "0.85rem" }}>
-                    Tell me what maneuver you're struggling with — <em>“I keep stalling on hill starts”</em>, <em>“how to do 8 turn”</em>, <em>“reverse parking”</em> — and I'll pull up the video lesson instantly.
+                    Ask anything about Indian driving rules, test track criteria, or maneuvers from the <strong>RTO Complete Driving Competency &amp; Test Manual</strong>:
                   </p>
                   <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
                     <button
                       type="button"
                       className="btn secondary"
                       style={{ fontSize: "0.75rem", padding: "0.25rem 0.55rem" }}
-                      onClick={() => send("How to do an 8 turn")}
+                      onClick={() => send("What is the clutch bite point technique for hill start?")}
+                    >
+                      ⛰️ Hill Start Rule &amp; Video
+                    </button>
+                    <button
+                      type="button"
+                      className="btn secondary"
+                      style={{ fontSize: "0.75rem", padding: "0.25rem 0.55rem" }}
+                      onClick={() => send("How to steer on 8-turn track?")}
                     >
                       🔄 8-Turn Track
                     </button>
@@ -95,17 +124,9 @@ export function AcademyWidget({
                       type="button"
                       className="btn secondary"
                       style={{ fontSize: "0.75rem", padding: "0.25rem 0.55rem" }}
-                      onClick={() => send("How to do reverse parking")}
+                      onClick={() => send("What is the reverse parking test evaluation criteria?")}
                     >
-                      🅿️ Reverse Park
-                    </button>
-                    <button
-                      type="button"
-                      className="btn secondary"
-                      style={{ fontSize: "0.75rem", padding: "0.25rem 0.55rem" }}
-                      onClick={() => send("How to do a hill start stop-wheel-hold")}
-                    >
-                      ⛰️ Hill Start
+                      🅿️ Reverse Park Criteria
                     </button>
                   </div>
                 </div>
@@ -114,56 +135,66 @@ export function AcademyWidget({
               {entries.map((entry, i) =>
                 entry.kind === "user" ? (
                   <p key={i} className="academy-user">{entry.text}</p>
-                ) : entry.result.video_id ? (
-                  <div key={i} className="academy-match">
-                    {/* Embedded Interactive Video Player */}
-                    <div style={{ borderRadius: "8px", overflow: "hidden", background: "#000", marginTop: "0.25rem", boxShadow: "var(--shadow-sm)" }}>
-                      <video
-                        controls
-                        autoPlay
-                        muted
-                        playsInline
-                        src={resolveVideoUrl(entry.result)}
-                        style={{ width: "100%", maxHeight: "170px", objectFit: "cover", display: "block" }}
-                      >
-                        Your browser does not support video playback.
-                      </video>
-                    </div>
-
-                    <div style={{ marginTop: "0.4rem", display: "flex", justifyContent: "space-between", alignItems: "baseline" }}>
-                      <strong style={{ fontSize: "0.85rem", color: "var(--gov-navy)" }}>
-                        {entry.result.title || `▶ Lesson: ${entry.result.topic}`}
-                      </strong>
-                      <span className="chip" style={{ fontSize: "0.68rem", background: "#f0fdf4", color: "#166534" }}>
-                        {Math.round(entry.result.confidence * 100)}% Match
-                      </span>
-                    </div>
-
-                    {entry.result.description && (
-                      <p style={{ fontSize: "0.78rem", color: "var(--ink-secondary)", margin: "0.25rem 0 0" }}>
-                        {entry.result.description}
-                      </p>
+                ) : (
+                  <div key={i} className="academy-match" style={{ background: "#f8fafc", border: "1px solid #e2e8f0" }}>
+                    {/* Sources Badge */}
+                    {entry.sources.length > 0 && (
+                      <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", marginBottom: "0.45rem" }}>
+                        <span className="chip" style={{ fontSize: "0.68rem", background: "#e0f2fe", color: "#0369a1", fontWeight: 700 }}>
+                          📖 RTO Manual: {entry.sources[0]}
+                        </span>
+                      </div>
                     )}
 
-                    <div style={{ marginTop: "0.5rem", display: "flex", gap: "0.4rem" }}>
-                      <button
-                        type="button"
-                        className="btn secondary"
-                        style={{ fontSize: "0.74rem", padding: "0.25rem 0.6rem" }}
-                        onClick={() =>
-                          setActiveModalVideo({
-                            url: resolveVideoUrl(entry.result),
-                            title: entry.result.title || entry.result.topic,
-                            topic: entry.result.topic,
-                          })
-                        }
-                      >
-                        🔍 Pop Up Fullscreen Player
-                      </button>
+                    {/* Synthesized Answer */}
+                    <div style={{ fontSize: "0.83rem", color: "#1e293b", lineHeight: 1.5, whiteSpace: "pre-line" }}>
+                      {entry.answer}
                     </div>
+
+                    {/* Embedded Interactive Video Player if Maneuver Matched */}
+                    {entry.video && entry.video.video_id && (
+                      <div style={{ marginTop: "0.75rem", borderTop: "1px solid #e2e8f0", paddingTop: "0.6rem" }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.3rem" }}>
+                          <strong style={{ fontSize: "0.82rem", color: "var(--gov-navy)" }}>
+                            🎬 Practice Video: {entry.video.title || entry.video.topic}
+                          </strong>
+                          <span className="chip" style={{ fontSize: "0.65rem", background: "#f0fdf4", color: "#166534" }}>
+                            {Math.round((entry.video.confidence || 0.8) * 100)}% Relevance
+                          </span>
+                        </div>
+
+                        <div style={{ borderRadius: "6px", overflow: "hidden", background: "#000", boxShadow: "var(--shadow-sm)" }}>
+                          <video
+                            controls
+                            autoPlay
+                            muted
+                            playsInline
+                            src={resolveVideoUrl(entry.video)}
+                            style={{ width: "100%", maxHeight: "170px", objectFit: "cover", display: "block" }}
+                          >
+                            Your browser does not support video playback.
+                          </video>
+                        </div>
+
+                        <div style={{ marginTop: "0.4rem", display: "flex", gap: "0.4rem" }}>
+                          <button
+                            type="button"
+                            className="btn secondary"
+                            style={{ fontSize: "0.74rem", padding: "0.25rem 0.6rem" }}
+                            onClick={() =>
+                              setActiveModalVideo({
+                                url: resolveVideoUrl(entry.video!),
+                                title: entry.video!.title || entry.video!.topic,
+                                topic: entry.video!.topic,
+                              })
+                            }
+                          >
+                            🔍 Pop Up Fullscreen Player
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <p key={i} className="muted">{entry.result.fallback_message}</p>
                 ),
               )}
             </div>
@@ -171,10 +202,10 @@ export function AcademyWidget({
             <div className="academy-input">
               <input
                 value={query}
-                placeholder="What are you struggling with?"
+                placeholder="Ask RTO Driving Manual or describe issue..."
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && send()}
-                aria-label="Describe what you're struggling with"
+                aria-label="Ask RTO Driving Manual"
               />
               <button className="btn primary" onClick={() => send()} disabled={busy || !query.trim()}>
                 {busy ? "…" : "Ask"}
@@ -183,7 +214,7 @@ export function AcademyWidget({
           </div>
         ) : (
           <button className="btn academy-fab" onClick={() => setOpen(true)}>
-            🛣️ Driving Academy Video AI
+            🛣️ Driving Academy Video &amp; Manual AI
           </button>
         )}
       </div>
@@ -231,7 +262,7 @@ export function AcademyWidget({
 
               <div style={{ marginTop: "1rem", padding: "0.85rem", background: "#f8fafc", borderRadius: "6px", border: "1px solid var(--line)" }}>
                 <strong style={{ fontSize: "0.85rem", color: "var(--gov-navy)" }}>
-                  💡 Automated Sensor Track (ADTT) Requirement:
+                  💡 Official RTO Manual Guideline:
                 </strong>
                 <p style={{ margin: "0.25rem 0 0", fontSize: "0.8rem", color: "var(--ink-secondary)", lineHeight: 1.45 }}>
                   Practice this maneuver precisely as shown. Overhead AI track sensors evaluate lane discipline, wheel rollback, and obstacle clearance during your physical evaluation.

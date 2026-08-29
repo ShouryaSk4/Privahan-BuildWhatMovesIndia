@@ -35,3 +35,16 @@ class AcademyVideo(BaseModel):
     hindi_title: str | None = None
     hinglish_keywords: list[str] = Field(default_factory=list)
     thumbnail_url: str | None = None
+
+
+class AcademyAskRequest(BaseModel):
+    applicant_id: str
+    query: str
+    journey_stage: str | None = None
+
+
+class AcademyAskResponse(BaseModel):
+    query: str
+    answer: str
+    source_sections: list[str] = Field(default_factory=list)
+    matched_video: VideoMatchResult | None = None

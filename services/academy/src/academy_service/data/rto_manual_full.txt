@@ -1,0 +1,1809 @@
+GOVERNMENT OF INDIA — MODEL FRAMEWORK
+
+Ministry of Road Transport & Highways · Regional Transport Office
+
+COMPREHENSIVE DRIVING COMPETENCY
+
+& RTO TEST MANUAL
+
+Two-Wheelers · Cars (Manual & Automatic) · Heavy Motor Vehicles / Trucks · Buses · Electric Vehicles
+
+A full candidate-facing reference covering law, documents, the Learner's Licence,traffic signs and signals, practical testing, vehicle-specific skill, clutch and brake mechanics,defensive driving, adverse conditions, accident procedure and post-licence obligations.
+
+Compiled with reference to the Motor Vehicles Act, 1988; the Motor Vehicles (Amendment) Act, 2019;the Central Motor Vehicles Rules, 1989; and current state RTO practical-test practice under theParivahan/Sarathi framework, 2026.
+
+Table of Contents
+
+Right-click and update field to populate the Table of Contents.
+
+Table of Contents
+
+PART A
+
+Foundations: Law, Licences and Documents
+
+1.  Purpose and Scope of this Manual
+
+This manual sets out, in one place, everything a candidate is expected to know and demonstrate before an Indian Regional Transport Office (RTO) will issue a driving licence — from the very first Learner's Licence (LL) theory test to the practical competency test for two-wheelers, private cars, and heavy commercial vehicles including trucks and buses, as well as the additional considerations that apply to electric vehicles (EVs). It is written in the structure an RTO training document typically follows: law and eligibility, the learning process, traffic signs and road rules, the practical test track, vehicle-specific applied skill, the mechanics underneath that skill, safe-driving judgement, and finally what happens after the licence is issued.
+
+The content reflects the framework created by the Motor Vehicles Act, 1988, as substantially amended by the Motor Vehicles (Amendment) Act, 2019, and the Central Motor Vehicles Rules (CMVR), 1989, as implemented through the Parivahan/Sarathi online system used by RTOs across India. Because India has 28 states and 8 Union Territories, each running its own RTO administration, exact fees, track layouts, fine amounts and slot-booking procedures vary by state within the ceilings set centrally — this manual gives the framework that is common nationwide and flags, at every point where it matters, that local variation is normal and should be confirmed with the relevant state RTO before a test date or a payment is made.
+
+How to use this manual:  Read Part A once, for the law and the process. Read Parts B and C as many times as needed — they are the actual driving skill, and skill is built by repetition, not by reading. Part D covers judgement, which matters just as much as mechanical control and is tested informally by every examiner even where it has no dedicated line item on the track. Part E covers what continues to matter after the licence is in your hand.
+
+1.1  Who this manual is for
+
+This manual is written for four overlapping audiences: a first-time two-wheeler learner preparing for an MCWG or MCWOG test; a first-time car learner preparing for an LMV-NT test in either a manual or an automatic car; an existing LMV licence-holder progressing to an HMV/HGMV or HPMV (bus) licence to drive trucks or buses commercially; and any driver, of any vehicle class, transitioning from a conventional petrol/diesel/CNG vehicle to an electric vehicle for the first time. Each of these readers can go directly to the vehicle-specific chapter that concerns them after reading Part A, though the mechanical-principles chapters in Part C reward being read in full regardless of which vehicle a candidate is learning on.
+
+2.  Legal and Regulatory Framework
+
+2.1  The governing statutes
+
+Driving licences, vehicle registration, traffic rules and penalties in India are governed primarily by the Motor Vehicles Act, 1988 (the parent statute), as substantially amended by the Motor Vehicles (Amendment) Act, 2019, which took effect from 1 September 2019 and dramatically increased penalties, introduced digital-document provisions, and strengthened the framework for driver training and testing. Detailed procedural rules — how a licence is applied for, what a test track must contain, what documents are required — sit in the Central Motor Vehicles Rules (CMVR), 1989, and in each state's own Motor Vehicles Rules, which must stay within the ceilings set centrally but can and do differ in administrative detail from state to state.
+
+2.2  The Parivahan / Sarathi digital framework
+
+Since the national digitisation push, almost every step of the licensing process — LL application, LL theory test slot booking (and, in many states, taking the LL test itself from home via webcam under Aadhaar e-KYC), DL practical test slot booking, fee payment, and smart-card licence delivery tracking — runs through the unified Parivahan and Sarathi portals (parivahan.gov.in). DigiLocker and the mParivahan mobile app are recognised as valid ways to carry and present a driving licence, registration certificate (RC), insurance certificate and Pollution Under Control (PUC) certificate digitally; a traffic police officer is required to accept these digital copies as equivalent to the physical document.
+
+2.3  Accredited Driving Training Centres (ADTCs)
+
+The Ministry of Road Transport and Highways has expanded a scheme of Accredited Driving Training Centres — approved private driving schools that meet defined infrastructure and instructor-qualification standards. In several states, a completion certificate from an ADTC can substitute for the RTO's own practical test, in recognition of the more structured, supervised training such centres provide. This is optional, not compulsory — no driving-school certificate is a legal requirement to obtain a licence in India — but it is increasingly encouraged, and can shorten the path to a licence in states where it is accepted.
+
+2.4  Enforcement and technology
+
+Traffic enforcement increasingly relies on Automatic Number Plate Recognition (ANPR) cameras, AI-assisted violation detection (for helmet non-use, seatbelt non-use, mobile-phone use, signal jumping, lane discipline and triple-riding), and automated e-challans issued without a physical stop. Under a central rule that took effect from 1 January 2026, an accumulation of 5 or more traffic violations by one licence-holder within a single calendar year — including relatively minor ones such as a missing helmet or seatbelt — empowers the licensing authority to suspend that driver's licence, after a notice and hearing. This makes even 'minor' compliance a real, cumulative stake for every driver, not a one-off risk.
+
+3.  Licence Categories and Vehicle Classes
+
+Before anything else, a candidate must know which category of licence corresponds to which vehicle. Driving a vehicle outside your licensed category is a punishable offence even if you hold some other valid licence, and it also typically voids the insurance cover on that vehicle for that trip.
+
+Code
+
+Category
+
+Vehicle covered
+
+Min. age
+
+Notes
+
+MCWOG
+
+Motorcycle Without Gear
+
+Gearless scooters/mopeds up to 50cc
+
+16*
+
+*With parental consent; restricted to 50cc
+
+MC50CC
+
+Motorcycle 50cc
+
+Mopeds / low-power two-wheelers
+
+16
+
+Overlaps with MCWOG in most states
+
+MCWG
+
+Motorcycle With Gear
+
+All geared motorcycles & scooters, any capacity
+
+18
+
+Full clutch/gear competency tested
+
+LMV-NT
+
+Light Motor Vehicle, Non-Transport
+
+Private cars, jeeps, vans (personal use)
+
+18
+
+Covers both manual and automatic transmission
+
+LMV-T
+
+Light Motor Vehicle, Transport
+
+Taxis, small goods carriers, school cabs
+
+18–20
+
+Requires transport/commercial endorsement
+
+LCV
+
+Light Commercial Vehicle
+
+Small goods carriers used for business
+
+18–20
+
+Transport endorsement generally required
+
+HMV / HGMV
+
+Heavy (Goods) Motor Vehicle
+
+Trucks, lorries, heavy goods carriers > 7,500 kg GVW
+
+20
+
+Prior LMV licence usually required first
+
+HPMV
+
+Heavy Passenger Motor Vehicle
+
+Buses over 12 tonnes
+
+20
+
+Additional PSV/conductor rules may apply
+
+TR
+
+Tractor
+
+Agricultural / construction tractors
+
+18
+
+Separate from HMV goods category
+
+FVG
+
+Farm Vehicle with Gear
+
+Purpose-built farm vehicles with gears
+
+18
+
+State-specific issuance
+
+Trailer endorsement
+
+Additional endorsement
+
+Pulling a trailer/semi-trailer behind an HMV
+
+20
+
+Requires prior transport licence and experience
+
+3.1  Non-transport vs. transport (commercial) licences
+
+A non-transport licence (e.g. LMV-NT) authorises driving for personal, non-paid use only. The moment a vehicle is used to carry paying passengers or goods for hire — a taxi, an app-based cab, a delivery vehicle, a school van — the driver needs a transport (commercial) endorsement on top of the base category, which in most states requires a minimum age of 20, a valid LMV licence already held for a defined period, and often a police-verification and medical fitness certificate specific to commercial driving.
+
+3.2  A note on the manual/automatic distinction
+
+Important nuance:  A Light Motor Vehicle licence in India is not split into 'manual' and 'automatic' sub-categories the way it is in some other countries (for example, the United Kingdom restricts a licence earned in an automatic car to automatic vehicles only). One LMV licence, once earned — whether the practical test was taken in a manual or an automatic car — legally covers driving both transmission types in India. The skill of using a clutch, however, is not interchangeable with the paperwork: a driver trained and tested only on an automatic car should not assume real competence on a manual car without deliberate practice, even though the licence itself permits it.
+
+3.3  International Driving Permit (IDP)
+
+A holder of a valid Indian driving licence who wishes to drive abroad may apply for an International Driving Permit through the same RTO that issued the base licence, under the 1949 Geneva Convention on Road Traffic (to which India is a signatory). The IDP is not a separate competency test — it is a translated, internationally recognised companion document to the existing Indian licence, valid typically for one year, and is not itself sufficient to drive in every country without also meeting that country's own local requirements.
+
+4.  Eligibility, Documents and the Application Process
+
+4.1  General eligibility
+
+Eligibility is governed by three things together: minimum age for the specific vehicle category (see Chapter 3), a basic level of physical and mental fitness to drive safely (self-declared for LMV/two-wheeler categories, formally certified by a registered medical practitioner for transport/commercial and HMV categories), and — for anyone under 18 applying for the limited MCWOG category — documented parental or guardian consent.
+
+4.2  Documents typically required
+
+Proof of age: birth certificate, school-leaving certificate, PAN card, or passport.
+
+Proof of address: Aadhaar card, voter ID, utility bill, passport, or rent agreement, depending on state rules.
+
+Recent passport-size photographs — typically two to three.
+
+A completed application form (Form 2 for a Learner's Licence, Form 4 for the Permanent Licence test) filed via the Parivahan Sarathi portal.
+
+A medical self-declaration (Form 1) for standard categories; a medical certificate from a registered doctor (Form 1-A) for transport/commercial and HMV categories, and generally for any applicant above 40 years of age.
+
+Parental/guardian consent letter, for a minor applying for the MCWOG (50cc) category between 16 and 18 years.
+
+4.3  The application sequence, end to end
+
+Register on the Parivahan Sarathi portal and fill Form 2 for the Learner's Licence, uploading the documents above.
+
+Book and complete the LL theory test slot (in person at the RTO, or via home-based webcam testing where the state allows it).
+
+On passing, the Learner's Licence is issued — typically the same day, as a downloadable digital document, with the physical/smart-card version optional in many states.
+
+Observe the mandatory waiting period (commonly around 30 days from LL issue, and in all states, not on the same day as LL issue) before the practical test can be booked.
+
+Practise, under supervision, using the LL and displaying the 'L' sign, for the remainder of the LL's 6-month validity.
+
+Book a practical (Permanent Driving Licence) test slot via Parivahan Sarathi, or complete an accepted ADTC training course where that substitution is available in your state.
+
+Attend the practical test at the RTO track (or the ADTC, where applicable) and pass the assessed manoeuvres described in Part B of this manual.
+
+On passing, pay the applicable smart-card fee; the Permanent Driving Licence is dispatched by post or made available for download/collection, and is generally valid for 20 years or until the holder turns 40, whichever is sooner, subject to state rules on renewal cycles thereafter.
+
+4.4  Typical fee structure (illustrative, central ceiling)
+
+Item
+
+Approximate central fee ceiling
+
+Learner's Licence (LL) fee
+
+₹150
+
+Driving (competency) test fee
+
+₹300
+
+Smart-card Permanent DL fee
+
+₹200
+
+International Driving Permit
+
+₹1,000
+
+Approximate total, LL through smart-card DL
+
+₹700 – ₹1,100
+
+On unofficial payments:  There is no legitimate facilitation fee beyond the amounts fixed under CMVR Rule 81 and its state equivalents. Any cash payment demanded outside the official Parivahan portal receipt should be refused and can be reported.
+
+5.  The Learner's Licence: Process and Theory Test
+
+5.1  Purpose
+
+The Learner's Licence is not a driving licence — it is legal permission to practise driving on public roads under supervision, while the holder is not yet independently competent. It exists to let a new driver build road experience safely before being tested for full, unsupervised competence.
+
+5.2  The LL theory test format
+
+The LL test is a computer-based, multiple-choice examination — commonly 15 or 20 questions, four options each — completed in 20–30 minutes at the RTO or, in many states since the 'faceless' reforms, from home via webcam with Aadhaar e-KYC verification. Kerala uses a distinct format of 50 questions with 30 required correct; a candidate should always confirm the exact format with their own state RTO or the Sarathi portal before their slot.
+
+Question format
+
+Passing score
+
+Negative marking
+
+Attempts allowed
+
+15 questions
+
+9 correct (60%)
+
+None
+
+Unlimited, with a repeat-test fee each time
+
+20 questions
+
+12 correct (60%)
+
+None
+
+Unlimited, with a repeat-test fee each time
+
+50 questions (Kerala)
+
+30 correct (60%)
+
+None
+
+Unlimited, with a repeat-test fee each time
+
+There is no negative marking anywhere in the RTO theory test system — an unanswered or incorrect question simply scores zero, it does not subtract from a correct answer elsewhere, so a candidate should attempt every question rather than leaving any blank.
+
+5.3  What the theory test actually covers
+
+The question bank draws on: traffic sign recognition across all three categories (Chapter 6), road markings and signal meanings, right-of-way and priority rules at junctions and roundabouts, speed limits by road and vehicle type, documents a driver must carry, penalties under the Motor Vehicles Act for common violations (Chapter 8), and a layer of practical mechanical-safety knowledge — recognising a slipping clutch, knowing why tyre pressure and tread matter, understanding what a red engine-warning light or a rising temperature gauge means, and basic pre-drive checks.
+
+5.4  Validity and supervised practice rules
+
+The LL is valid for 6 months from the date of issue. The Permanent Driving Licence (DL) test must be attempted and cleared within this window, or the candidate must reapply for a fresh LL.
+
+A vehicle being driven on a Learner's Licence must display a large 'L' sign, front and rear.
+
+The learner must be accompanied by a person holding a valid, full licence for that same category — not another learner.
+
+A Learner's Licence does not permit driving unaccompanied — even with an 'L' plate displayed.
+
+A learner should not drive on expressways, in very heavy traffic, or at night until reasonably confident even under supervision — this is good practice rather than a strict legal bar in most states, but is treated as an examiner's informal expectation.
+
+Common myth:  No driving-school certificate is legally mandatory to get a licence in India — a candidate may learn from any licensed person, including a family member. However, many state RTOs give preference in slot allocation to candidates who complete a certified driving-school course, and several states now accept an ADTC completion certificate in place of the practical test entirely (see Chapter 2.3).
+
+6.  Traffic Signs: Mandatory, Cautionary and Informatory
+
+Indian road signs follow a standardised colour-and-shape coding, set out by the Indian Roads Congress (IRC) and adopted nationally, that allows a driver to identify the category of message from a distance before even reading the detail on it.
+
+Category
+
+Shape / colour rule
+
+Function
+
+Mandatory / Regulatory
+
+Circular, red border (a few are solid red or blue discs)
+
+An order that must legally be obeyed — e.g. Stop, No Entry, speed limit, no overtaking
+
+Cautionary / Warning
+
+Triangular / diamond, red border, white or yellow background
+
+A warning of a hazard ahead so the driver can adjust speed and attention in time
+
+Informatory / Guide
+
+Rectangular, blue or green background
+
+Direction, distance, and facility information — hospitals, fuel stations, parking, route markers
+
+6.1  Selected mandatory (regulatory) signs
+
+Stop — octagonal red sign; the vehicle must come to a complete halt at the stop line before proceeding.
+
+Give Way — inverted triangle; slow down and yield to traffic on the main road/priority direction.
+
+No Entry — solid red circle with a white horizontal bar; no vehicle may enter from that direction.
+
+Speed Limit — red circle with the number inside; the stated speed is the maximum legal speed for that stretch.
+
+No Overtaking / No Parking / No Horn / One Way — each shown as a red-bordered circle with the relevant symbol.
+
+Compulsory Turn / Compulsory Ahead — blue circular signs showing the only direction(s) permitted.
+
+6.2  Selected cautionary (warning) signs
+
+Roughly 40 distinct cautionary signs are recognised nationally. Commonly tested examples include: right-hand curve, left-hand curve, a series of curves ahead, narrow bridge or road narrows, steep ascent or descent, slippery road, school ahead, men-at-work/road-work ahead, cross-road or side-road junction ahead, cattle crossing, and unguarded railway level crossing. Each exists to give the driver enough advance warning to slow down and adjust attention before, not upon, reaching the hazard.
+
+6.3  Selected informatory (guide) signs
+
+These carry no legal command; they simply help a driver navigate — direction and distance to a place, route/highway number markers, and facility signs for hospitals, fuel stations, parking areas, first-aid posts, and public toilets. A flashing amber traffic light (distinct from a sign) instructs a driver to proceed with caution, slow down, and give way where necessary — it is not an instruction to speed up.
+
+Exam tip carried over from RTO practice:  The quickest way to answer a sign-recognition question correctly under time pressure is the colour-and-shape rule itself: red circle = an order (mandatory), red/yellow triangle = a warning (cautionary), blue/green rectangle = information (informatory). This single rule resolves the majority of sign questions even before reading the symbol in detail.
+
+6.4  Extended catalogue of mandatory (regulatory) signs
+
+The following is a fuller working list of mandatory signs commonly drawn on in the LL question bank. All are legal orders — non-compliance is a punishable offence, distinct from the advisory nature of cautionary signs.
+
+Sign
+
+Meaning
+
+Stop
+
+Come to a complete halt at the stop line before proceeding
+
+Give Way
+
+Slow down and yield priority to traffic on the main/priority road
+
+No Entry
+
+No vehicle may enter from that direction
+
+One Way
+
+Traffic may move only in the indicated direction
+
+No Overtaking
+
+Overtaking another vehicle is prohibited on this stretch
+
+No Parking
+
+Standing/parking a vehicle is prohibited at all times unless a time restriction is separately shown
+
+No Stopping / Standing
+
+Even a brief stop is prohibited, stricter than a no-parking sign
+
+Speed Limit (number shown)
+
+The stated figure is the maximum legal speed on that stretch
+
+Horn Prohibited
+
+Sounding the horn is not permitted in this zone (commonly hospital/school zones)
+
+Compulsory Ahead
+
+Vehicles must proceed straight ahead only
+
+Compulsory Turn Left / Right
+
+Vehicles must turn in the indicated direction only
+
+Compulsory Keep Left / Right
+
+Vehicles must keep to the indicated side of an obstruction or median
+
+Compulsory Cycle Track
+
+The lane is reserved for cycles; other vehicles must not use it
+
+Compulsory Sound Horn
+
+Drivers must sound the horn, typically at a blind curve or narrow bridge
+
+Axle Load Limit
+
+Vehicles exceeding the stated axle load are prohibited
+
+Length / Width / Height Limit
+
+Vehicles exceeding the stated dimension are prohibited from proceeding
+
+No Entry for Bullock Carts / Handcarts / Cycles
+
+The specified slow-moving vehicle class is prohibited on that stretch
+
+Restriction Ends
+
+A previously indicated restriction (speed, overtaking, etc.) no longer applies from this point
+
+Pedestrian Crossing (regulatory variant)
+
+Marks a crossing point where pedestrians must be given priority
+
+No U-Turn
+
+A U-turn is prohibited at that point
+
+6.5  Extended catalogue of cautionary (warning) signs
+
+Roughly 40 cautionary signs are recognised nationally under IRC standards. The commonly tested set includes:
+
+Sign
+
+Meaning
+
+Right Hand Curve / Left Hand Curve
+
+A single curve ahead in the stated direction — reduce speed in advance
+
+Right Hairpin Bend / Left Hairpin Bend
+
+A very sharp curve requiring significant speed reduction
+
+Succession of Curves
+
+A series of curves ahead, starting in the direction shown
+
+Narrow Road Ahead
+
+The carriageway narrows ahead
+
+Narrow Bridge
+
+A bridge ahead is narrower than the approach road
+
+Steep Ascent / Steep Descent
+
+A significant gradient ahead — engage a lower gear or increase regen level in advance
+
+Slippery Road
+
+The road surface ahead may reduce tyre grip — often near water, oil spills, or loose gravel
+
+Loose Gravel
+
+Loose surface material ahead may reduce grip and cause stone-chipping
+
+Road Under Construction / Men at Work
+
+Workers, machinery or an altered surface ahead
+
+Cross Road
+
+An intersecting road crosses ahead
+
+Side Road (left or right)
+
+A side road joins the main road ahead
+
+T-Junction
+
+The road ahead ends in a T-shaped junction
+
+Y-Junction
+
+The road ahead forks into a Y-shaped junction
+
+Roundabout Ahead
+
+A roundabout junction lies ahead
+
+Traffic Signal Ahead
+
+A signal-controlled junction lies ahead, often used where visibility of the signal itself is limited
+
+Unguarded Railway Crossing
+
+A level crossing ahead with no gate/barrier — proceed with extreme caution
+
+Guarded Railway Crossing
+
+A level crossing ahead with a gate/barrier
+
+School Ahead
+
+A school zone ahead — expect pedestrian children and reduced speed limits
+
+Pedestrian Crossing (cautionary variant)
+
+A crossing point ahead frequently used by pedestrians
+
+Cattle Crossing
+
+Livestock may cross or be present on the road ahead
+
+Falling Rocks
+
+A hill/mountain stretch where rockfall is a known hazard
+
+Ferry Ahead
+
+The road ahead terminates at a ferry crossing
+
+Gap in Median
+
+An opening in a road median ahead, permitting a turn or U-turn
+
+Dangerous Dip
+
+A sudden dip or depression in the road surface ahead
+
+Hump or Rough Road
+
+A speed breaker or an uneven surface ahead
+
+Two-Way Traffic
+
+A stretch ahead carries traffic in both directions, often after a divided section ends
+
+Quay/River Bank
+
+The road runs close to a water body edge ahead
+
+7.  Road Markings, Signals and Right-of-Way Rules
+
+7.1  Road markings
+
+Continuous (unbroken) white/yellow centre line: overtaking is prohibited across it.
+
+Broken (dashed) centre line: overtaking is permitted when safe to do so.
+
+Edge lines: mark the usable width of the carriageway, particularly important at night and in poor visibility.
+
+Stop line: a solid line at a junction or signal where the vehicle must halt completely, before the pedestrian crossing if one is present.
+
+Zebra (pedestrian) crossing: pedestrians have the right of way once they have stepped onto it; a vehicle must stop clear of the crossing, not on it.
+
+Yellow box junction markings: a vehicle must not enter the box unless its exit is clear, to avoid blocking the intersection.
+
+7.2  Traffic signal sequence and meaning
+
+Signal
+
+Meaning
+
+Red
+
+Stop completely before the stop line; do not proceed
+
+Amber (steady, after red)
+
+Prepare to move; do not move until green
+
+Green
+
+Proceed if the way is clear, giving way to pedestrians already crossing
+
+Amber (steady, after green)
+
+Stop if it is safe to do so; do not accelerate to beat the light
+
+Flashing amber
+
+Proceed with caution, slow down, give way to pedestrians and conflicting traffic
+
+Flashing red
+
+Treat as a Stop sign — halt completely, then proceed only when clear
+
+7.3  Right-of-way (priority) rules
+
+On a two-way road with no separating median, keep to the left, so oncoming traffic can pass smoothly.
+
+At an uncontrolled (unsignalled, unmarked) intersection, traffic already on the roundabout or the vehicle arriving from the right generally has priority, though local convention and actual road markings always override this general rule where they differ.
+
+Emergency vehicles (ambulance, fire engine, police vehicle) with siren/beacon active have absolute priority; failing to give way to one is itself a specifically penalised offence under the 2019 amendment.
+
+A vehicle already established in a roundabout has priority over one entering it.
+
+When turning right across oncoming traffic, wait until the path is genuinely clear rather than assuming oncoming vehicles will slow down.
+
+Pedestrians on a marked crossing, and children or the elderly crossing at any point, are always given precedence over vehicular progress, signal phase notwithstanding, as a matter of both law and basic road safety practice.
+
+8.  Traffic Violations and Penalties
+
+The Motor Vehicles (Amendment) Act, 2019 substantially raised penalties for common violations from 1 September 2019 onward, with the explicit aim of improving compliance and reducing India's high rate of road fatalities. States may set their own fine amounts at or below the central ceiling, so figures below are the commonly applied central-ceiling amounts; a candidate should check their own state's current schedule, since it is revised periodically.
+
+Violation
+
+Typical fine (first offence)
+
+Note
+
+Driving without a valid licence
+
+₹5,000
+
+Two/three-wheelers may attract a lower state-set rate in some states
+
+Driving without insurance
+
+₹2,000
+
+Rises for repeat offences
+
+No helmet (rider or pillion)
+
+₹1,000
+
+Applies per person, not per vehicle
+
+No seatbelt
+
+₹1,000
+
+Applies to front and, increasingly, rear-seat occupants
+
+Overspeeding
+
+₹1,000 – ₹4,000
+
+Varies by vehicle class (LMV vs. medium/heavy) and road type
+
+Signal (red-light) jumping
+
+₹1,000 – ₹5,000
+
+Higher for repeat offences
+
+Driving under the influence (drunk driving)
+
+₹10,000
+
+Plus up to 6 months' imprisonment; non-compoundable, requires court appearance
+
+Using a mobile phone while driving
+
+₹1,000 – ₹5,000
+
+Hands-free navigation use is generally treated differently from handheld calling/texting
+
+No valid PUC (Pollution Under Control) certificate
+
+₹10,000
+
+Also a prerequisite for renewing insurance in most states
+
+Dangerous / rash driving
+
+₹5,000 (first offence), ₹10,000 (repeat)
+
+Can also attract imprisonment on conviction
+
+Overloading a goods vehicle
+
+Up to ₹10,000 (state variable, previously ₹20,000 in some states)
+
+Plus liability for the excess load itself
+
+Offence by a juvenile driver
+
+₹25,000 and up to 3 years' imprisonment
+
+Guardian/vehicle owner held liable; the juvenile's licence eligibility is also affected
+
+8.1  The 5-violation licence suspension rule
+
+Under a central rule effective from 1 January 2026, accumulating 5 or more traffic violations within a single calendar year — including relatively minor ones such as a missing helmet or seatbelt — empowers the RTO/DTO to suspend the driver's licence, following a notice and a hearing. This applies across all vehicle categories and is a meaningful reason to treat routine compliance (helmet, seatbelt, documents, signal discipline) as more than a matter of avoiding individual small fines.
+
+8.2  Compoundable vs. non-compoundable offences
+
+Most minor violations (helmet, seatbelt, minor speeding, parking) are compoundable — settled by paying the fixed fine, commonly online via the Parivahan e-challan system or through a Lok Adalat, which in some states also allows a reduced settlement. Serious offences — drunk driving, driving without a licence altogether, and rash/negligent driving causing an accident — are non-compoundable and require a court appearance, since they carry the possibility of imprisonment in addition to a fine.
+
+PART B
+
+The Practical Test, by Vehicle Class
+
+9.  The Permanent Driving Licence Practical Test: General Structure
+
+Once the LL has been held for the minimum waiting period (commonly around 30 days, and never on the very same day it was issued, in most states), the candidate books a slot for the practical driving competency test. This is where actual vehicle-handling skill is assessed, on a marked test track at the RTO, sometimes now monitored by camera/sensor systems ('automated tracks') rather than a human examiner alone.
+
+9.1  Standard track layout
+
+While exact dimensions and sequence differ from RTO to RTO, the manoeuvres below form the common national pattern for four-wheelers and, in a reduced form, for two-wheelers.
+
+Manoeuvre
+
+What it tests
+
+Typical fail triggers
+
+Straight-line / slow ride
+
+Steering steadiness, low-speed balance and control
+
+Wandering out of the marked lane, foot down (2-wheeler)
+
+Figure-of-8 (forward, sometimes reverse)
+
+Turning-radius judgement, clutch–throttle coordination, balance in tight turns
+
+Touching/crossing boundary line, foot down, stalling
+
+Slalom / zig-zag through cones
+
+Agility and smooth clutch-throttle control at low speed
+
+Hitting a cone, harsh jerky control
+
+Gradient (hill) start
+
+Clutch–accelerator–handbrake coordination against gravity
+
+Rolling back beyond the permitted limit (commonly 30–50 cm), stalling
+
+Reverse / parallel parking
+
+Spatial judgement, mirror use, steering while reversing
+
+Multiple corrections, touching boundary markers/cones
+
+S-curve reverse (serpentine reverse)
+
+Sustained reverse steering control through a curved path
+
+Crossing boundary lines, excessive corrections
+
+Emergency/controlled stop on command
+
+Reaction time, braking technique without skidding
+
+Locking wheels, harsh unbalanced stop
+
+Hand signals and indicators (2-wheeler)
+
+Communication of intent to other road users
+
+Wrong or missed signal before turning/stopping
+
+On-road component (where used)
+
+Real-traffic judgement — junctions, lane discipline, mirror checks
+
+Failure to check mirrors/blind spot, poor lane discipline, hesitation at junctions
+
+9.2  Automated vs. manually examined tracks
+
+On a manually examined track, the RTO inspector gives an on-the-spot pass/fail decision based on direct observation. On camera/sensor-based automated tracks, now used at many metro-area RTOs, deductions are calculated by the system against boundary contact, rolling-back distance and time, and the result is generated automatically at the end of the run, removing a layer of subjective judgement (and, correspondingly, a layer of appeal or negotiation) from the outcome.
+
+9.3  Result and outcome
+
+On passing, the smart-card Permanent Driving Licence is issued (usually posted or available for download shortly after), generally valid for 20 years or until the holder turns 40, whichever is earlier, with renewal required at intervals thereafter — commonly every 10 years for drivers under 40, and every 5 years for drivers above 40 or 50 depending on state rules. On failing, the RTO retest process typically allows an unlimited number of further attempts, each requiring a repeat-test fee, provided the LL is still within its 6-month validity window; if it lapses, a fresh LL application and theory test are required before the practical test can be retried.
+
+9.4  National failure-point insight
+
+Nationwide reality check:  The single highest-failure manoeuvre nationally, across every vehicle class, is the hill/gradient start, because it demands the exact combined coordination of clutch (or brake, for automatics/EVs), accelerator and handbrake covered in Part C. The second most common national fail point is boundary-line contact during the figure-8 or reverse manoeuvres. Both are fixed by dedicated, repeated practice on ground marked to the same dimensions as the actual RTO track — not by theory alone.
+
+10.  Two-Wheeler Riding Skill
+
+10.1  Body position and balance fundamentals
+
+Sit with a relaxed but firm grip — a tight, tense grip on the handlebar transmits every small hand movement into the front wheel and destabilises low-speed balance. Keep elbows slightly bent, eyes up and looking through the turn (not down at the front wheel), and use body weight, not just steering input, to control direction in slow manoeuvres. Feet should rest lightly on the footpegs once moving, ready to come down only if genuinely needed for balance — using a foot as a constant 'training wheel' during a manoeuvre is itself a fail condition on the test track.
+
+10.2  Clutch–throttle coordination (geared two-wheelers)
+
+Pull the clutch lever fully in with two fingers (or the full hand, depending on comfort) before shifting.
+
+Find and hold the 'biting point' — the point in the clutch lever's travel where engine power just starts to reach the rear wheel — while gently and simultaneously opening the throttle.
+
+Release the clutch smoothly past the biting point as speed builds; a sudden full release causes a jerky lurch or a stall.
+
+For very slow-speed manoeuvres (the figure-8, the slalom), keep the clutch just at or slightly past the biting point throughout, using the rear brake — never the clutch alone — to fine-tune speed.
+
+10.3  Braking on two wheels
+
+A motorcycle has two independent brakes and they are not interchangeable in role:
+
+Front brake: delivers roughly 70% of stopping power because weight shifts forward under braking, but is more prone to locking the front wheel and causing a fall if grabbed suddenly.
+
+Rear brake: gives finer, more forgiving control and is the primary brake for slow-speed balance work such as the figure-8.
+
+Correct emergency-stop technique: apply the rear brake first, then squeeze (never grab) the front brake progressively while easing off the throttle, keep the bike upright and travelling in a straight line, and downshift through the gears as speed drops so the engine is in the right gear when you come to a halt.
+
+10.4  The gradient start on a two-wheeler
+
+Hold the front brake with two fingers while the bike is stationary on the slope. Bring the clutch to the biting point, add a little throttle, and only then release the front brake as power reaches the rear wheel — releasing the brake before the clutch has 'caught' causes the bike to roll backward.
+
+10.5  Hand signals and observation habits
+
+Even where a two-wheeler has working electrical indicators, examiners specifically look for the corresponding hand signal on the practical test in most states: right arm extended horizontally for a right turn, right arm extended and rotated for a slow-down/stop signal, and a clear shoulder check before merging or turning, regardless of whether a mirror has already been checked. These habits are assessed because they demonstrate active awareness, not just correct final positioning.
+
+10.6  The figure-of-8 — a dedicated walkthrough
+
+The figure-8 is the manoeuvre most candidates fail on first attempt nationally, so it is worth a dedicated technique note. Walk the actual figure course before riding it, so the path is in memory rather than being judged in real time. Chart the loop mentally — where the tightest points are, where to look next — before starting. Keep a steady, low, consistent throttle rather than alternating between throttle and brake through the loop. Look through each turn toward where you want to exit it, not down at the front wheel or at the boundary line itself (looking at what you want to avoid tends to steer you toward it). Lean the bike gently into each turn while keeping your own upper body relatively upright and centred, and use gentle, continuous rear-brake modulation rather than the clutch to control speed through the tightest points.
+
+11.  Car Driving Skill — Manual Transmission
+
+11.1  How the clutch actually works
+
+The clutch sits between the engine and the gearbox. The engine's flywheel and the gearbox's input shaft each carry a friction disc; when the clutch pedal is released, spring pressure clamps these discs together so engine power transmits directly to the wheels. Pressing the clutch pedal down separates the discs, disconnecting the engine from the gearbox so a gear can be changed, or the car can idle/stop, without stalling the engine.
+
+Depress the clutch pedal fully with the left foot before selecting a gear.
+
+Select the gear (1st for moving off from a stop).
+
+Release the clutch pedal slowly until you feel/hear the engine note change and the car begin to strain slightly forward — this is the biting point (also called the friction point).
+
+Add gentle accelerator at the same moment, and continue releasing the clutch smoothly the rest of the way as the car gathers speed — this is called 'clutch control'.
+
+For each upward gear change, briefly depress the clutch, shift, and release smoothly while matching accelerator input to the new gear; for downshifts, similarly clutch-in, shift down, and release with a slightly higher throttle blip if a smooth match is wanted.
+
+The most common learner fault:  Releasing the clutch too fast from a stationary position skips past the biting point and stalls the engine. Riding the clutch — resting the foot on the pedal, holding it partly depressed for long periods, such as in traffic — causes premature wear of the friction plate and should be avoided; use the handbrake at a halt instead of half-clutch.
+
+11.2  Reading the gear pattern and choosing the right gear
+
+Most Indian manual cars use a five-speed (increasingly, six-speed) H-pattern gearbox with reverse typically reached by pressing down or pulling up a collar on the lever before engaging it, to prevent accidental selection while moving. As a general working guide (engine and gearing vary by car, so this is indicative, not exact): 1st gear for moving off and for very slow manoeuvring; 2nd for roughly 10–20 km/h and tight turns; 3rd for roughly 20–40 km/h; 4th for roughly 40–60 km/h; 5th (and 6th, where fitted) for cruising above that. The underlying skill being tested is not memorising numbers but listening and feeling for the engine labouring (too high a gear for the speed) or revving without corresponding acceleration (too low a gear), and shifting accordingly.
+
+11.3  Hill (gradient) start in a manual car
+
+Apply the handbrake and hold the car with the footbrake before moving your right foot to the accelerator. Bring the clutch to the biting point (you will feel the car want to creep forward against the handbrake), add light throttle, and release the handbrake only once you feel the engine taking the car's weight — release the handbrake too early and the car rolls back; release the clutch too fast and the engine stalls.
+
+11.4  Braking technique in a car
+
+Modern cars use hydraulic disc (and, on rear wheels of many models, drum) brakes: pressing the pedal forces brake pads or shoes against a rotating disc/drum, converting the car's motion into heat through friction.
+
+Threshold braking: press the pedal firmly and progressively, easing pressure just before the car actually stops, so the final halt is smooth rather than an abrupt nose-dip.
+
+ABS (Anti-lock Braking System), fitted to virtually all modern cars: in a genuine emergency stop, press the brake pedal hard and keep steady, firm pressure on — do not pump the pedal. ABS will rapidly modulate brake pressure at each wheel to prevent skidding, and you may feel the pedal pulse; this is normal and means the system is working.
+
+Engine braking: lifting off the accelerator while still in gear slows the car through engine resistance before the brake pedal is even touched — useful on long downhill stretches to avoid over-relying on the brakes.
+
+11.5  Parallel and reverse parking, step by step
+
+Pull up alongside the front vehicle/marker, roughly half a metre to a metre away, so your rear bumper is level with theirs.
+
+Select reverse, check all mirrors and turn to look over your shoulder through the rear windscreen.
+
+Reverse slowly, and once your rear wheel area is roughly level with the target space, steer firmly toward the kerb/boundary.
+
+As the car angles into the space, straighten the steering (counter-steer) so the car settles parallel to the kerb rather than continuing to swing.
+
+Adjust with small forward/backward corrections only if needed, keeping clear of markers on both sides, then centre the car in the space and apply the handbrake.
+
+11.6  When to accelerate and when to stop, on the road
+
+Look well ahead — not just at the vehicle directly in front — and scan for cues (brake lights, a pedestrian stepping toward the kerb, a signal changing) that tell you to begin slowing early, gently, and in good time, rather than reacting late and hard. The standard safe following-distance guidance is the 'two-second rule' on dry roads (pick a fixed roadside object; if the vehicle ahead passes it, you should not reach the same point for at least two seconds), extended further in rain or on poor road surfaces. Accelerate only when the path ahead is genuinely clear and you have checked mirrors and blind spots for merging or crossing traffic; accelerate smoothly and progressively rather than flooring the pedal, both for control and for fuel efficiency.
+
+12.  Car Driving Skill — Automatic Transmission
+
+12.1  What changes without a clutch
+
+An automatic car removes the clutch pedal and manual gear lever entirely — there are only two pedals, accelerator and brake — and the gearbox itself decides when to change gear based on speed and throttle input, using a torque converter, a continuously variable transmission (CVT), or an automated dual-clutch system depending on the model, none of which the driver needs to actively manage.
+
+12.2  Selector positions and starting procedure
+
+Start the car with your right foot firmly on the brake pedal (a safety interlock on most automatics will not allow the car to be started, or shifted out of Park, unless the brake is pressed).
+
+Shift the selector into D (Drive) for forward motion, R (Reverse) to reverse, N (Neutral) to disconnect the drivetrain while stationary, or P (Park) to lock the transmission when parked.
+
+Release the brake pedal: most automatics 'creep' forward on their own at idle, even with no accelerator input — be ready for this at traffic lights and in car parks.
+
+Use the accelerator and brake pedals exactly as in a manual car for speed control; the gearbox handles all gear changes automatically.
+
+12.3  Manual-override modes
+
+Many automatic cars also offer an 'L' or numbered low-gear position, or paddle shifters/a manual (+/-) gate, which lets the driver hold the gearbox in a lower ratio for stronger engine braking on a long descent, or for more responsive acceleration when overtaking — this is optional control layered on top of the automatic system, not a requirement of everyday driving.
+
+12.4  Two habits specific to automatics
+
+Never rest your left foot on the brake pedal while driving ('left-foot braking') unless the vehicle is specifically designed for it — it causes brake lights to stay lit continuously and can cause unintended, simultaneous braking and acceleration.
+
+Always shift fully into P and apply the handbrake before releasing the brake pedal at the end of a journey — an automatic left only in D or N, and not firmly parked, can creep on its own.
+
+Licence note:  In India, passing the practical test in either a manual or an automatic car issues the same LMV-NT category — unlike some countries, there is no separate 'automatic-only' restriction placed on the licence (see Chapter 3.2).
+
+13.  Heavy Motor Vehicles and Trucks
+
+Everything in Chapters 11 and 12 about clutch, brake and gear control still applies to a truck — the difference is scale, weight, blind spots and consequence. HMV/HGMV training and testing adds the following layers of skill on top of the base LMV competency:
+
+13.1  Additional skills specifically assessed
+
+Multi-point mirror checks: trucks have large blind spots directly behind and along both sides; wide, deliberate mirror checks before every lane change, turn, or reverse manoeuvre are mandatory habit, not optional.
+
+Wide-turn management: a truck's rear wheels track a tighter path than the front (off-tracking), so right and left turns must be started wider than instinct suggests, to avoid mounting the kerb or clipping the inside of the turn.
+
+Longer stopping distances: a loaded truck's far greater mass means threshold braking must begin much earlier than in a car — tailgating in a heavy vehicle is disproportionately dangerous.
+
+Load awareness: an unevenly loaded or unsecured cargo shifts the vehicle's centre of gravity and can make it unstable in corners or under braking; drivers are examined on pre-trip load and coupling checks, not only on steering skill.
+
+Air-brake systems (larger HMVs/buses): many heavy vehicles use compressed-air brakes rather than purely hydraulic ones — these need a build-up of air pressure before the vehicle can be safely driven, and drivers must know to check the air-pressure gauge before moving off, and to recognise the warning buzzer for low air pressure.
+
+Gear range and engine braking: heavy vehicles typically have many more gears (constant-mesh or synchromesh boxes with 6, 9 or more speeds, sometimes with a high/low range splitter), and engine braking on long descents is an essential, actively taught skill to prevent brake fade from continuous braking.
+
+Coupling checks (for articulated/trailer combinations): verifying the fifth-wheel/kingpin coupling, air and electrical line connections, and trailer brake function before setting off.
+
+13.2  Eligibility path
+
+Because of this added complexity, most states require a candidate to already hold a valid LMV licence for a minimum period (commonly one year) before they may even apply for HMV training, and the minimum age is 20 rather than 18. The practical test itself repeats the core manoeuvres from Chapter 9 (straight line, reverse, gradient) but conducted on a full-size heavy vehicle, along with a demonstration of the pre-trip and load-safety checks above.
+
+13.3  Fatigue and duty-hour discipline
+
+Because heavy-vehicle driving is disproportionately linked to fatigue-related accidents over long-distance routes, commercial drivers are trained on recognising fatigue signs (delayed reaction, drifting within the lane, heavy eyelids), taking scheduled rest breaks, and never using stimulant substances as a substitute for genuine rest — this is examined as part of the broader commercial-licence competency expectation even where it is not a specific track manoeuvre.
+
+14.  Buses and Passenger Transport Vehicles
+
+The Heavy Passenger Motor Vehicle (HPMV) category, covering buses above 12 tonnes, layers passenger-specific responsibilities on top of the general HMV skill set in Chapter 13.
+
+Smooth acceleration and braking specifically for standing-passenger comfort and safety — sudden inputs that would be a minor inconvenience in a private car can cause a standing passenger to fall.
+
+Door-operation discipline: never moving the vehicle with a door open, and confirming all passengers are clear before closing doors and moving off.
+
+Bus-stop positioning: pulling in close and parallel to the kerb so passengers can board and alight safely, without stopping so far from the kerb that a passenger must step into moving traffic.
+
+Awareness of a longer, wider vehicle body when navigating narrow streets, low bridges/height restrictions, and tight turning circles at termini.
+
+A Public Service Vehicle (PSV) badge or conductor's licence may additionally be required in some states before a driver may legally carry paying passengers on a bus, on top of the base HPMV driving licence itself.
+
+15.  Three-Wheelers and Auto-Rickshaws
+
+Three-wheelers — auto-rickshaws (passenger) and small goods carriers — form a distinct, widely used category in Indian road transport, particularly in cities and towns. They are licensed and tested broadly under the LMV framework in most states, but with handling characteristics different enough from a four-wheeled car to deserve specific note.
+
+15.1  Handling differences from a four-wheeler
+
+A much higher centre of gravity relative to track width makes a three-wheeler considerably more prone to tipping in a sharp turn taken at speed, or when heavily loaded on one side — cornering speed must be judged more conservatively than in a car.
+
+Many auto-rickshaws use handlebar-style steering (motorcycle-derived controls) rather than a steering wheel, with a twist-grip throttle and, on geared variants, a foot- or hand-operated clutch and gear-change mechanism resembling a two-wheeler's more than a car's.
+
+Braking is typically less powerful, proportionally, than a car's, given the vehicle's lighter overall construction — earlier, gentler braking is advisable, particularly with passengers or load aboard.
+
+Being narrower and more nimble than a car, the temptation to filter through gaps in traffic is greater — this is where the stability disadvantage in 15.1 becomes most relevant, since a sudden swerve to avoid a gap closing is exactly the manoeuvre most likely to unbalance the vehicle.
+
+15.2  Licensing
+
+A three-wheeler for personal/goods use generally falls under the LMV category; a three-wheeler used to carry paying passengers (the familiar auto-rickshaw taxi) requires the transport/commercial endorsement described in Chapter 3.1, along with, in many cities, a separate permit specific to that vehicle for commercial plying within defined routes or zones.
+
+17.  Electric Vehicles vs. Conventional Vehicles
+
+Electric vehicles (EVs) are, mechanically, always automatics — there is no clutch pedal and no manual gear lever in any mass-market EV, because an electric motor delivers strong torque across almost its entire speed range and does not need a multi-ratio gearbox the way a combustion engine does. Most EVs use a single-speed 'reduction gear' instead of a conventional multi-speed transmission.
+
+Aspect
+
+Conventional (ICE) vehicle
+
+Electric vehicle (EV)
+
+Pedals
+
+Clutch (manual) + accelerator + brake, or accelerator + brake (automatic)
+
+Accelerator + brake only, always
+
+Gear changes
+
+Manual: driver-shifted through the clutch; Automatic: gearbox-shifted, several ratios
+
+Usually none — single-speed reduction gear
+
+Stalling risk
+
+Present in manual vehicles if clutch/throttle mistimed
+
+None — cannot stall
+
+Slowing when you lift off the accelerator
+
+Gradual coasting, with mild engine braking in gear
+
+Noticeably stronger 'regenerative braking' deceleration, often adjustable in strength
+
+Braking system energy use
+
+Kinetic energy converted entirely to heat via friction brakes
+
+Motor first recovers kinetic energy as electricity (regen) back into the battery; friction brakes engage for the remainder / harder stops
+
+Acceleration feel
+
+Power builds with engine revs; torque peak arrives at a specific rev range
+
+Maximum torque available near-instantly from a standstill — noticeably sharper initial response
+
+Cabin noise at low speed
+
+Engine and exhaust noise audible
+
+Near-silent — pedestrians and cyclists may not hear the vehicle approaching
+
+Refuelling/recharging
+
+A few minutes at a fuel station
+
+Minutes (fast DC charging) to several hours (home AC charging), plans need to allow for this
+
+Routine mechanical maintenance
+
+Engine oil, spark plugs, exhaust system, clutch wear
+
+No engine oil, no spark plugs, no clutch; battery health and coolant systems become the focus
+
+Licence category needed (India)
+
+LMV-NT
+
+Same LMV-NT — no separate EV category
+
+15.1  Learning to drive an EV — what changes in practice
+
+Because there is no clutch and (typically) no gear selection beyond P/R/N/D, an EV removes an entire skill layer — many new drivers actually find an EV a gentler introduction to vehicle control than a manual car.
+
+Regenerative braking means lifting off the accelerator alone produces meaningful deceleration — new EV drivers should deliberately practise modulating the accelerator pedal to control speed smoothly, rather than treating it as strictly on/off, and should still cover the brake pedal for anything beyond gentle slowing.
+
+Because acceleration response is instant and strong, throttle input should be introduced gently, especially in traffic or on wet roads, to avoid unintended sharp acceleration.
+
+Because the vehicle is near-silent, drivers should rely more on the speedometer than on engine sound to judge speed, and should be extra alert to pedestrians and two-wheelers who may not hear the vehicle coming, particularly while reversing or moving slowly in a car park.
+
+The basic controls tested at the RTO track — steering, braking to a controlled stop, gradient hold and start, reverse parking — are unchanged in principle; an EV simply removes the clutch-timing component of the gradient-start manoeuvre, since there is no clutch to manage. Most EVs use 'hill-hold' assist, which holds the brake automatically for a second or two after the brake pedal is released on a slope, giving the driver time to move to the accelerator.
+
+15.2  Hybrid vehicles
+
+Hybrid vehicles:  Hybrid (petrol-electric) vehicles behave, from the driver's seat, essentially like an EV — no clutch pedal, automatic operation, and regenerative braking — while retaining a conventional fuel tank and engine that the car's own computer manages in the background, switching between electric and combustion power (or blending both) without driver input.
+
+15.3  Two-wheeler EVs
+
+Electric scooters and motorcycles follow the same principle as electric cars: no clutch, twist-and-go throttle control, and regenerative braking on many models (often a small percentage of total braking, supplementing rather than replacing the front and rear friction brakes). An electric two-wheeler above a defined power/speed threshold is licensed under the same MCWG-equivalent framework as a geared petrol motorcycle in most states, while low-powered electric scooters below a defined threshold may not require a licence or registration at all — this threshold is set by the Ministry of Road Transport and Highways and should be confirmed against the specific model's registered category before assuming either way.
+
+X.  Pre-Drive and Walk-Around Vehicle Checks
+
+Before starting any journey — and specifically demonstrated or expected as good practice at the start of most practical tests — a competent driver carries out a short walk-around and cockpit check. The exact checklist differs by vehicle type but the underlying purpose is identical: catching a defect before it becomes a hazard on the road, rather than discovering it mid-journey.
+
+X.1  Two-wheeler pre-ride check
+
+Tyres: correct pressure (visually and by feel, or with a gauge), adequate tread, no visible cuts or embedded objects.
+
+Brakes: front and rear lever/pedal free play feels correct, not spongy or overly loose.
+
+Lights and horn: headlight, tail light, brake light, indicators and horn all functioning.
+
+Chain/belt (where applicable): correct tension, adequately lubricated.
+
+Mirrors: correctly adjusted before moving off, not after.
+
+Fuel/charge level: sufficient for the planned journey, with a margin.
+
+X.2  Car pre-drive check
+
+Check
+
+What to look for
+
+Tyres (all four, plus spare)
+
+Correct pressure, even tread wear, no visible damage or bulges
+
+Lights
+
+Headlights (low/high), tail lights, brake lights, indicators, hazard lights all working
+
+Mirrors and seat position
+
+Adjusted before moving off — never adjusted while the vehicle is in motion
+
+Engine oil level (petrol/diesel/CNG)
+
+Between the minimum and maximum marks on the dipstick, checked with the engine cold/off
+
+Coolant level (petrol/diesel/CNG)
+
+Within the marked range on the coolant reservoir, checked with the engine cold
+
+Brake fluid level
+
+Within the marked range on the reservoir; a low level can indicate worn brake pads or a leak
+
+Windscreen and wipers
+
+Clean glass, wiper blades in good condition, washer fluid topped up
+
+Handbrake/parking brake
+
+Holds firmly with a normal amount of lever/pedal travel
+
+Documents
+
+Driving licence, RC, insurance certificate and PUC certificate present (physically or via DigiLocker/mParivahan)
+
+X.3  Electric vehicle pre-drive check
+
+An EV pre-drive check replaces the fluid-level checks above with a state-of-charge check (sufficient charge for the planned journey, plus a margin, particularly before a longer trip where charging-point availability should be planned in advance) and a visual check of the charging port and cable for damage if the vehicle was charged overnight. Tyres, lights, mirrors and documents are checked exactly as for a conventional car.
+
+X.4  Truck and bus pre-trip check
+
+In addition to the car-level checks above, a heavy-vehicle pre-trip check specifically includes: air-pressure build-up and the low-pressure warning buzzer (Chapter 13/19.5), load security and even distribution, coupling and trailer connections where applicable (kingpin, air lines, electrical lines), and a walk-around check of all tyres given the greater number fitted and the greater consequence of a failure at speed.
+
+PART C
+
+The Mechanics Behind the Controls
+
+16.  Understanding the Clutch: Full Mechanical Explanation
+
+16.1  What the clutch is for
+
+Every vehicle with an internal combustion engine needs a way to disconnect the spinning engine from the wheels — otherwise the engine would stall the instant the vehicle stopped, and gears could never be changed while moving, since a gearbox can only shift cleanly when the two sets of gears it is connecting are momentarily not under load. The clutch is that disconnect mechanism.
+
+16.2  How a manual clutch is built
+
+A typical manual clutch consists of a flywheel (bolted to the engine's crankshaft), a clutch (friction) plate faced with a high-friction material similar in principle to brake-pad material, a pressure plate, and a diaphragm spring that clamps the friction plate tightly between the flywheel and the pressure plate. When the driver's foot is off the clutch pedal, this spring pressure holds the whole assembly locked together, so the engine and the gearbox input shaft spin as one unit and power flows straight through. Pressing the clutch pedal operates a release bearing that pushes against the diaphragm spring, relieving the clamping pressure and letting the friction plate spin freely between the flywheel and the pressure plate — engine and gearbox are now mechanically separated.
+
+16.3  The biting point, precisely
+
+Between fully pressed (disconnected) and fully released (fully connected) there is a narrow band of pedal travel where the friction plate is neither fully locked nor fully free — it is slipping slightly while still transmitting some power. This is the biting point (or friction point). Controlling a vehicle smoothly from a standstill depends entirely on spending a controlled moment in this band: releasing through it too fast transmits engine power to the wheels before the car/bike has built momentum to match, and the mismatch stalls the engine (or, on a two-wheeler with the throttle open, causes a jerky wheelie-like lurch); staying in this band too long, under load, generates heat and accelerates wear of the friction material.
+
+16.4  Two-wheeler clutches vs. car clutches
+
+The operating principle is identical, but most modern geared motorcycles use a wet, multi-plate clutch (several friction plates running in the engine oil bath, giving smoother, more heat-tolerant engagement over a shorter lever travel) rather than the single dry-plate clutch typical of cars. This is why a motorcycle clutch lever's biting point often feels narrower and closer to the lever's resting position than a car clutch pedal's does.
+
+16.5  Automatic transmissions and torque converters
+
+An automatic car does not have a manual clutch at all in the traditional sense; a torque-converter automatic instead uses a fluid coupling (the torque converter) that transmits power hydraulically between the engine and the transmission, smoothing out the connection without a driver-operated pedal, while an internal 'lock-up clutch' engages directly at cruising speed for efficiency. A CVT (continuously variable transmission) uses a belt-and-pulley system with no fixed 'gears' at all, changing its ratio smoothly rather than in steps. A dual-clutch automated transmission (DCT) does use two actual clutch packs internally, but they are computer-controlled, not operated by the driver's foot.
+
+16.6  Clutch wear and driver habits
+
+A clutch's friction material wears with every moment spent slipping under load — the biting-point phase of a normal gear change or hill start is unavoidable and expected wear, but two specific driver habits accelerate it unnecessarily: 'riding' the clutch (resting a foot lightly on the pedal, or a hand on the lever, during normal driving, causing constant slight slip even when not needed) and holding a vehicle stationary on a slope using the clutch's biting point instead of the handbrake/parking brake for extended periods, such as at a long traffic signal on an incline.
+
+17.  Understanding Braking Systems: Full Mechanical Explanation
+
+17.1  The basic physics
+
+Braking works by converting the vehicle's kinetic energy (the energy of its motion) into heat through friction, which is then dissipated into the surrounding air. The harder and more suddenly this conversion happens, the more heat is generated at once, and the greater the risk of the tyre's grip on the road being overwhelmed — which is what causes a skid.
+
+17.2  Hydraulic friction brakes (disc and drum)
+
+Pressing the brake pedal pushes a piston in the master cylinder, pressurising brake fluid that travels through sealed lines to a smaller cylinder/caliper at each wheel. In a disc brake, this pressure squeezes two pads against a rotating metal disc attached to the wheel hub; in a drum brake (still common on the rear axle of many smaller/lighter Indian cars and most two-wheelers' rear wheel where drum brakes remain in use), the pressure pushes curved shoes outward against the inside of a rotating drum. Disc brakes generally shed heat faster and perform more consistently under repeated hard use, which is why they are near-universal on the front axle, where the majority of braking force and heat is generated.
+
+17.3  ABS — Anti-lock Braking System
+
+ABS uses a speed sensor at each wheel to detect when a wheel is about to lock (stop rotating while the vehicle is still moving, causing a skid and loss of steering control). The moment lock-up is detected, the ABS control unit rapidly releases and reapplies brake pressure at that wheel, many times per second — faster than any human foot could pump the pedal — keeping the tyre just at the edge of maximum grip rather than fully locked. The correct driver technique with ABS is to apply firm, continuous pressure and let the system do the rapid modulation; pumping the pedal manually, a technique taught before ABS became standard, actually works against the system.
+
+17.4  EBD and other electronic aids
+
+Electronic Brakeforce Distribution (EBD), which works alongside ABS, automatically varies how much braking force goes to the front versus rear wheels depending on the vehicle's load and weight transfer at the moment of braking, improving stability especially when braking hard with passengers or cargo aboard. Many modern vehicles also include Brake Assist, which detects a sudden, hard press of the pedal (indicating an emergency) and automatically applies maximum available braking force even if the driver's own pressure eases slightly out of instinct.
+
+17.5  Air brakes (heavy vehicles)
+
+Larger trucks and buses commonly use compressed-air brakes instead of, or alongside, hydraulic ones, because they can generate much greater clamping force for a heavy vehicle's mass without requiring impractical pedal effort from the driver. An air compressor, driven by the engine, builds and maintains pressure in onboard air tanks; pressing the brake pedal opens a valve that releases this stored air pressure to actuate the brakes at each wheel. This is why a heavy vehicle must not be driven until sufficient air pressure has built up after starting — moving with too little air pressure available risks a partial or total loss of braking force, and vehicles are fitted with a low-pressure warning buzzer specifically for this reason.
+
+17.6  Regenerative braking (EVs and hybrids)
+
+In an EV or hybrid, lifting off the accelerator (and, on many models, the first portion of brake-pedal travel) reverses the electric motor's role: instead of drawing power from the battery to turn the wheels, the motor is turned by the still-moving wheels and acts as a generator, converting the vehicle's kinetic energy into electricity that is fed back into the battery. This provides genuine deceleration without touching the friction brakes at all, extends both battery range and brake-pad life, and only hands over to the conventional friction brakes for harder or more urgent stops, or once the vehicle's speed drops low enough that regeneration becomes less effective.
+
+17.7  Brake fade and how to avoid it
+
+Brake fade — a temporary, sometimes alarming loss of braking effectiveness — happens when the friction material and the disc/drum become too hot from sustained or repeated hard braking (most commonly on a long downhill stretch) to keep converting motion into heat effectively. It is prevented, not cured after the fact, primarily by using engine braking (staying in a lower gear on a descent, or increasing regenerative braking level in an EV) to do a large share of the slowing, rather than resting continuously on the brake pedal for an extended downhill run.
+
+18.  Acceleration, Speed Control and Engine/Motor Management
+
+18.1  How acceleration is actually produced
+
+In a petrol/diesel engine, pressing the accelerator pedal (via a cable or, in most modern vehicles, an electronic 'drive-by-wire' sensor) opens the throttle body further, admitting more air (and correspondingly more fuel) into the engine's cylinders, increasing the force of each combustion stroke and therefore the engine's power output and revolutions per minute (RPM). In an electric motor, the accelerator pedal instead directly commands the electric current supplied to the motor's windings — there is no combustion, no throttle body, and essentially no lag between pedal input and torque delivery, which is why EV acceleration feels so immediate compared to a petrol engine building revs.
+
+18.2  Smooth acceleration technique
+
+Squeeze the accelerator progressively from a standstill rather than pressing it in one motion — this matches power delivery to the clutch's biting point (manual) or to the gearbox's own gentle take-up (automatic), avoiding both stalling and a harsh lurch.
+
+Once moving, accelerate in proportion to the actual need — merging into fast-moving traffic warrants firmer, decisive acceleration; ordinary city progress does not.
+
+Avoid holding the accelerator flat while the engine is already near its redline (maximum safe RPM) in a low gear — this wastes fuel, generates excess noise and wear, and in a manual car is usually the sign that an upward gear change is overdue.
+
+18.3  Reading the tachometer (RPM gauge)
+
+The tachometer shows how fast the engine's crankshaft is rotating, in thousands of revolutions per minute. A red zone marked at the high end indicates the manufacturer's maximum safe limit; sustained running in or near this zone risks engine damage and is never necessary for ordinary road driving. For a manual car, the tachometer is one of the clearest instruments for judging when to change gear — a gentle guideline for many petrol engines is to shift up somewhere in the 2,000–3,000 RPM range under normal, unhurried driving, though this varies meaningfully by engine and should be treated as indicative only.
+
+18.4  Speed control on the move — cruise and coasting
+
+Maintaining a steady speed on an open road is more fuel-efficient and safer than continuously alternating between acceleration and braking; many modern cars offer cruise control specifically to hold a set speed automatically on suitable roads (best used on clear highways, not in dense urban traffic where constant judgement is required). Coasting — allowing the vehicle to slow gradually by lifting off the accelerator well in advance of a required stop, rather than travelling at speed right up to the point of braking — is both a fuel-saving habit and a core defensive-driving technique, since it builds in a larger margin for the unexpected.
+
+18.5  At what point should you accelerate, and how — consolidated
+
+Accelerate only once the path is confirmed clear and, for geared vehicles, only once the clutch has reached or passed the biting point.
+
+Increase throttle progressively rather than abruptly — smooth acceleration is both safer and (for fuel/battery efficiency) more economical.
+
+On a gradient start, accelerator input must be introduced before the handbrake/front brake is released, not after, so the vehicle's own drive takes over the moment gravity is no longer being resisted by the brake.
+
+When overtaking, accelerate decisively and complete the manoeuvre promptly once committed, rather than accelerating hesitantly and prolonging time spent in the opposing lane.
+
+19.  Steering, Balance and Vehicle Dynamics
+
+19.1  Basic steering technique (four-wheelers)
+
+The commonly taught reference position for hand placement on the steering wheel is 'nine and three' (or the slightly lower 'eight and four') o'clock, giving full range of movement in either direction without needing to release and re-grip the wheel for a normal turn. For sharper turns — reverse parking, the figure-8, a tight U-turn — a controlled hand-over-hand technique is used, feeding the wheel through the hands rather than crossing the arms, which would restrict range of motion and vision at the critical moment.
+
+19.2  Balance and countersteering (two-wheelers)
+
+A two-wheeler is inherently balanced dynamically rather than statically — it stays upright because of the combined effect of its own geometry and small, continuous steering corrections, many of them below the level of conscious awareness once a rider is experienced. At anything above a walking pace, a motorcycle actually turns by a brief, counter-intuitive push on the handlebar in the opposite direction to the intended turn (pushing the right side of the handlebar forward to turn right), which very slightly unbalances the bike and lets it lean into the turn — this is 'countersteering', and it happens instinctively in experienced riders even though it is rarely taught explicitly at the learner stage, where slow-speed direct steering dominates instead.
+
+19.3  Weight transfer under acceleration and braking
+
+Under hard acceleration, a vehicle's weight shifts rearward, increasing rear-tyre grip and reducing front-tyre grip — relevant to why wheel-spin under hard acceleration is more of a rear-wheel-drive characteristic. Under braking, weight shifts forward (the 'nose-dive' felt in a car, or the sensation of being pushed toward the tank on a motorcycle), which is precisely why the front brake supplies the larger share of a two-wheeler's stopping power (Chapter 10.3) and why a car's front brakes and tyres wear faster than the rear.
+
+19.4  Skidding — causes and correction
+
+A skid happens when a tyre's demand for grip (from steering, braking, or accelerating too hard, or a combination) exceeds what the road surface can actually supply, particularly on a wet, oily, gravel-strewn, or worn road surface. The general, vehicle-agnostic correction is to avoid sudden, large control inputs during the skid itself: ease off whichever pedal or steering input caused the loss of grip, look and steer gently toward where you want the vehicle to go rather than fighting the slide with large opposite-lock corrections, and let ABS (where fitted) do the fine modulation of braking rather than pumping the pedal manually.
+
+X.  Vehicle Maintenance Basics Every Driver Should Know
+
+A driving licence tests the ability to control a vehicle, but a genuinely competent driver also recognises the early warning signs of a mechanical problem, since many roadside breakdowns and some accidents are preventable with basic maintenance awareness. None of this requires being a mechanic — it requires knowing what to check, and what a warning sign means.
+
+X.1  Tyres
+
+Under-inflated tyres increase fuel/energy consumption, generate excess heat (a blow-out risk on a long, fast drive), and reduce grip in wet conditions specifically at the tyre's shoulders.
+
+Over-inflated tyres reduce the contact patch with the road, reducing grip and giving a harsher ride.
+
+Tread depth below the legal minimum significantly increases stopping distance on a wet road and the risk of aquaplaning; a simple visual check against the tyre's built-in tread-wear indicators (small raised bars within the tread grooves) should be a habit, not only an annual event.
+
+Uneven wear across a tyre's width can indicate incorrect wheel alignment or suspension wear, and is worth having checked rather than ignored.
+
+X.2  Fluids
+
+Fluid
+
+Why it matters
+
+Warning sign of a problem
+
+Engine oil
+
+Lubricates and cools moving engine parts
+
+Oil warning light on the dashboard; unusual engine noise
+
+Coolant
+
+Prevents the engine from overheating
+
+Temperature gauge reading high; visible steam from the bonnet
+
+Brake fluid
+
+Transmits pedal pressure to the brakes hydraulically
+
+Brake warning light; a spongy or lower-than-usual brake pedal
+
+Windscreen washer fluid
+
+Clears road grime for visibility
+
+Washer jets producing no fluid when the stalk is operated
+
+X.3  Battery and electricals (conventional vehicles)
+
+A conventional vehicle's 12-volt battery starts the engine and powers lights, indicators and accessories; a battery nearing the end of its life typically shows itself as slow, laboured engine cranking on start-up, dimming headlights at idle, or dashboard warning lights flickering — worth acting on before it fails completely, often at the least convenient moment.
+
+X.4  EV battery basics
+
+An EV's main traction battery is a different, much larger system from a conventional 12-volt battery (though most EVs also carry a small conventional battery for onboard electronics). Battery health is generally preserved by avoiding routinely charging to 100% or running down to 0% where the vehicle offers a settable charge limit, avoiding repeated fast (DC) charging as the sole charging method where slower home/AC charging is also available, and avoiding leaving the vehicle at a very high or very low charge state for extended periods, particularly in high ambient heat.
+
+X.5  Reading the dashboard warning-light colour code
+
+Red warning light: stop as soon as it is safe to do so and address the issue before continuing — indicates a serious fault (e.g. oil pressure, brake system, main battery/coolant temperature).
+
+Amber/yellow warning light: a fault exists that should be checked soon, but does not necessarily require stopping immediately — proceed with caution and have it inspected promptly.
+
+Green/blue indicator light: informational only (e.g. indicators active, headlights on, cruise control engaged) — not a fault warning.
+
+PART D
+
+Judgement, Hazard Awareness and Conditions
+
+20.  Defensive Driving and Hazard Perception
+
+20.1  What defensive driving actually means
+
+Defensive driving is the practice of driving in a way that anticipates and reduces risk from the mistakes of others, road conditions, and unpredictable events — not just avoiding your own mistakes. It is not formally scored as a separate line item on most RTO practical tests, but examiners consistently note it informally (mirror checks, following distance, smoothness, anticipation), and it is precisely the skill that keeps a licensed driver safe for decades after the test itself is long forgotten.
+
+20.2  The core habits
+
+Maintain a safe following distance at all times — the two-second rule in good conditions, extended in poor ones (Chapter 20.4).
+
+Scan well ahead of the vehicle immediately in front — traffic several vehicles ahead, brake lights, pedestrians near the kerb, a changing signal — rather than fixating on the single vehicle directly in your path.
+
+Check mirrors regularly as a habit, not only when a specific manoeuvre is planned — roughly every 5–8 seconds is a commonly taught rhythm — so the surrounding traffic picture is always current.
+
+Always signal intent (indicator, hand signal, brake lights) early enough to give following and merging traffic real time to react, not at the last possible moment.
+
+Assume other road users may make a mistake — a vehicle may not indicate before a lane change, a pedestrian may step out unexpectedly — and drive with enough margin that such a mistake does not become a collision.
+
+Never assume right of way in practice, even where the rule says it is yours — proceed once you have actually confirmed, by eye contact or observed behaviour, that the other party has seen and is yielding.
+
+20.3  Hazard perception — what to actively scan for
+
+Environment
+
+Typical hazards to actively anticipate
+
+Urban / residential streets
+
+Children near parked cars, doors opening on parked vehicles, pedestrians crossing between vehicles, two-wheelers filtering through gaps
+
+Markets and mixed-traffic zones
+
+Slow-moving carts and cycles, sudden stops by other vehicles, animals, vendors encroaching on the carriageway
+
+Highways / expressways
+
+Vehicles merging from slip roads, tyre debris, sudden braking by trucks ahead, wrong-side driving by other vehicles
+
+School zones
+
+Sudden pedestrian movement, reduced attention from young pedestrians, buses stopping to load/unload
+
+Near construction / road-work
+
+Uneven surfaces, narrowed lanes, workers close to the carriageway, loose material on the road
+
+20.4  Following distance in detail
+
+The two-second rule: choose a fixed point on the road ahead (a signboard, a shadow, a lamp post) — when the vehicle ahead passes it, count 'one thousand and one, one thousand and two'; your own vehicle should not reach that same point before the count finishes. This should be extended to at least four seconds in rain, and further still in fog, on a poor road surface, or when following a heavy vehicle whose driver's view of what is ahead of them (and therefore their ability to react and warn you in time) may be different from your own.
+
+21.  Driving in Adverse Conditions
+
+21.1  Rain and wet-road driving
+
+Reduce speed — wet tarmac significantly increases stopping distance and the risk of aquaplaning (a thin film of water lifting the tyre off the road surface, causing a temporary, total loss of grip and steering response).
+
+Increase following distance to at least four seconds.
+
+Avoid harsh braking or sudden steering inputs; brake earlier and more gently than in dry conditions.
+
+Switch on headlights (not just hazard lights) in heavy rain to improve your own visibility to others, even in daylight.
+
+If aquaplaning occurs, ease off the accelerator without braking or turning sharply, and wait for the tyres to regain contact with the road surface before steering or braking normally again.
+
+21.2  Night driving
+
+Use headlights on low beam in built-up areas and when an oncoming vehicle approaches, switching to high beam only on unlit roads with no oncoming or preceding traffic in the beam's path — high beam directed at an oncoming driver briefly blinds them and is itself a penalised offence in most states.
+
+Reduce speed relative to daytime driving on the same road, since hazard-recognition distance is shorter after dark.
+
+Be conscious that judging the speed and distance of oncoming vehicles is genuinely harder at night; leave a larger safety margin at junctions and while overtaking.
+
+Keep the windscreen, headlights and mirrors clean — dirt and grime scatter light and meaningfully reduce visibility after dark, even where it makes little visible difference in daylight.
+
+21.3  Fog and low-visibility driving
+
+Use fog lights where fitted, along with low-beam headlights; high beam reflects back off fog and reduces visibility further rather than helping.
+
+Reduce speed substantially, and increase following distance well beyond the standard two-second guideline, since stopping and reaction distances are effectively unchanged while visibility is drastically reduced.
+
+Use road markings (the left edge line in particular) as a steering reference when visibility is very poor, rather than relying on the vehicle ahead.
+
+21.4  Highway / expressway driving
+
+Maintain lane discipline — stay in the appropriate lane for your speed and intended manoeuvre, and use the rightmost lane primarily for overtaking, not for sustained cruising, in line with most state expressway rules.
+
+Check mirrors and blind spots thoroughly before any lane change, given the higher relative speeds involved.
+
+Never reverse or make a U-turn on a highway/expressway carriageway; if a wrong turn is missed, continue to the next authorised exit.
+
+Take a scheduled rest break roughly every two hours on a long drive, in recognition of how fatigue accumulates on monotonous, high-speed stretches specifically.
+
+21.5  Waterlogged/flooded roads
+
+Avoid entering water of unknown or excessive depth — even a shallow-looking stretch can conceal a pothole, an open manhole, or debris.
+
+If crossing is unavoidable and the depth is assessed as safe, proceed slowly in a low gear (or, in an EV, at gentle and steady accelerator input) to maintain a small bow wave ahead of the vehicle and avoid stalling.
+
+Avoid braking while still in standing water where possible; test the brakes gently once clear of the water, since wet brakes take a moment to regain full effectiveness.
+
+22.  Common Test Mistakes and Fail Points, by Vehicle Class
+
+Vehicle class
+
+Most common fail points
+
+Two-wheeler (MCWOG/MCWG)
+
+Foot down during slow-ride or figure-8; boundary-line contact in the figure-8; stalling on the gradient start; rolling back on the gradient; missed or incorrect hand signal
+
+Car — manual (LMV-NT)
+
+Stalling at the start or during a gear change; rolling back on the gradient start; harsh, jerky clutch release; excessive corrections during reverse/parallel parking; late or missed mirror checks
+
+Car — automatic (LMV-NT)
+
+Unexpected creep causing contact with a marker at a stop; left-foot braking causing jerky control; over-reliance on the accelerator for fine speed control instead of gentle brake modulation during parking manoeuvres
+
+Truck / bus (HMV, HGMV, HPMV)
+
+Turning too tight and off-tracking the rear wheels onto a kerb/marker; inadequate mirror checks before a lane change or turn; late braking given the vehicle's actual stopping distance; incomplete pre-trip/coupling checks
+
+Electric vehicle (any class)
+
+Overly sharp, unintended acceleration from misjudging the instant-torque throttle response; under-use of the brake pedal because regenerative braking is doing most of the work, leading to a longer-than-expected final stopping distance in an emergency
+
+22.1  General preparation advice, independent of vehicle class
+
+Practise in a space marked out to the exact dimensions your specific RTO uses for its track — call ahead and ask, since dimensions and layout vary meaningfully between RTOs even within the same state.
+
+Visit the test track in person before the test date if candidates are permitted to observe others testing, to see the real layout and pace rather than relying only on descriptions.
+
+Practise the gradient start and the figure-8/reverse manoeuvres specifically and repeatedly, since these are the two most common national fail points across every vehicle class (Chapter 9.4).
+
+On the test day itself, treat every instruction from the examiner as literal and immediate — hesitating to double-check an instruction, or performing a manoeuvre not asked for, is itself commonly read as uncertain competence even when the underlying vehicle control was fine.
+
+X.  Documents to Carry, Insurance and Parking Rules
+
+X.1  Documents a driver must be able to produce
+
+A valid driving licence for the category of vehicle being driven.
+
+The vehicle's Registration Certificate (RC).
+
+A valid insurance certificate — third-party insurance is legally compulsory for every motor vehicle on Indian roads; comprehensive cover is optional but widely taken for the additional protection it provides the vehicle owner.
+
+A valid Pollution Under Control (PUC) certificate.
+
+A permit, for a transport/commercial vehicle operating outside purely private use.
+
+All of the above may be produced either physically or as digital copies via DigiLocker or the mParivahan app, which a traffic police officer is required to accept as equivalent to the physical original.
+
+X.2  Third-party vs. comprehensive insurance
+
+Third-party insurance covers liability for injury, death or property damage caused to a third party by the insured vehicle — it does not cover damage to the insured driver's own vehicle. Comprehensive insurance additionally covers damage to, or theft of, the insured driver's own vehicle, and can be extended with add-ons (zero-depreciation cover, engine protection, roadside assistance, and similar). Only third-party cover is legally mandatory; driving without it is a specifically penalised offence under the Motor Vehicles Act (Chapter 8).
+
+X.3  Parking rules and etiquette
+
+Park only in designated/permitted areas — never on a pedestrian crossing, at a junction, in front of a fire hydrant/exit, blocking another vehicle's exit, or on a no-parking-marked stretch.
+
+Engage the handbrake/parking brake fully, and for a manual car on a slope, leave it in gear (or in Park for an automatic) as an additional precaution against rolling.
+
+Turn the front wheels toward the kerb when parked facing downhill, and away from the kerb when parked facing uphill (with a kerb present), so that if the parking brake were to fail, the vehicle rolls into the kerb rather than into traffic.
+
+Switch off headlights and any accessories before leaving the vehicle, to avoid draining the battery.
+
+When parking on a road with traffic, always exit the vehicle from the side away from moving traffic, and check over your shoulder before opening a door directly into the flow of traffic — 'dooring' a passing cyclist or two-wheeler is both dangerous and a specifically recognised hazard in Indian traffic conditions.
+
+23.  Accident Procedure and First Response
+
+23.1  A driver's legal duty at the scene
+
+Under Section 132 of the Motor Vehicles Act, 1988, a driver involved in an accident has a statutory duty to stop and render such assistance as may be required, and to give their name and address, and the name and address of the vehicle's owner, to the injured party or a person acting on their behalf, as well as to a police officer if one is present or arrives. Leaving the scene without doing so — a 'hit and run' — is itself a serious, separately penalised offence, distinct from any liability for the accident itself.
+
+23.2  Immediate steps at the scene
+
+Stop the vehicle safely, switch on hazard lights, and — where safe to do so — move it out of the flow of traffic to prevent a secondary collision.
+
+Check for injuries, your own and others'; call for emergency medical help (dial 112, the unified national emergency number, or 108/102 for an ambulance in most states) without delay if anyone is injured.
+
+Do not move a seriously injured person unless leaving them in place poses a further immediate danger (fire, ongoing traffic risk) — incorrect movement can worsen a spinal or head injury.
+
+Exchange licence, registration (RC) and insurance details with the other party/parties involved.
+
+Report the accident to the nearest police station within 24 hours, as required under the Act, even where it seems minor — this protects the driver's own position for insurance and liability purposes as much as it fulfils a legal duty.
+
+Photograph the scene, vehicle positions and damage where safely possible, before vehicles are moved, for the insurance claim process.
+
+23.3  The Golden Hour and Good Samaritan protection
+
+The 'Golden Hour' — statutorily defined under Section 2(12A) of the Motor Vehicles Act as the first hour following a serious traumatic injury — is recognised as the period during which prompt medical care has the greatest chance of preventing death. Section 162 of the Act mandates cashless treatment of road-accident victims by hospitals during this window. India's Good Samaritan guidelines and associated state laws give a bystander who voluntarily helps an accident victim — including by simply transporting them to hospital — legal protection from being compelled to act as a witness, from being detained for questioning beyond what is necessary, and from having their personal details disclosed without consent; a Good Samaritan cannot be held liable for any unintended consequence of the good-faith assistance they render. A separate Rah-Veer scheme recognises such bystanders with a monetary award where an accident victim is taken to hospital within the golden hour.
+
+23.4  Basic first-aid awareness expected of a driver
+
+Do not remove a motorcycle rider's helmet unless breathing is obstructed and it is unavoidable — improper helmet removal can worsen a neck injury; if it must be done, support the head and neck throughout.
+
+Control visible heavy bleeding with firm, direct pressure using a clean cloth, without removing an already-soaked cloth (add more layers on top instead).
+
+Keep an injured person still, warm, and reassured while waiting for emergency help, rather than attempting to treat injuries beyond basic first aid without medical training.
+
+Note the accident's approximate time and any details that will assist the police report and insurance claim, while care of the injured takes priority over documentation.
+
+PART E
+
+After the Licence
+
+24.  Renewal, Endorsement and Licence Maintenance
+
+24.1  Validity and renewal cycle
+
+A Permanent Driving Licence is generally valid for 20 years from the date of issue, or until the holder turns 40, whichever comes first. After that, renewal is required — commonly every 10 years for holders under 40 at the time of renewal, and every 5 years for holders above 40 (thresholds and exact cycles vary by state), with a medical fitness declaration or certificate typically required at renewal for older drivers. Renewal can be applied for up to one year before expiry and up to a defined grace period after expiry (commonly around one year, subject to a late fee) before the licence is treated as fully lapsed and a fresh application process is required.
+
+24.2  Adding a category to an existing licence
+
+A licence-holder who wishes to add a further category — for example, an existing LMV holder wanting to add MCWG, or an existing LMV holder progressing to HMV — applies afresh for that specific category through the Sarathi portal, including a fresh Learner's Licence and practical test for that category, even though no new full application is needed for categories already held.
+
+24.3  Address change and duplicate licence
+
+A change of address should be updated on the licence record via the Sarathi portal; a lost or damaged licence can be replaced by applying for a duplicate, generally requiring a police complaint/FIR copy for a lost licence, a fee, and photo/signature verification, without needing to retake either test.
+
+24.4  Endorsements and disqualification
+
+Serious or repeated violations can result in specific endorsements on a licence record, or outright suspension/disqualification for a defined period, decided by the licensing authority or a court depending on the offence's severity — drunk driving, dangerous driving causing injury, and the accumulation of 5 or more violations in a calendar year (Chapter 8.1) are the most common paths to this outcome. A disqualified driver who continues to drive commits a further, separate offence.
+
+25.  Glossary of Terms
+
+Term
+
+Meaning
+
+ABS
+
+Anti-lock Braking System — prevents wheel lock-up under hard braking by rapidly modulating brake pressure
+
+ADTC
+
+Accredited Driving Training Centre — an approved private driving school whose course may substitute for the RTO practical test in some states
+
+Biting point / friction point
+
+The point in clutch-pedal or clutch-lever travel where engine power just begins to reach the wheels
+
+CMVR
+
+Central Motor Vehicles Rules, 1989 — the detailed procedural rules made under the Motor Vehicles Act
+
+DL
+
+(Permanent) Driving Licence
+
+EBD
+
+Electronic Brakeforce Distribution — automatically balances braking force between front and rear wheels
+
+Engine braking
+
+Deceleration produced by lifting off the accelerator while still in gear, using engine resistance rather than the brake pedal
+
+Golden Hour
+
+The statutorily defined first hour after a serious injury, during which prompt medical care most improves survival odds
+
+Good Samaritan
+
+A bystander who voluntarily assists an accident victim in good faith, with specific legal protections under Indian law
+
+GVW
+
+Gross Vehicle Weight — the maximum operating weight of a vehicle including its own weight, fuel, passengers and cargo
+
+HMV / HGMV
+
+Heavy (Goods) Motor Vehicle — the licence category for trucks and heavy goods carriers
+
+HPMV
+
+Heavy Passenger Motor Vehicle — the licence category for large buses
+
+LL
+
+Learner's Licence — temporary supervised-practice permit issued before the practical test
+
+LMV
+
+Light Motor Vehicle — the licence category for private cars and similar vehicles
+
+MCWG / MCWOG
+
+Motorcycle With Gear / Without Gear — the licence categories for geared and gearless two-wheelers respectively
+
+PUC
+
+Pollution Under Control certificate — mandatory periodic proof of a vehicle's emissions compliance
+
+Regenerative braking
+
+Deceleration in an EV/hybrid produced by using the electric motor as a generator, recovering energy into the battery
+
+RTO
+
+Regional Transport Office — the state-level authority administering vehicle registration and driving licences
+
+Threshold braking
+
+Progressive, firm brake-pedal pressure applied just up to, but not beyond, the point of wheel lock-up
+
+26.  Appendix A: State-Wise Variation Notes
+
+India's RTO system is administered at the state level within a central framework, so several practical details differ from state to state. A candidate should always confirm the following directly with their own state RTO or the Parivahan Sarathi portal before their test date:
+
+Exact LL theory test format (15, 20 or, in Kerala, 50 questions) and whether home-based webcam testing is available.
+
+Exact practical-test track dimensions, manoeuvre sequence, and whether the track is automated (sensor-based) or manually examined.
+
+Exact fine amounts for common violations, which are set by each state at or below the central ceiling.
+
+Whether an ADTC completion certificate is accepted in place of the RTO's own practical test.
+
+The exact permitted roll-back distance on the gradient-start manoeuvre (commonly 30–50 cm, but stated differently by different RTOs).
+
+State-specific rules layered on top of the central Motor Vehicles Act — for example, Gujarat's prohibition-related rules add separate, additional consequences for drunk driving beyond the standard central Motor Vehicles Act penalty.
+
+27.  Appendix B: Quick-Reference Summary Table
+
+Vehicle class
+
+Key skill focus
+
+Signature test manoeuvre
+
+Two-wheeler (MCWG)
+
+Balance, clutch-throttle coordination, front/rear brake split
+
+Figure-of-8 without foot-down
+
+Car — manual (LMV-NT)
+
+Clutch biting point, smooth gear changes, threshold braking
+
+Gradient start without rolling back
+
+Car — automatic (LMV-NT)
+
+Accelerator/brake modulation only, awareness of creep
+
+Reverse / parallel parking
+
+Truck / bus (HMV, HGMV, HPMV)
+
+Wide-turn management, mirror checks, longer stopping distances, load awareness
+
+S-curve reverse and gradient hold with a loaded/long vehicle
+
+Electric vehicle (any class)
+
+Regenerative-braking feel, instant-torque throttle control, silent-running awareness
+
+Same track tests as the automatic-car track, minus any clutch element
+
+X.  Appendix C: Sample Practice Questions
+
+The following sample questions are representative of the style and difficulty of the LL theory test question bank (Chapter 5), covering signs, rules, and applied mechanical knowledge from across this manual. They are for practice orientation only and are not drawn verbatim from any state's live question bank.
+
+X.  Appendix C: Sample Practice Questions
+
+The following sample questions are representative of the style and difficulty of the LL theory test question bank (Chapter 5), covering signs, rules, and applied mechanical knowledge from across this manual. They are for practice orientation only and are not drawn verbatim from any state's live question bank.
+
+Q1. A solid, unbroken centre line on the road means:
+
+Answer: Overtaking across it is not permitted
+
+Q2. A red circular sign with a white bar means:
+
+Answer: No Entry — no vehicle may enter from that direction
+
+Q3. The 'biting point' of a clutch refers to:
+
+Answer: The point where engine power just begins to transfer to the wheels
+
+Q4. On a two-wheeler, most of the stopping power comes from:
+
+Answer: The front brake, due to forward weight transfer under braking
+
+Q5. A flashing amber traffic signal means:
+
+Answer: Proceed with caution, slowing down and giving way where necessary
+
+Q6. The minimum age to apply for an MCWG (geared two-wheeler) licence is:
+
+Answer: 18 years
+
+Q7. A Learner's Licence is valid for:
+
+Answer: 6 months from the date of issue
+
+Q8. ABS prevents wheel lock-up by:
+
+Answer: Rapidly modulating brake pressure at each wheel
+
+Q9. When approaching a roundabout, priority generally belongs to:
+
+Answer: Traffic already established in the roundabout
+
+Q10. An EV's regenerative braking works by:
+
+Answer: Using the electric motor as a generator to recover kinetic energy into the battery
+
+Q11. The correct technique in an ABS-equipped car during an emergency stop is to:
+
+Answer: Apply firm, continuous pedal pressure without pumping
+
+Q12. A driver involved in an accident must report it to the police within:
+
+Answer: 24 hours
+
+Q13. The 'Golden Hour' refers to:
+
+Answer: The first hour after a serious injury, when prompt medical care most improves survival
+
+Q14. Which licence category is required to drive a truck over 7,500 kg GVW?
+
+Answer: HMV/HGMV
+
+Q15. A broken (dashed) centre line means:
+
+Answer: Overtaking is permitted when safe to do so
+
+Q16. Riding the clutch (resting a foot on the pedal) causes:
+
+Answer: Premature wear of the friction plate
+
+Q17. The two-second rule is used to judge:
+
+Answer: Safe following distance
+
+Q18. On a gradient start in a manual car, the handbrake should be released:
+
+Answer: Only once the clutch has reached the biting point and is taking the car's weight
+
+Q19. A red dashboard warning light generally means:
+
+Answer: Stop as soon as safely possible and address the fault before continuing
+
+Q20. Engine braking is achieved by:
+
+Answer: Lifting off the accelerator while remaining in gear
+
+Q21. The fine for driving without a valid insurance certificate is (typical central ceiling):
+
+Answer: ₹2,000
+
+Q22. A Good Samaritan who assists an accident victim in good faith is:
+
+Answer: Legally protected from being compelled to act as a witness or face harassment
+
+Q23. A vehicle's PUC certificate confirms:
+
+Answer: Compliance with permitted emission levels
+
+Q24. The correct hand signal for a right turn on a two-wheeler is:
+
+Answer: Right arm extended horizontally
+
+Q25. Aquaplaning occurs when:
+
+Answer: A film of water lifts the tyre off the road surface, causing loss of grip
+
+Q26. A three-wheeler is more prone to tipping in a fast turn than a car mainly because of:
+
+Answer: Its higher centre of gravity relative to its track width
+
+Q27. A licence-holder accumulating 5 or more violations in a calendar year (from Jan 2026) may face:
+
+Answer: Suspension of their driving licence, after notice and a hearing
+
+Q28. The correct order of steps for moving off in a manual car is:
+
+Answer: Clutch down, select gear, find biting point with light throttle, release clutch smoothly
+
+Q29. Threshold braking means:
+
+Answer: Applying firm, progressive brake pressure just up to the point of wheel lock-up
+
+Q30. An automatic car's selector position 'N' means:
+
+Answer: Neutral — the drivetrain is disconnected while the vehicle is stationary
+
+End of manual.  This document is a structured educational compilation for candidate preparation; always confirm current fees, exact track layout, fine amounts and manoeuvre order with your specific state RTO or the Parivahan Sarathi portal before your test date, as local practice varies and rules are periodically updated.

@@ -109,3 +109,31 @@ def test_match_unknown_fallback():
     data = response.json()
     assert data["confidence"] < 0.4
     assert data["fallback_message"] is not None
+
+
+def test_rag_ask_incline_manual():
+    """Verify RAG over the official RTO Complete Driving Manual."""
+    payload = {
+        "applicant_id": "app_123",
+        "query": "What is the clutch bite point technique for hill start on an incline ramp?",
+    }
+    response = client.post("/academy/ask", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert "answer" in data
+    assert len(data["source_sections"]) > 0
+    assert data["matched_video"] is not None
+    assert data["matched_video"]["topic"] == "hill start"
+
+
+def test_rag_ask_traffic_rules():
+    """Verify RAG retrieval for road signs and legal rules."""
+    payload = {
+        "applicant_id": "app_123",
+        "query": "What are mandatory traffic signs under Motor Vehicles Act?",
+    }
+    response = client.post("/academy/ask", json=payload)
+    assert response.status_code == 200
+    data = response.json()
+    assert len(data["source_sections"]) > 0
+    assert any("Traffic Signs" in s or "Legal" in s for s in data["source_sections"])
