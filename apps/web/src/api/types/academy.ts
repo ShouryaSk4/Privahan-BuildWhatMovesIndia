@@ -145,6 +145,12 @@ export interface components {
             confidence: number;
             /** Fallback Message */
             fallback_message?: string | null;
+            /** Video Url */
+            video_url?: string | null;
+            /** Title */
+            title?: string | null;
+            /** Description */
+            description?: string | null;
         };
     };
     responses: never;

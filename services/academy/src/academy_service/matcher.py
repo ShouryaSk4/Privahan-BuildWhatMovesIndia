@@ -79,6 +79,9 @@ Respond strictly in valid JSON with no markdown wrapping:
                         topic=matched_video.topic,
                         confidence=round(min(confidence, 0.99), 2),
                         fallback_message=None if confidence >= 0.4 else "Topic matched with low confidence.",
+                        video_url=matched_video.video_url,
+                        title=matched_video.title,
+                        description=matched_video.description,
                     )
         return None
 
@@ -135,6 +138,9 @@ Respond strictly in valid JSON with no markdown wrapping:
                 topic=best_video.topic,
                 confidence=round(min(best_score / 1.5, 0.98), 2),
                 fallback_message=None,
+                video_url=best_video.video_url,
+                title=best_video.title,
+                description=best_video.description,
             )
 
         # Fallback when confidence is low
@@ -147,4 +153,7 @@ Respond strictly in valid JSON with no markdown wrapping:
                 f"We couldn't identify a specific lesson for '{request.query}'. "
                 f"Popular modules include: {available_topics}."
             ),
+            video_url=ACADEMY_VIDEO_CATALOG[0].video_url,
+            title=ACADEMY_VIDEO_CATALOG[0].title,
+            description=ACADEMY_VIDEO_CATALOG[0].description,
         )

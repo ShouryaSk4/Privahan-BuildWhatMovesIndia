@@ -17,6 +17,9 @@ class VideoMatchResult(BaseModel):
     topic: str
     confidence: float = Field(..., ge=0.0, le=1.0, description="Confidence score between 0.0 and 1.0")
     fallback_message: str | None = None
+    video_url: str | None = None
+    title: str | None = None
+    description: str | None = None
 
 
 class AcademyVideo(BaseModel):
