@@ -61,11 +61,20 @@ TRANSITIONS: dict[str, tuple[tuple[JourneyStage, ...], JourneyStage]] = {
         (JourneyStage.LL_DOCUMENTS_VERIFIED, JourneyStage.LL_TEST_SCHEDULED),
         JourneyStage.LL_ISSUED,
     ),
-    "begin_practice": ((JourneyStage.LL_ISSUED,), JourneyStage.PRACTICE_WINDOW),
-    "dl_test_booked": ((JourneyStage.PRACTICE_WINDOW,), JourneyStage.DL_TEST_BOOKED),
+    "begin_practice": (
+        (JourneyStage.LL_ISSUED, JourneyStage.DL_TEST_BOOKED),
+        JourneyStage.PRACTICE_WINDOW,
+    ),
+    "dl_test_booked": (
+        (JourneyStage.LL_ISSUED, JourneyStage.PRACTICE_WINDOW, JourneyStage.DL_TEST_BOOKED),
+        JourneyStage.DL_TEST_BOOKED,
+    ),
     "dl_test_failed": ((JourneyStage.DL_TEST_BOOKED,), JourneyStage.DL_TEST_RESULT_FAIL),
     "dl_test_passed": ((JourneyStage.DL_TEST_BOOKED,), JourneyStage.DL_TEST_RESULT_PASS),
-    "dl_test_rebooked": ((JourneyStage.DL_TEST_RESULT_FAIL,), JourneyStage.DL_TEST_BOOKED),
+    "dl_test_rebooked": (
+        (JourneyStage.DL_TEST_RESULT_FAIL, JourneyStage.DL_TEST_BOOKED),
+        JourneyStage.DL_TEST_BOOKED,
+    ),
     "dl_issued": ((JourneyStage.DL_TEST_RESULT_PASS,), JourneyStage.DL_ISSUED),
 }
 

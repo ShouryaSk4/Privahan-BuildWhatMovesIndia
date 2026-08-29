@@ -139,7 +139,7 @@ class MockSarathiClient:
 
     def book_dl_test(self, request: SlotBookingRequest) -> SlotBookingResult:
         status = self.get_application_status(request.application_number)
-        if status.stage not in ("ll_issued", "dl_test_failed"):
+        if status.stage not in ("ll_issued", "dl_test_failed", "dl_test_booked", "practice_window"):
             raise SarathiError(
                 f"Cannot book a driving test while application is in stage '{status.stage}'"
             )
