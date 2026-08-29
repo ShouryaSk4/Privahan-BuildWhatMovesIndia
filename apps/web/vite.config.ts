@@ -20,11 +20,6 @@ export default defineConfig(({ mode: _mode }) => ({
         changeOrigin: true,
         rewrite: (path: string) => path.replace(/^\/api\/identity/, "/identity"),
       },
-      "/api/bol": {
-        target: "http://localhost:8006",
-        changeOrigin: true,
-        rewrite: (path: string) => path.replace(/^\/api\/bol/, ""),
-      },
     },
   },
   test: {

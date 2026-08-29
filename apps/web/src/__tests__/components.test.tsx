@@ -44,7 +44,6 @@ const baseProfile = {
 };
 
 const ADDRESS_MISMATCH = {
-  severity: "warning",
   field: "aadhaar_registered_address",
   fetched_value: "House 12, Gomti Nagar, Lucknow, UP - 226010",
   issue: "Your current device location suggests a different RTO than your Aadhaar jurisdiction.",
@@ -52,7 +51,6 @@ const ADDRESS_MISMATCH = {
 };
 
 const NAME_MISMATCH = {
-  severity: "error",
   field: "name",
   fetched_value: "Vikram Singh Chauhan",
   issue: "Aadhaar name differs from PAN record 'Vikram S Chauhan'.",

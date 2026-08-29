@@ -16,9 +16,11 @@ const CHECKPOINTS = [
 export function DemoPanel({
   state,
   onUpdate,
+  onReset,
 }: {
   state: JourneyState;
   onUpdate: (s: JourneyState) => void;
+  onReset?: () => void;
 }) {
   const [open, setOpen] = useState(false);
   const [checkpoint, setCheckpoint] = useState(CHECKPOINTS[0]);
@@ -30,6 +32,17 @@ export function DemoPanel({
     try {
       await action();
       onUpdate(await journeyApi.sync(state.applicant_id));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : String(e));
+    }
+  }
+
+  async function handleReset() {
+    setError(null);
+    try {
+      const resetState = await journeyApi.reset(state.applicant_id);
+      onUpdate(resetState);
+      if (onReset) onReset();
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -47,7 +60,18 @@ export function DemoPanel({
     <aside className="demo card" aria-label="RTO simulator — development only">
       <header className="row space-between">
         <strong>RTO simulator</strong>
-        <button className="btn ghost" onClick={() => setOpen(false)}>✕</button>
+        <div style={{ display: "flex", gap: "0.5rem" }}>
+          <button
+            type="button"
+            className="btn ghost"
+            style={{ fontSize: "0.75rem", color: "#dc2626" }}
+            onClick={handleReset}
+            title="Reset this applicant journey back to start"
+          >
+            ↺ Reset Journey
+          </button>
+          <button className="btn ghost" onClick={() => setOpen(false)}>✕</button>
+        </div>
       </header>
       <p className="muted">
         Stands in for the government side (mock Module 5) until real Sarathi access exists.

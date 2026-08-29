@@ -104,12 +104,6 @@ export interface components {
             video_url: string;
             /** Tags */
             tags?: string[];
-            /** Hindi Title */
-            hindi_title?: string | null;
-            /** Hinglish Keywords */
-            hinglish_keywords?: string[];
-            /** Thumbnail Url */
-            thumbnail_url?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {

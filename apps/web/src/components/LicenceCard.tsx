@@ -14,9 +14,11 @@ const CONFETTI_COLORS = ["#1e4b9e", "#e8a13a", "#1a7f4e", "#c8102e", "#6e9be0"];
 export function LicenceCard({
   applicantId,
   applicationNumber,
+  onReturnHome,
 }: {
   applicantId: string;
   applicationNumber: string;
+  onReturnHome?: () => void;
 }) {
   const [view, setView] = useState<VerifiedIdentityView | null>(null);
   useEffect(() => {
@@ -29,8 +31,10 @@ export function LicenceCard({
   const fmt = (d: Date) =>
     d.toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
 
+  const dlNumber = deriveLicenceNumber(applicationNumber);
+
   return (
-    <div className="licence-wrap print-zone">
+    <div className="licence-wrap" style={{ flexDirection: "column", alignItems: "center" }}>
       <div className="confetti" aria-hidden="true">
         {Array.from({ length: 24 }, (_, i) => (
           <span
@@ -43,26 +47,35 @@ export function LicenceCard({
           />
         ))}
       </div>
+
       <div className="licence-card" role="img" aria-label="Your driving licence">
         <header>
-          <span className="licence-org">UNION OF INDIA · DRIVING LICENCE</span>
+          <span className="licence-org">UNION OF INDIA · DRIVING LICENCE (FORM 7)</span>
           <span className="licence-class">LMV</span>
         </header>
         <div className="licence-body">
           <div className="licence-photo" aria-hidden="true">
-            {(view?.profile.name ?? "Citizen")
-              .split(" ")
-              .map((w) => w[0])
-              .slice(0, 2)
-              .join("")}
+            {view?.profile.photo_url ? (
+              <img
+                src={view.profile.photo_url}
+                alt="Citizen"
+                style={{ width: "100%", height: "100%", objectFit: "cover" }}
+              />
+            ) : (
+              (view?.profile.name ?? "Citizen")
+                .split(" ")
+                .map((w) => w[0])
+                .slice(0, 2)
+                .join("")
+            )}
           </div>
           <dl>
             <div>
               <dt>Licence no.</dt>
-              <dd className="licence-no">{deriveLicenceNumber(applicationNumber)}</dd>
+              <dd className="licence-no">{dlNumber}</dd>
             </div>
             <div>
-              <dt>Name</dt>
+              <dt>Full Name</dt>
               <dd>{view?.profile.name ?? "—"}</dd>
             </div>
             <div>
@@ -70,20 +83,45 @@ export function LicenceCard({
               <dd>{view?.profile.dob ?? "—"}</dd>
             </div>
             <div>
-              <dt>Issued</dt>
+              <dt>Date of Issue</dt>
               <dd>{fmt(issued)}</dd>
             </div>
             <div>
               <dt>Valid till</dt>
               <dd>{fmt(validTill)}</dd>
             </div>
+            <div style={{ gridColumn: "span 2" }}>
+              <dt>Authorized Vehicle Class</dt>
+              <dd>LMV (Light Motor Vehicle - Motor Car)</dd>
+            </div>
           </dl>
         </div>
-        <footer>Issued digitally via Parivahan Seva · Zero forms · One visit</footer>
+        <footer>
+          Digitally Signed by Licensing Authority • Parivahan Seva National Transport Registry
+        </footer>
       </div>
-      <button className="btn secondary print-hide" onClick={() => window.print()}>
-        🖨️ Print / save licence as PDF
-      </button>
+
+      <div style={{ display: "flex", gap: "0.75rem", marginTop: "1.5rem", flexWrap: "wrap", justifyContent: "center" }}>
+        <button
+          type="button"
+          className="btn primary"
+          onClick={() => window.print()}
+        >
+          📄 Download / Print Official PDF Certificate
+        </button>
+        <button
+          type="button"
+          className="btn secondary"
+          onClick={() => alert(`Digital Driving Licence (${dlNumber}) synced to your DigiLocker account.`)}
+        >
+          📱 Sync to DigiLocker / mParivahan
+        </button>
+        {onReturnHome && (
+          <button type="button" className="btn secondary" onClick={onReturnHome}>
+            ← Return to Citizen Homepage
+          </button>
+        )}
+      </div>
     </div>
   );
 }

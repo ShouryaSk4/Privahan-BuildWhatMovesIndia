@@ -9,6 +9,7 @@ export type QuizQuestion = {
   prompt: string;
   options: string[];
   correct: number; // index into options
+  explanation: string;
 };
 
 export const QUESTIONS: QuizQuestion[] = [
@@ -21,6 +22,7 @@ export const QUESTIONS: QuizQuestion[] = [
       "No parking beyond this point",
     ],
     correct: 0,
+    explanation: "Triangular signs are cautionary/warning signs indicating potential road hazards ahead.",
   },
   {
     id: "zebra",
@@ -31,12 +33,14 @@ export const QUESTIONS: QuizQuestion[] = [
       "Speed up to clear the crossing first",
     ],
     correct: 1,
+    explanation: "Pedestrians have legal right of way at marked pedestrian and zebra crossings.",
   },
   {
     id: "school",
     prompt: "Passing a school zone, the safe speed is:",
     options: ["60 km/h", "40 km/h", "25 km/h"],
     correct: 2,
+    explanation: "Standard regulatory speed limit in school and hospital safety zones is 25 km/h.",
   },
 ];
 
@@ -51,9 +55,11 @@ export function scoreQuiz(answers: (number | null)[]): number {
 
 export function LLQuiz({
   onResult,
+  onBack,
   busy,
 }: {
   onResult: (passed: boolean, score: number) => void;
+  onBack?: () => void;
   busy: boolean;
 }) {
   const [answers, setAnswers] = useState<(number | null)[]>(
@@ -76,14 +82,17 @@ export function LLQuiz({
 
   return (
     <div className="quiz" aria-label="Learner's licence test">
-      <p className="muted">
-        Three questions, answer {PASS_MARK} correctly. This is the online test — from your
-        home, no RTO visit.
-      </p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+        <p className="muted" style={{ margin: 0, fontSize: "0.92rem" }}>
+          <b>Screen Test for Aid of Learner's Licence (STALL):</b> 3 questions. Minimum passing score is {PASS_MARK}/{QUESTIONS.length}.
+          Conducted digitally at home pursuant to MoRTH Contactless Citizen Services.
+        </p>
+      </div>
+
       {QUESTIONS.map((q, qi) => (
         <fieldset key={q.id} className="quiz-q" disabled={result?.passed || busy}>
           <legend>
-            {qi + 1}. {q.prompt}
+            Question {qi + 1} of {QUESTIONS.length} — {q.prompt}
           </legend>
           {q.options.map((opt, oi) => (
             <label key={oi} className={result && oi === q.correct ? "quiz-correct" : ""}>
@@ -95,30 +104,46 @@ export function LLQuiz({
                   setAnswers((a) => a.map((v, i) => (i === qi ? oi : v)))
                 }
               />
-              {opt}
+              <span>{opt}</span>
             </label>
           ))}
+          {result && !result.passed && (
+            <p style={{ fontSize: "0.8rem", color: "var(--gov-emerald)", marginTop: "0.4rem", fontWeight: 600 }}>
+              💡 Rule explanation: {q.explanation}
+            </p>
+          )}
         </fieldset>
       ))}
-      {result === null ? (
-        <button className="btn primary" disabled={!allAnswered || busy} onClick={submit}>
-          Submit answers
-        </button>
-      ) : result.passed ? (
-        <p className="alert alert-good" role="status">
-          ✅ {result.score}/{QUESTIONS.length} — passed! Issuing your learner's licence…
-        </p>
-      ) : (
-        <div className="alert alert-warn" role="status">
-          <p>
-            {result.score}/{QUESTIONS.length} — not quite. The correct answers are now
-            highlighted; take a look and try again. No fee, no penalty.
-          </p>
-          <button className="btn secondary" onClick={retry}>
-            Try again
+
+      <div className="row" style={{ marginTop: "1rem" }}>
+        {onBack && (
+          <button type="button" className="btn secondary" onClick={onBack} disabled={busy}>
+            ← Back to Application Overview
           </button>
-        </div>
-      )}
+        )}
+
+        {result === null ? (
+          <button className="btn primary" disabled={!allAnswered || busy} onClick={submit}>
+            {busy ? "Evaluating…" : "Submit answers"}
+          </button>
+        ) : result.passed ? (
+          <div className="alert alert-good" role="status" style={{ width: "100%" }}>
+            <strong>✅ {result.score}/{QUESTIONS.length} — passed!</strong> Issuing your official Learner's Licence Form 3 digitally…
+          </div>
+        ) : (
+          <div className="alert alert-warn" role="status" style={{ width: "100%" }}>
+            <p>
+              <b>Result: {result.score}/{QUESTIONS.length}</b> — The passing threshold is {PASS_MARK}/{QUESTIONS.length}.
+              The correct answers and statutory rules are now highlighted above. No fee, no penalty.
+            </p>
+            <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
+              <button className="btn secondary" onClick={retry}>
+                Try again
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

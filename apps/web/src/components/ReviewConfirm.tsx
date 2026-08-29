@@ -30,24 +30,58 @@ export function ReviewConfirm({
 
   return (
     <section className="card" aria-label="Review your details">
-      <h2>Review your details</h2>
+      <h2>Verified Citizen Demographic Record</h2>
       <p className="muted">
-        Fetched via {profile.source === "digilocker_aadhaar" ? "DigiLocker / Aadhaar e-KYC" : profile.source}. You
-        don't fill a form — you check one.
+        Authenticated via {profile.source === "digilocker_aadhaar" ? "DigiLocker National Identity Repository & UIDAI Aadhaar e-KYC" : profile.source}.
+        Official demographic records have been securely retrieved without manual form entry.
       </p>
-      <p className="zero-form-stat" role="note">
-        Fields you typed: <b>0</b> · Fields we fetched: <b>4</b>
-      </p>
-      <dl className="profile-grid">
-        <div><dt>Name</dt><dd>{profile.name}</dd></div>
-        <div><dt>Date of birth</dt><dd>{profile.dob}</dd></div>
-        <div><dt>Address</dt><dd>{profile.address}</dd></div>
-        <div><dt>Photo</dt><dd>On file from Aadhaar</dd></div>
-      </dl>
+
+      <div className="zero-form-stat" role="note">
+        <span>🛡️ Zero-Form Licence Architecture:</span>
+        <span>Fields you typed: <b>0</b> · Fields verified from e-KYC: <b>4</b></span>
+      </div>
+
+      <div className="profile-dossier">
+        <div className="profile-avatar-wrap">
+          {profile.photo_url ? (
+            <img src={profile.photo_url} alt="Aadhaar photo" />
+          ) : (
+            <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, color: "#475569" }}>
+              {profile.name.slice(0, 2).toUpperCase()}
+            </div>
+          )}
+        </div>
+
+        <dl className="profile-grid">
+          <div>
+            <dt>Full Legal Name</dt>
+            <dd>{profile.name}</dd>
+          </div>
+          <div>
+            <dt>Date of Birth</dt>
+            <dd>{profile.dob}</dd>
+          </div>
+          <div style={{ gridColumn: "span 2" }}>
+            <dt>Aadhaar Registered Permanent Address</dt>
+            <dd>{profile.address}</dd>
+          </div>
+          <div>
+            <dt>Identity Source</dt>
+            <dd>UIDAI Aadhaar / DigiLocker</dd>
+          </div>
+          <div>
+            <dt>Photo & Biometrics</dt>
+            <dd>On file from Aadhaar</dd>
+          </div>
+        </dl>
+      </div>
 
       {blocked && (
         <div className="alert alert-error" role="alert">
           <strong>Fix this before applying — it would be rejected later:</strong>
+          <p style={{ marginTop: "0.25rem", fontSize: "0.82rem" }}>
+            Our Rejection-Prevention Engine detected discrepancies with secondary regulatory databases (PAN/UIDAI):
+          </p>
           <ul>
             {blockingMismatches.map((m) => (
               <li key={m.field}>
@@ -62,9 +96,9 @@ export function ReviewConfirm({
         <div className="alert alert-warn">
           <strong>Two different RTOs apply to you.</strong>
           <p>
-            Your current location suggests <b>{profile.gps_suggested_rto}</b>, but your
-            Aadhaar-registered address is <b>{profile.aadhaar_registered_address}</b>. Choose
-            where to apply:
+            Your current device location suggests <b>{profile.gps_suggested_rto}</b>, but your
+            Aadhaar-registered address is <b>{profile.aadhaar_registered_address}</b>. Pursuant to Motor Vehicle Rules, choose
+            your preferred RTO jurisdiction:
           </p>
           <label>
             <input

@@ -9,15 +9,18 @@ export type VerifiedIdentityView = journeyComponents["schemas"]["VerifiedIdentit
 export type TestSlot = journeyComponents["schemas"]["TestSlot"];
 export type VideoMatchResult = academyComponents["schemas"]["VideoMatchResult"];
 
+const isDev = import.meta.env.DEV;
+
 export const JOURNEY_URL =
-  import.meta.env.VITE_JOURNEY_URL ?? "http://localhost:8002";
+  import.meta.env.VITE_JOURNEY_URL ?? (isDev ? "http://localhost:8002" : "");
 export const GATEWAY_URL =
-  import.meta.env.VITE_GATEWAY_URL ?? "http://localhost:8005";
-// Modules 4 and 6 have no CORS headers, so by default we go through the dev
-// proxy in vite.config.ts (same-origin). These are the bases of their route
-// namespaces — bypass with e.g. VITE_ACADEMY_URL=http://host:8004/academy.
-export const ACADEMY_URL = import.meta.env.VITE_ACADEMY_URL ?? "/api/academy";
-export const BOL_URL = import.meta.env.VITE_BOL_URL ?? "/api/bol";
+  import.meta.env.VITE_GATEWAY_URL ?? (isDev ? "http://localhost:8005" : "");
+// In dev, Vite proxies /api/academy to localhost:8004. In production (Vercel),
+// /academy routes to api/index.py.
+export const ACADEMY_URL =
+  import.meta.env.VITE_ACADEMY_URL ?? (isDev ? "/api/academy" : "/academy");
+export const BOL_URL =
+  import.meta.env.VITE_BOL_URL ?? (isDev ? "http://localhost:8006" : "/bol");
 
 export class ApiError extends Error {
   constructor(
@@ -35,7 +38,12 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
   });
   const body = await res.json().catch(() => null);
   if (!res.ok) {
-    throw new ApiError(res.status, body && typeof body === "object" && "detail" in body ? (body as { detail: unknown }).detail : body);
+    throw new ApiError(
+      res.status,
+      body && typeof body === "object" && "detail" in body
+        ? (body as { detail: unknown }).detail
+        : body,
+    );
   }
   return body as T;
 }
@@ -43,6 +51,10 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
 export const journeyApi = {
   get: (applicantId: string) =>
     request<JourneyState>(`${JOURNEY_URL}/journey/${applicantId}`),
+  reset: (applicantId: string) =>
+    request<JourneyState>(`${JOURNEY_URL}/journey/${applicantId}/reset`, {
+      method: "POST",
+    }),
   verifiedProfile: (applicantId: string) =>
     request<VerifiedIdentityView>(
       `${JOURNEY_URL}/journey/${applicantId}/verified-profile`,
@@ -59,10 +71,6 @@ export const journeyApi = {
     }),
   sync: (applicantId: string) =>
     request<JourneyState>(`${JOURNEY_URL}/journey/${applicantId}/sync`, {
-      method: "POST",
-    }),
-  reset: (applicantId: string) =>
-    request<JourneyState>(`${JOURNEY_URL}/journey/${applicantId}/reset`, {
       method: "POST",
     }),
   slots: (applicantId: string) =>
