@@ -454,10 +454,12 @@ export default function App() {
           </div>
         )}
 
-        {error && <p className="alert alert-error" role="alert">{error}</p>}
+        {error && error !== "null" && error.trim() !== "" && (
+          <p className="alert alert-error" role="alert">{error}</p>
+        )}
 
         {/* ------------------------------------------------------------------
-            Step 4 / Review: Verified e-KYC Dossier
+            Step 4 / Review: Verified e-KYC Dossier (Zero-Form Architecture)
             ------------------------------------------------------------------ */}
         {review ? (
           <ReviewConfirm
@@ -474,61 +476,21 @@ export default function App() {
         ) : (
           <>
             {/* --------------------------------------------------------------
-                Stage: no_licence (Step 3: Category -> Step 4: Zero-Form Apply)
+                Stage: no_licence (Step 3: Vehicle Class & Existing Licence)
                 -------------------------------------------------------------- */}
             {stage === "no_licence" && (
-              !categoryConfirmed ? (
-                <CategorySelector
-                  selectedCode={selectedCategory}
-                  existingLicence={verifiedData?.existingLicence}
-                  onSelect={(code) => setSelectedCategory(code)}
-                  onProceed={() => setCategoryConfirmed(true)}
-                  busy={busy}
-                />
-              ) : (
-                <section className="card" aria-label="Next step">
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.5rem" }}>
-                    <div>
-                      <span className="badge-official">Step 4 of 9 • Zero-Form Licence Engine</span>
-                      <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0.4rem 0 0.2rem" }}>
-                        Review Verified DigiLocker Dossier ({selectedCategory})
-                      </h2>
-                    </div>
-                    <span className="chip status-verified">Aadhaar e-KYC Ready</span>
-                  </div>
-
-                  <p className="muted" style={{ fontSize: "0.92rem", marginTop: "0.5rem" }}>
-                    Under the Motor Vehicles Act, your eligibility requirements are verified instantly from National Repositories:
-                  </p>
-                  <ul style={{ margin: "0.85rem 0 1.5rem 1.25rem", fontSize: "0.92rem", color: "var(--ink-secondary)" }}>
-                    {state.required_documents.map((d) => (
-                      <li key={d.code} style={{ margin: "0.35rem 0" }}>
-                        <b>{d.label}</b> {d.satisfied_by_ekyc && <span className="chip">Verified via DigiLocker e-KYC</span>}
-                      </li>
-                    ))}
-                  </ul>
-
-                  <div className="card-footer">
-                    <button
-                      type="button"
-                      className="btn secondary"
-                      onClick={() => setCategoryConfirmed(false)}
-                      disabled={busy}
-                    >
-                      ← Change Vehicle Class ({selectedCategory})
-                    </button>
-                    <button
-                      className="btn primary"
-                      disabled={busy}
-                      onClick={() =>
-                        act(async () => setReview(await journeyApi.verifiedProfile(applicantId)))
-                      }
-                    >
-                      {busy ? "Authenticating with DigiLocker…" : "Authenticate & Review Verified Profile →"}
-                    </button>
-                  </div>
-                </section>
-              )
+              <CategorySelector
+                selectedCode={selectedCategory}
+                existingLicence={verifiedData?.existingLicence}
+                onSelect={(code) => setSelectedCategory(code)}
+                onProceed={() =>
+                  act(async () => {
+                    const prof = await journeyApi.verifiedProfile(applicantId);
+                    setReview(prof);
+                  })
+                }
+                busy={busy}
+              />
             )}
 
             {/* --------------------------------------------------------------
