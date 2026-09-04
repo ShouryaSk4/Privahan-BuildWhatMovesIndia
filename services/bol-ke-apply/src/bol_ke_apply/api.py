@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 
-from bol_ke_apply.agent import BolKeApplyAgent
+from bol_ke_apply.agent import ACTION_TOOLS, TOOL_SPECS, BolKeApplyAgent, run_goal
 from bol_ke_apply.server import check_mismatch, fetch_identity, match_video, whats_next
 
 app = FastAPI(
@@ -66,32 +66,15 @@ def chat(request: ChatRequest) -> dict:
 
 @app.get("/tools")
 def list_tools() -> list[dict]:
-    """Expose the 3 registered MCP platform tools."""
+    """All registered platform tools (read + action), from the live registry."""
     return [
         {
-            "name": "fetch_identity",
-            "description": "Fetch verified citizen profile from DigiLocker / Aadhaar e-KYC (Module 3)",
-            "parameters": {"applicant_id": "string"},
-        },
-        {
-            "name": "check_mismatch",
-            "description": "Perform rejection-prevention cross-check between Aadhaar and secondary records (Module 3)",
-            "parameters": {"applicant_id": "string"},
-        },
-        {
-            "name": "match_video",
-            "description": "Match a driving difficulty to an instructional lesson clip (Module 4)",
-            "parameters": {
-                "applicant_id": "string",
-                "query": "string",
-                "journey_stage": "string | None",
-            },
-        },
-        {
-            "name": "whats_next",
-            "description": "Get the citizen's journey stage and next action (Module 2)",
-            "parameters": {"applicant_id": "string"},
-        },
+            "name": spec["function"]["name"],
+            "description": spec["function"]["description"],
+            "parameters": spec["function"]["parameters"].get("properties", {}),
+            "consequential": spec["function"]["name"] in ACTION_TOOLS,
+        }
+        for spec in TOOL_SPECS
     ]
 
 
@@ -116,6 +99,24 @@ def tool_match_video(req: ToolMatchVideoRequest) -> dict:
 
 class ToolWhatsNextRequest(BaseModel):
     applicant_id: str
+
+
+class AgentRunRequest(BaseModel):
+    goal: str
+    applicant_id: str = "applicant_clean"
+    max_steps: int = 12
+
+
+@app.post("/agent/run")
+def agent_run(req: AgentRunRequest) -> dict:
+    """Autonomous mode: pursue a goal end-to-end with the full tool belt.
+
+    The citizen's submission of a goal is the consent for this run; hard rails
+    still apply (step budget, no retry of failing calls, blocked results stop
+    forward motion, reset never happens unless the goal asks). Every tool call
+    is returned in `steps` for auditability.
+    """
+    return run_goal(agent, req.goal, req.applicant_id, max_steps=min(max(req.max_steps, 1), 20))
 
 
 class TranscribeRequest(BaseModel):

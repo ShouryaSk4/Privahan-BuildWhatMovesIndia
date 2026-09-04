@@ -167,6 +167,88 @@ def whats_next(applicant_id: str) -> dict:
     }
 
 
+# --------------------------------------------------------------------------
+# Journey ACTION tools — the autonomous half of the agent (Module 2 writes).
+# Errors from Module 2 are relayed as structured dicts, never raised: the LLM
+# reads them and tells the citizen what choice or fix is needed.
+# --------------------------------------------------------------------------
+
+
+def _journey_post(path: str, payload: dict | None = None) -> dict:
+    try:
+        with httpx.Client(timeout=8.0) as client:
+            resp = client.post(f"{JOURNEY_SERVICE_URL}{path}", json=payload)
+            body = resp.json() if resp.content else {}
+            if resp.status_code < 400:
+                return body
+            return {
+                "blocked": True,
+                "status": resp.status_code,
+                "detail": body.get("detail", body) if isinstance(body, dict) else body,
+            }
+    except httpx.HTTPError as exc:
+        logger.debug("Journey action fallback (%s): %s", path, exc)
+        return {"error": "journey_unreachable", "detail": str(exc)}
+
+
+@mcp.tool()
+def start_application(applicant_id: str, confirmed_rto_code: str | None = None) -> dict:
+    """Submit the Zero-Form learner's licence application (Module 2 -> Module 5).
+
+    A 409 means the citizen must choose an RTO (GPS vs Aadhaar jurisdiction —
+    pass confirmed_rto_code, or the literal "aadhaar_jurisdiction"). A 422
+    means Rejection-Prevention blocked it; relay the mismatches and fixes.
+    """
+    return _journey_post(
+        f"/journey/{applicant_id}/apply", {"confirmed_rto_code": confirmed_rto_code}
+    )
+
+
+@mcp.tool()
+def report_event(applicant_id: str, event: str) -> dict:
+    """Advance the journey state machine (e.g. "begin_practice") via Module 2."""
+    return _journey_post(f"/journey/{applicant_id}/events", {"event": event})
+
+
+@mcp.tool()
+def list_test_slots(applicant_id: str, rto_code: str | None = None) -> dict:
+    """List available automated driving-test track slots (via Module 2 -> Module 5)."""
+    try:
+        with httpx.Client(timeout=8.0) as client:
+            params = {"rto_code": rto_code} if rto_code else None
+            resp = client.get(
+                f"{JOURNEY_SERVICE_URL}/journey/{applicant_id}/dl-test/slots", params=params
+            )
+            if resp.status_code == 200:
+                slots = resp.json()
+                return {"slots": slots[:8], "total": len(slots)}
+            return {"blocked": True, "status": resp.status_code, "detail": resp.json().get("detail")}
+    except httpx.HTTPError as exc:
+        logger.debug("Slot listing fallback: %s", exc)
+        return {"error": "journey_unreachable", "detail": str(exc)}
+
+
+@mcp.tool()
+def book_test_slot(applicant_id: str, slot_id: str) -> dict:
+    """Book a driving-test slot. Only call after the citizen confirmed the slot."""
+    return _journey_post(f"/journey/{applicant_id}/dl-test/bookings", {"slot_id": slot_id})
+
+
+@mcp.tool()
+def sync_status(applicant_id: str) -> dict:
+    """Refresh the journey from the government side (Module 5) and return it."""
+    return _journey_post(f"/journey/{applicant_id}/sync")
+
+
+@mcp.tool()
+def reset_journey(applicant_id: str) -> dict:
+    """DEMO ONLY: forget this journey so the persona can start again.
+
+    Destructive — only call when the citizen explicitly asked for a reset.
+    """
+    return _journey_post(f"/journey/{applicant_id}/reset")
+
+
 def main():
     """Run the MCP server over standard stdio."""
     mcp.run()

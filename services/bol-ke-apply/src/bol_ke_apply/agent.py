@@ -14,14 +14,30 @@ import logging
 from collections import deque
 
 from contracts.mcp_tools import (
+    BookSlotToolInput,
     CheckMismatchToolInput,
     FetchIdentityToolInput,
+    ListSlotsToolInput,
     MatchVideoToolInput,
+    ReportEventToolInput,
+    ResetJourneyToolInput,
+    StartApplicationToolInput,
     WhatsNextToolInput,
 )
 
 from bol_ke_apply.llm_client import get_llm_provider
-from bol_ke_apply.server import check_mismatch, fetch_identity, match_video, whats_next
+from bol_ke_apply.server import (
+    book_test_slot,
+    check_mismatch,
+    fetch_identity,
+    list_test_slots,
+    match_video,
+    report_event,
+    reset_journey,
+    start_application,
+    sync_status,
+    whats_next,
+)
 
 # Native function-calling tool specs, generated from the shared Pydantic
 # contracts (packages/contracts/contracts/mcp_tools.py) — the single source of
@@ -35,13 +51,41 @@ TOOL_EXECUTORS = {
         journey_stage=args.get("journey_stage"),
     ),
     "whats_next": lambda args: whats_next(applicant_id=args["applicant_id"]),
+    # -- action tools (the autonomous half) --
+    "start_application": lambda args: start_application(
+        applicant_id=args["applicant_id"],
+        confirmed_rto_code=args.get("confirmed_rto_code"),
+    ),
+    "report_event": lambda args: report_event(
+        applicant_id=args["applicant_id"], event=args["event"]
+    ),
+    "list_test_slots": lambda args: list_test_slots(
+        applicant_id=args["applicant_id"], rto_code=args.get("rto_code")
+    ),
+    "book_test_slot": lambda args: book_test_slot(
+        applicant_id=args["applicant_id"], slot_id=args["slot_id"]
+    ),
+    "sync_status": lambda args: sync_status(applicant_id=args["applicant_id"]),
+    "reset_journey": lambda args: reset_journey(applicant_id=args["applicant_id"]),
 }
+
+# Tools with side effects: the conversational agent must get the citizen's
+# yes before calling these; the autonomous runner logs each one it takes.
+ACTION_TOOLS = frozenset(
+    {"start_application", "report_event", "book_test_slot", "reset_journey"}
+)
 
 _TOOL_DESCRIPTIONS = {
     "fetch_identity": "Fetch the citizen's verified DigiLocker/Aadhaar e-KYC profile (Module 3).",
     "check_mismatch": "Rejection-prevention cross-check of Aadhaar vs PAN records; severity 'error' blocks, 'warning' advises (Module 3).",
     "match_video": "Match a driving difficulty or manoeuvre question to a Driving Academy lesson video (Module 4).",
     "whats_next": "Get the citizen's current journey stage, next action and certainty (cost/days/visits) (Module 2).",
+    "start_application": "Submit the Zero-Form LL application. If blocked with rto_confirmation_required, ask the citizen to choose and retry with confirmed_rto_code ('aadhaar_jurisdiction' or the GPS RTO code). If blocked with rejection_prevention, relay the mismatches and fixes — do not retry.",
+    "report_event": "Advance the journey (e.g. event='begin_practice' after the LL is issued).",
+    "list_test_slots": "List available automated driving-test slots so the citizen can pick one.",
+    "book_test_slot": "Book a specific driving-test slot AFTER the citizen confirmed it.",
+    "sync_status": "Refresh the journey from the government registry and return the updated state.",
+    "reset_journey": "DEMO ONLY, destructive: forget this journey. Only on explicit citizen request.",
 }
 
 _TOOL_INPUTS = {
@@ -49,6 +93,12 @@ _TOOL_INPUTS = {
     "check_mismatch": CheckMismatchToolInput,
     "match_video": MatchVideoToolInput,
     "whats_next": WhatsNextToolInput,
+    "start_application": StartApplicationToolInput,
+    "report_event": ReportEventToolInput,
+    "list_test_slots": ListSlotsToolInput,
+    "book_test_slot": BookSlotToolInput,
+    "sync_status": ResetJourneyToolInput,
+    "reset_journey": ResetJourneyToolInput,
 }
 
 
@@ -124,6 +174,16 @@ Guidelines:
 3. Use the platform tools to look things up — never invent journey stages, fees, dates, application numbers or personal data. Every factual claim about the citizen must come from a tool result. General rules may come from the Knowledge Base below.
 4. When the request is ambiguous, ask one short clarifying question instead of guessing.
 5. Keep answers concise (2-4 sentences), free of bureaucratic jargon and markdown. Do not discuss fees unless asked.
+6. You can ACT, not just answer: submitting the application, advancing stages, listing and
+   booking test slots, syncing the registry. Policy for actions:
+   - Before any consequential action (start_application, book_test_slot, report_event,
+     reset_journey), state what you are about to do and get the citizen's clear "yes" in
+     THIS conversation first. A confirmation earlier in the history counts.
+   - If a tool returns blocked with rto_confirmation_required, present both RTO options and
+     ask the citizen to choose; retry only with their chosen confirmed_rto_code.
+   - If blocked with rejection_prevention, relay each mismatch and its fix. Never retry past it.
+   - After an action, confirm what happened using the tool result (stage, application number).
+   - reset_journey only when the citizen explicitly asks to start over.
 
 {RTO_KNOWLEDGE_BASE}
 """
@@ -203,7 +263,7 @@ class BolKeApplyAgent:
         tool_called = None
         tool_result = None
 
-        for _ in range(3):  # at most 3 model turns per reply
+        for _ in range(6):  # up to 6 model turns: plan -> act -> observe -> reply
             assistant = self.provider.chat_with_tools(messages, TOOL_SPECS)
             if assistant is None:
                 return None  # provider unsupported / no key / API error → fallback
@@ -323,3 +383,107 @@ Respond directly to the citizen in natural {lang} using the RTO knowledge base a
             "audio_url": self.provider.synthesize_speech(reply),
             "engine": f"{type(self.provider).__name__}+keywords",
         }
+
+
+AUTONOMY_PROMPT = SYSTEM_PROMPT + """
+
+AUTONOMOUS RUN MODE:
+You are executing a goal on the citizen's behalf; they have already consented to this run.
+Work step by step with tools: check state first (whats_next), act, observe, continue.
+Rules:
+- Move the journey forward only as far as the tools allow. When a step needs something only
+  the citizen or the RTO can do (a choice you were not given, a physical test, a blocked
+  mismatch), STOP and summarise instead of guessing.
+- rto_confirmation_required: if the goal names a jurisdiction preference use it, otherwise stop
+  and report both options.
+- rejection_prevention: stop and report the fixes. Never work around a block.
+- Never call reset_journey unless the goal explicitly says to reset/start over.
+- Do not repeat a tool call that just failed with the same arguments.
+When done (or stopped), reply with a short summary of what you did and what comes next.
+"""
+
+
+class AutonomousRun:
+    """Result of a goal-directed run: every step is logged for audit."""
+
+    def __init__(self):
+        self.steps: list[dict] = []
+
+    def log(self, name: str, args: dict, result: dict) -> None:
+        self.steps.append({
+            "tool": name,
+            "args": args,
+            "ok": not (isinstance(result, dict) and (result.get("blocked") or result.get("error"))),
+            "result": result,
+        })
+
+
+def run_goal(
+    agent: "BolKeApplyAgent",
+    goal: str,
+    applicant_id: str,
+    max_steps: int = 12,
+) -> dict:
+    """Plan/act/observe loop: the agent pursues a goal with the full tool belt.
+
+    Server-side autonomy with hard rails: a step budget, no verbatim retries of
+    failing calls, and an auditable step log in the response.
+    """
+    lang = _detect_language(goal)
+    if agent.provider.moderate(goal):
+        return {"reply": "This goal cannot be processed.", "steps": [], "language": lang,
+                "engine": "moderation", "stopped": "moderated"}
+
+    run = AutonomousRun()
+    messages = [
+        {"role": "system", "content": AUTONOMY_PROMPT},
+        {"role": "user", "content": f"[applicant_id={applicant_id} · language={lang}]\nGOAL: {goal}"},
+    ]
+    last_failed: tuple | None = None
+    stopped = "completed"
+
+    for _ in range(max_steps):
+        assistant = agent.provider.chat_with_tools(messages, TOOL_SPECS)
+        if assistant is None:
+            return {"reply": "Autonomous mode needs a tool-calling provider — set OPENAI_API_KEY.",
+                    "steps": run.steps, "language": lang, "engine": "unavailable",
+                    "stopped": "no_provider"}
+
+        tool_calls = assistant.get("tool_calls") or []
+        if not tool_calls:
+            reply = (assistant.get("content") or "").replace("**", "").strip()
+            return {"reply": reply or "Run finished.", "steps": run.steps, "language": lang,
+                    "engine": type(agent.provider).__name__, "stopped": stopped}
+
+        messages.append(assistant)
+        for call in tool_calls:
+            fn = call.get("function", {})
+            name = fn.get("name", "")
+            try:
+                args = json.loads(fn.get("arguments") or "{}")
+            except json.JSONDecodeError:
+                args = {}
+            args.setdefault("applicant_id", applicant_id)
+
+            signature = (name, json.dumps(args, sort_keys=True))
+            if signature == last_failed:
+                result = {"error": "repeat_of_failed_call",
+                          "detail": "Same call just failed — change approach or stop."}
+            else:
+                executor = TOOL_EXECUTORS.get(name)
+                result = executor(args) if executor else {"error": f"unknown tool '{name}'"}
+                if isinstance(result, dict) and (result.get("blocked") or result.get("error")):
+                    last_failed = signature
+                else:
+                    last_failed = None
+            run.log(name, args, result if isinstance(result, dict) else {"value": result})
+            logger.info("autonomous step: %s(%s) ok=%s", name, args, run.steps[-1]["ok"])
+            messages.append({
+                "role": "tool",
+                "tool_call_id": call.get("id", name),
+                "content": json.dumps(result, default=str)[:4000],
+            })
+
+    return {"reply": "Step budget reached — stopping safely. Review the step log.",
+            "steps": run.steps, "language": lang,
+            "engine": type(agent.provider).__name__, "stopped": "max_steps"}

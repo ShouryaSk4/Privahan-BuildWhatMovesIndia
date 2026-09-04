@@ -50,14 +50,31 @@ class ReportEventToolInput(JourneyEvent):
     pass
 
 
+class ListSlotsToolInput(BaseModel):
+    applicant_id: str
+    rto_code: str | None = None
+
+
+class BookSlotToolInput(BaseModel):
+    applicant_id: str
+    slot_id: str
+
+
+class ResetJourneyToolInput(BaseModel):
+    applicant_id: str
+
+
 __all__ = [
+    "BookSlotToolInput",
     "CheckMismatchToolInput",
     "FetchIdentityToolInput",
     "JourneyEvent",
     "JourneyState",
+    "ListSlotsToolInput",
     "MatchVideoToolInput",
     "MismatchCheckResult",
     "ReportEventToolInput",
+    "ResetJourneyToolInput",
     "StartApplicationToolInput",
     "VerifiedProfile",
     "VideoMatchRequest",

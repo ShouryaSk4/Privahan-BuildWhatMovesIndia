@@ -127,6 +127,17 @@ never drift from the platform. Replies also carry real synthesized speech
 speech-to-text (`gpt-4o-transcribe`) for browsers with weak speech support.
 Inbound text passes the free `omni-moderation-latest` gate.
 
+**Autonomous mode.** Bol Ke Apply is a full agent, not just a Q&A bot. The tool belt
+now includes the **action tools** — `start_application`, `report_event`,
+`list_test_slots`, `book_test_slot`, `sync_status`, `reset_journey` — so the
+conversational agent can drive the journey itself (with an explicit-confirmation
+policy before consequential actions), and `POST /agent/run` executes a whole goal
+autonomously: plan → act → observe with hard rails (step budget, no verbatim retries
+of failing calls, blocked results stop forward motion, reset only on explicit request)
+and an auditable `steps` log in every response. Blocked outcomes come back structured —
+an RTO-choice 409 becomes a question to the citizen, a rejection-prevention 422 becomes
+the list of fixes — never a workaround.
+
 The fallback chain never leaves the assistant dead:
 **OpenAI tool-calling → Gemini phrased replies → offline keyword routing (mock).**
 Provider selection: `BOL_KE_APPLY_LLM_PROVIDER` = `openai` | `gemini` | `mock` |
