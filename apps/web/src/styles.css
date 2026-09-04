@@ -2312,3 +2312,195 @@ textarea:focus-visible,
     display: none !important;
   }
 }
+
+/* ==========================================================================
+   Animation Layer — living, dignified motion
+   Every rule here sits behind prefers-reduced-motion: no-preference; the
+   global reduce kill-switch above covers legacy browsers.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  /* --- Journey rail: progress feels alive ------------------------------- */
+  @keyframes pv-dot-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(30, 75, 158, 0.45); }
+    60%      { box-shadow: 0 0 0 9px rgba(30, 75, 158, 0); }
+  }
+
+  @keyframes pv-pop {
+    0%   { transform: scale(0.4); }
+    70%  { transform: scale(1.18); }
+    100% { transform: scale(1); }
+  }
+
+  .rail-step.current .rail-dot {
+    animation: pv-dot-pulse 2.2s ease-out infinite;
+  }
+
+  .rail-step.done .rail-dot {
+    animation: pv-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+
+  /* --- Certainty banner: staggered arrival ------------------------------- */
+  .certainty-item {
+    animation: pv-rise 420ms cubic-bezier(0.2, 0.6, 0.3, 1) both;
+  }
+
+  .certainty-item:nth-child(2) { animation-delay: 90ms; }
+  .certainty-item:nth-child(3) { animation-delay: 180ms; }
+
+  /* --- Task cards: cascade in, icons nod on hover ------------------------ */
+  .task-cards-grid .task-card { animation: pv-rise 380ms cubic-bezier(0.2, 0.6, 0.3, 1) both; }
+  .task-cards-grid .task-card:nth-child(2) { animation-delay: 70ms; }
+  .task-cards-grid .task-card:nth-child(3) { animation-delay: 140ms; }
+  .task-cards-grid .task-card:nth-child(4) { animation-delay: 210ms; }
+
+  @keyframes pv-nod {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    30%      { transform: translateY(-3px) rotate(-4deg); }
+    60%      { transform: translateY(0) rotate(3deg); }
+  }
+
+  .task-card:hover .task-card-icon {
+    animation: pv-nod 500ms ease-in-out;
+    display: inline-block;
+  }
+
+  /* --- Primary buttons: a single sheen pass on hover --------------------- */
+  .btn.primary,
+  .btn-primary {
+    position: relative;
+    overflow: hidden;
+  }
+
+  @keyframes pv-sheen {
+    from { transform: translateX(-120%) skewX(-18deg); }
+    to   { transform: translateX(240%) skewX(-18deg); }
+  }
+
+  .btn.primary::before,
+  .btn-primary::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 40%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.28), transparent);
+    transform: translateX(-120%) skewX(-18deg);
+    pointer-events: none;
+  }
+
+  .btn.primary:hover:not(:disabled)::before,
+  .btn-primary:hover:not(:disabled)::before {
+    animation: pv-sheen 700ms ease-out;
+  }
+
+  /* --- Alerts: arrive with intent; errors get one polite shake ----------- */
+  @keyframes pv-alert-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  @keyframes pv-shake {
+    0%, 100% { transform: translateX(0); }
+    20%      { transform: translateX(-5px); }
+    40%      { transform: translateX(4px); }
+    60%      { transform: translateX(-3px); }
+    80%      { transform: translateX(2px); }
+  }
+
+  .alert { animation: pv-alert-in 260ms ease-out both; }
+
+  .alert-error {
+    animation: pv-alert-in 260ms ease-out both, pv-shake 420ms ease-in-out 260ms;
+  }
+
+  /* --- Quiz: choices respond, correct answers glow once ------------------ */
+  .quiz-q label:hover {
+    transform: translateX(3px);
+    transition: transform 120ms ease;
+  }
+
+  @keyframes pv-correct-glow {
+    0%   { box-shadow: 0 0 0 0 rgba(4, 120, 87, 0.5); background-color: var(--gov-emerald-light); }
+    100% { box-shadow: 0 0 0 12px rgba(4, 120, 87, 0); }
+  }
+
+  .quiz-correct { animation: pv-correct-glow 900ms ease-out both; border-radius: var(--radius-sm); }
+
+  /* --- Licence card: the earned moment ----------------------------------- */
+  @keyframes pv-licence-reveal {
+    0%   { opacity: 0; transform: perspective(900px) rotateY(-14deg) translateY(18px) scale(0.96); }
+    100% { opacity: 1; transform: perspective(900px) rotateY(0deg) translateY(0) scale(1); }
+  }
+
+  @keyframes pv-licence-sheen {
+    from { transform: translateX(-140%) skewX(-20deg); }
+    to   { transform: translateX(260%) skewX(-20deg); }
+  }
+
+  .licence-card {
+    animation: pv-licence-reveal 700ms cubic-bezier(0.2, 0.7, 0.25, 1) both;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .licence-card::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 45%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+    transform: translateX(-140%) skewX(-20deg);
+    animation: pv-licence-sheen 1100ms ease-out 750ms both;
+    pointer-events: none;
+  }
+
+  .celebrate { animation: pv-rise 500ms ease-out 400ms both; }
+
+  /* --- Voice modal: enters like a sheet, listens like a microphone -------- */
+  @keyframes pv-overlay-in { from { opacity: 0; } to { opacity: 1; } }
+
+  @keyframes pv-modal-in {
+    from { opacity: 0; transform: translateY(16px) scale(0.97); }
+    to   { opacity: 1; transform: none; }
+  }
+
+  .voice-modal-overlay { animation: pv-overlay-in 200ms ease-out both; }
+  .voice-modal { animation: pv-modal-in 300ms cubic-bezier(0.2, 0.7, 0.25, 1) both; }
+
+  @keyframes pv-ripple {
+    from { box-shadow: 0 0 0 0 rgba(185, 28, 28, 0.45), 0 0 0 0 rgba(185, 28, 28, 0.25); }
+    to   { box-shadow: 0 0 0 16px rgba(185, 28, 28, 0), 0 0 0 32px rgba(185, 28, 28, 0); }
+  }
+
+  .voice-mic-big.listening {
+    animation: pv-ripple 1.4s ease-out infinite;
+  }
+}
+
+/* --- Live journey map (landscape stepper): the current step breathes ------ */
+@media (prefers-reduced-motion: no-preference) {
+  .landscape-journey-step {
+    animation: pv-rise 360ms cubic-bezier(0.2, 0.6, 0.3, 1) both;
+  }
+
+  .landscape-journey-step:nth-child(2) { animation-delay: 50ms; }
+  .landscape-journey-step:nth-child(3) { animation-delay: 100ms; }
+  .landscape-journey-step:nth-child(4) { animation-delay: 150ms; }
+  .landscape-journey-step:nth-child(5) { animation-delay: 200ms; }
+  .landscape-journey-step:nth-child(6) { animation-delay: 250ms; }
+  .landscape-journey-step:nth-child(7) { animation-delay: 300ms; }
+  .landscape-journey-step:nth-child(8) { animation-delay: 350ms; }
+  .landscape-journey-step:nth-child(9) { animation-delay: 400ms; }
+
+  .landscape-journey-step.current .landscape-step-marker {
+    animation: pv-dot-pulse 2.2s ease-out infinite;
+  }
+
+  .landscape-journey-step.done .landscape-step-marker {
+    animation: pv-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+}
