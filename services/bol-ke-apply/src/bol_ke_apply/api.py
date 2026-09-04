@@ -118,6 +118,38 @@ class ToolWhatsNextRequest(BaseModel):
     applicant_id: str
 
 
+class TranscribeRequest(BaseModel):
+    audio_b64: str
+    mime_type: str = "audio/webm"
+
+
+@app.post("/transcribe")
+def transcribe(req: TranscribeRequest) -> dict:
+    """Server-side speech-to-text (OpenAI gpt-4o-transcribe / whisper).
+
+    The browser's built-in SpeechRecognition is uneven across devices and weak
+    on Hinglish; the web app records audio and sends it here instead when the
+    provider supports transcription.
+    """
+    import base64 as _b64
+
+    from fastapi import HTTPException
+
+    try:
+        audio = _b64.b64decode(req.audio_b64)
+    except Exception as exc:
+        raise HTTPException(status_code=400, detail=f"Invalid base64 audio: {exc}") from exc
+    if not audio:
+        raise HTTPException(status_code=400, detail="Empty audio payload.")
+    text = agent.provider.transcribe_audio(audio, req.mime_type)
+    if not text:
+        raise HTTPException(
+            status_code=502,
+            detail="Transcription unavailable — configure OPENAI_API_KEY or type your question.",
+        )
+    return {"text": text}
+
+
 @app.post("/tools/whats_next")
 def tool_whats_next(req: ToolWhatsNextRequest) -> dict:
     return whats_next(applicant_id=req.applicant_id)

@@ -11,11 +11,81 @@ and executes MCP platform tools:
 
 import json
 import logging
-import os
-import re
+from collections import deque
+
+from contracts.mcp_tools import (
+    CheckMismatchToolInput,
+    FetchIdentityToolInput,
+    MatchVideoToolInput,
+    WhatsNextToolInput,
+)
 
 from bol_ke_apply.llm_client import get_llm_provider
 from bol_ke_apply.server import check_mismatch, fetch_identity, match_video, whats_next
+
+# Native function-calling tool specs, generated from the shared Pydantic
+# contracts (packages/contracts/contracts/mcp_tools.py) — the single source of
+# truth now also feeds the LLM, so tool schemas cannot drift from the platform.
+TOOL_EXECUTORS = {
+    "fetch_identity": lambda args: fetch_identity(applicant_id=args["applicant_id"]),
+    "check_mismatch": lambda args: check_mismatch(applicant_id=args["applicant_id"]),
+    "match_video": lambda args: match_video(
+        applicant_id=args["applicant_id"],
+        query=args["query"],
+        journey_stage=args.get("journey_stage"),
+    ),
+    "whats_next": lambda args: whats_next(applicant_id=args["applicant_id"]),
+}
+
+_TOOL_DESCRIPTIONS = {
+    "fetch_identity": "Fetch the citizen's verified DigiLocker/Aadhaar e-KYC profile (Module 3).",
+    "check_mismatch": "Rejection-prevention cross-check of Aadhaar vs PAN records; severity 'error' blocks, 'warning' advises (Module 3).",
+    "match_video": "Match a driving difficulty or manoeuvre question to a Driving Academy lesson video (Module 4).",
+    "whats_next": "Get the citizen's current journey stage, next action and certainty (cost/days/visits) (Module 2).",
+}
+
+_TOOL_INPUTS = {
+    "fetch_identity": FetchIdentityToolInput,
+    "check_mismatch": CheckMismatchToolInput,
+    "match_video": MatchVideoToolInput,
+    "whats_next": WhatsNextToolInput,
+}
+
+
+def build_tool_specs() -> list[dict]:
+    specs = []
+    for name, model in _TOOL_INPUTS.items():
+        schema = model.model_json_schema()
+        schema.pop("title", None)
+        for prop in schema.get("properties", {}).values():
+            prop.pop("title", None)
+        specs.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": name,
+                    "description": _TOOL_DESCRIPTIONS[name],
+                    "parameters": schema,
+                },
+            }
+        )
+    return specs
+
+
+TOOL_SPECS = build_tool_specs()
+
+# Short per-applicant conversation memory (in-process, mirrors the service's
+# demo scope; a durable store can replace this without changing the interface).
+_HISTORY: dict[str, deque] = {}
+_HISTORY_TURNS = 5  # user+assistant pairs kept
+
+
+def _history(applicant_id: str) -> deque:
+    return _HISTORY.setdefault(applicant_id, deque(maxlen=_HISTORY_TURNS * 2))
+
+
+def reset_history(applicant_id: str) -> None:
+    _HISTORY.pop(applicant_id, None)
 
 logger = logging.getLogger("bol_ke_apply_agent")
 
@@ -49,10 +119,11 @@ SYSTEM_PROMPT = f"""You are the official MoRTH AI Citizen Officer for 'बोल
 Your role is to assist Indian citizens applying for their first-time driving licence or learning to drive.
 
 Guidelines:
-1. Speak warmly, respectfully, and clearly in the citizen's preferred language (Hindi, English, or Hinglish).
-2. Answer queries accurately using the official RTO Knowledge Base provided below.
-3. If the citizen asks to see their profile/Aadhaar/identity, check document rejection risk, find driving video lessons, or check application status, indicate the corresponding tool in your response.
-4. Keep answers concise, helpful, and free of bureaucratic jargon. Do not discuss fees or tariff breakdowns unless specifically asked.
+1. Speak warmly, respectfully, and clearly — and ALWAYS reply in the same language the citizen used (Hindi, English, or Hinglish).
+2. Answer only about the driving-licence journey and road safety. Politely decline anything else.
+3. Use the platform tools to look things up — never invent journey stages, fees, dates, application numbers or personal data. Every factual claim about the citizen must come from a tool result. General rules may come from the Knowledge Base below.
+4. When the request is ambiguous, ask one short clarifying question instead of guessing.
+5. Keep answers concise (2-4 sentences), free of bureaucratic jargon and markdown. Do not discuss fees unless asked.
 
 {RTO_KNOWLEDGE_BASE}
 """
@@ -80,7 +151,7 @@ class BolKeApplyAgent:
     """Autonomous conversational driver for Bol Ke Apply powered by Google Gemini."""
 
     def __init__(self, provider_name: str | None = None):
-        self.provider = get_llm_provider(provider_name or os.getenv("BOL_KE_APPLY_LLM_PROVIDER", "gemini"))
+        self.provider = get_llm_provider(provider_name)
 
     def interact(
         self,
@@ -89,8 +160,101 @@ class BolKeApplyAgent:
         journey_stage: str | None = None,
     ) -> dict:
         """Process a citizen voice utterance / message and trigger MCP tools as needed."""
-        msg_lower = message.lower().strip()
         lang = _detect_language(message)
+
+        # Safety gate (free moderation endpoint; no-op for providers without it).
+        if self.provider.moderate(message):
+            refusal = {
+                "hindi": "क्षमा करें, मैं इस विषय पर सहायता नहीं कर सकता। कृपया ड्राइविंग लाइसेंस संबंधित प्रश्न पूछें।",
+                "hinglish": "Maaf kijiye, main is vishay par madad nahi kar sakta. Kripya driving licence se juda sawaal poochhein.",
+            }.get(lang, "Sorry, I can't help with that. Please ask about your driving licence journey.")
+            return {
+                "reply": refusal,
+                "tool_called": None,
+                "tool_result": None,
+                "language": lang,
+                "audio_url": None,
+                "engine": "moderation",
+            }
+
+        # Preferred path: native LLM function calling (OpenAI provider).
+        llm_turn = self._interact_with_tools(message, applicant_id, journey_stage, lang)
+        if llm_turn is not None:
+            return llm_turn
+
+        return self._interact_keyword(message, applicant_id, journey_stage, lang)
+
+    def _interact_with_tools(
+        self, message: str, applicant_id: str, journey_stage: str | None, lang: str
+    ) -> dict | None:
+        """Multi-turn tool-calling loop. Returns None when the provider can't do it."""
+        history = _history(applicant_id)
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            *list(history),
+            {
+                "role": "user",
+                "content": (
+                    f"[applicant_id={applicant_id} · journey_stage={journey_stage or 'no_licence'} "
+                    f"· language={lang}]\n{message}"
+                ),
+            },
+        ]
+        tool_called = None
+        tool_result = None
+
+        for _ in range(3):  # at most 3 model turns per reply
+            assistant = self.provider.chat_with_tools(messages, TOOL_SPECS)
+            if assistant is None:
+                return None  # provider unsupported / no key / API error → fallback
+
+            tool_calls = assistant.get("tool_calls") or []
+            if not tool_calls:
+                reply = (assistant.get("content") or "").replace("**", "").strip()
+                if not reply:
+                    return None
+                history.append({"role": "user", "content": message})
+                history.append({"role": "assistant", "content": reply})
+                return {
+                    "reply": reply,
+                    "tool_called": tool_called,
+                    "tool_result": tool_result,
+                    "language": lang,
+                    "audio_url": self.provider.synthesize_speech(reply),
+                    "engine": type(self.provider).__name__,
+                }
+
+            messages.append(assistant)
+            for call in tool_calls:
+                fn = call.get("function", {})
+                name = fn.get("name", "")
+                try:
+                    args = json.loads(fn.get("arguments") or "{}")
+                except json.JSONDecodeError:
+                    args = {}
+                args.setdefault("applicant_id", applicant_id)
+                if name == "match_video":
+                    args.setdefault("query", message)
+                    args.setdefault("journey_stage", journey_stage)
+                executor = TOOL_EXECUTORS.get(name)
+                result = executor(args) if executor else {"error": f"unknown tool '{name}'"}
+                if executor:
+                    tool_called, tool_result = name, result
+                logger.info("bol-ke-apply tool call: %s(%s)", name, args)
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": call.get("id", name),
+                        "content": json.dumps(result, default=str)[:4000],
+                    }
+                )
+        return None  # model kept calling tools without answering → fallback
+
+    def _interact_keyword(
+        self, message: str, applicant_id: str, journey_stage: str | None, lang: str
+    ) -> dict:
+        """Keyword-routed fallback: works offline and with providers lacking tool support."""
+        msg_lower = message.lower().strip()
 
         tool_called = None
         tool_result = None
@@ -157,4 +321,5 @@ Respond directly to the citizen in natural {lang} using the RTO knowledge base a
             "tool_result": tool_result,
             "language": lang,
             "audio_url": self.provider.synthesize_speech(reply),
+            "engine": f"{type(self.provider).__name__}+keywords",
         }

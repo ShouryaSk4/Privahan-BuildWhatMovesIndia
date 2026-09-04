@@ -137,6 +137,14 @@ export function VoiceModal({
           toolTag: data.tool_called ? `Executed MCP Tool: ${data.tool_called}` : undefined,
         },
       ]);
+      // Speak the reply when the backend synthesized audio (OpenAI TTS).
+      if (data.audio_url && typeof data.audio_url === "string" && data.audio_url.length > 100) {
+        try {
+          void new Audio(data.audio_url).play().catch(() => {});
+        } catch {
+          /* autoplay blocked or unsupported — text reply is already shown */
+        }
+      }
     } catch (err) {
       setMessages((prev) => [
         ...prev,

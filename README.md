@@ -70,7 +70,7 @@ Shared Single Source of Truth:
 | Academy (M4) | 8004 | http://localhost:8004 | `POST /academy/match-video`, `GET /academy/videos` |
 | Gateway (M5) | 8005 | http://localhost:8005 | `POST /gov/ll-applications`, `GET /gov/dl-test/slots` |
 | Web (M1) | 5173 | http://localhost:5173 | — |
-| Bol Ke Apply (M6) | 8006 | http://localhost:8006 | `POST /chat`, `GET /tools`, `POST /tools/whats_next` (plus MCP over stdio) |
+| Bol Ke Apply (M6) | 8006 | http://localhost:8006 | `POST /chat`, `POST /transcribe`, `GET /tools`, `POST /tools/whats_next` (plus MCP over stdio) |
 
 ---
 
@@ -108,18 +108,31 @@ journey is demoable in minutes. Leave it unset to enforce the real waiting perio
 ### Module 6 — Bol Ke Apply
 
 ```bash
-# HTTP agent (the web app's voice widget talks to this), port 8006
+# HTTP agent (the web app's voice modal talks to this), port 8006
 uv run uvicorn bol_ke_apply.api:app --port 8006
 
 # or the MCP server over stdio
 uv run --package bol-ke-apply python -m bol_ke_apply.server
 ```
 
-The agent answers in Hindi/Hinglish/English and now includes the journey-state
-tool `whats_next` (Module 2 exists, so AGENTS.md §2's hold is lifted): asking
-"mera application status kya hai" returns the citizen's real stage and next step.
+**LLM provider (OpenAI preferred).** Set `OPENAI_API_KEY` in `.env` and the agent
+upgrades from keyword routing to **native function calling** on `gpt-4o-mini`:
+the model reads the citizen's message (Hindi / Hinglish / English, any phrasing),
+chooses among the platform tools — `fetch_identity`, `check_mismatch`,
+`match_video`, `whats_next` — executes them, and answers from the results with
+short per-applicant conversation memory. Tool schemas are generated from the
+Pydantic contracts in `packages/contracts/contracts/mcp_tools.py`, so they can
+never drift from the platform. Replies also carry real synthesized speech
+(`audio_url`, `gpt-4o-mini-tts`) and `/transcribe` does server-side
+speech-to-text (`gpt-4o-transcribe`) for browsers with weak speech support.
+Inbound text passes the free `omni-moderation-latest` gate.
 
----
+The fallback chain never leaves the assistant dead:
+**OpenAI tool-calling → Gemini phrased replies → offline keyword routing (mock).**
+Provider selection: `BOL_KE_APPLY_LLM_PROVIDER` = `openai` | `gemini` | `mock` |
+`auto` (auto picks by available API key). Live routing evals live in
+`services/bol-ke-apply/tests/test_openai_agent.py` and run only when
+`OPENAI_API_KEY` is present.
 
 ## Tests & lint
 

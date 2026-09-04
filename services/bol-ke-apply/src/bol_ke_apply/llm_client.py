@@ -11,8 +11,8 @@ import json
 import logging
 import os
 from abc import ABC, abstractmethod
-
 from pathlib import Path
+
 import httpx
 
 logger = logging.getLogger("bol_ke_apply_llm")
@@ -53,6 +53,22 @@ class BaseLLMProvider(ABC):
     @abstractmethod
     def transcribe_audio(self, audio_bytes: bytes, mime_type: str = "audio/wav") -> str:
         """Transcribe audio into text."""
+
+    # Optional capabilities — providers that can't do these inherit the defaults,
+    # and callers fall back gracefully.
+
+    def chat_with_tools(self, messages: list[dict], tools: list[dict]) -> dict | None:
+        """One model turn with native function calling.
+
+        Returns the raw assistant message ({"content": ..., "tool_calls": [...]})
+        or None when the provider does not support tool calling / has no key —
+        the agent then falls back to keyword routing.
+        """
+        return None
+
+    def moderate(self, text: str) -> bool:
+        """True if the text should be refused. Default: never flag."""
+        return False
 
 
 class MockLLMProvider(BaseLLMProvider):
@@ -181,11 +197,147 @@ class GeminiLLMProvider(BaseLLMProvider):
         return MockLLMProvider().transcribe_audio(audio_bytes, mime_type)
 
 
+class OpenAILLMProvider(BaseLLMProvider):
+    """OpenAI provider: tool-calling chat, TTS, STT, and moderation.
+
+    Models (all overridable via env):
+      OPENAI_MODEL             gpt-4o-mini        — agent reasoning + tool calls
+      OPENAI_TTS_MODEL         gpt-4o-mini-tts    — speech synthesis (audio_url)
+      OPENAI_TRANSCRIBE_MODEL  gpt-4o-transcribe  — speech-to-text (/transcribe)
+      OPENAI_MODERATION_MODEL  omni-moderation-latest (free)
+    """
+
+    def __init__(self, api_key: str | None = None):
+        self.api_key = api_key or os.getenv("OPENAI_API_KEY", "")
+        self.base_url = os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1").rstrip("/")
+        self.chat_model = os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        self.tts_model = os.getenv("OPENAI_TTS_MODEL", "gpt-4o-mini-tts")
+        self.tts_voice = os.getenv("OPENAI_TTS_VOICE", "alloy")
+        self.transcribe_model = os.getenv("OPENAI_TRANSCRIBE_MODEL", "gpt-4o-transcribe")
+        self.moderation_model = os.getenv("OPENAI_MODERATION_MODEL", "omni-moderation-latest")
+
+    def _headers(self) -> dict:
+        return {"Authorization": f"Bearer {self.api_key}"}
+
+    def generate_response(
+        self,
+        prompt: str,
+        system_instruction: str | None = None,
+    ) -> str:
+        if not self.api_key:
+            return MockLLMProvider().generate_response(prompt, system_instruction)
+        messages = []
+        if system_instruction:
+            messages.append({"role": "system", "content": system_instruction})
+        messages.append({"role": "user", "content": prompt})
+        try:
+            with httpx.Client(timeout=20.0) as client:
+                resp = client.post(
+                    f"{self.base_url}/chat/completions",
+                    headers=self._headers(),
+                    json={"model": self.chat_model, "messages": messages, "max_tokens": 500},
+                )
+                if resp.status_code == 200:
+                    return resp.json()["choices"][0]["message"]["content"].strip()
+                logger.warning("OpenAI chat error %s: %s", resp.status_code, resp.text[:200])
+        except (httpx.HTTPError, json.JSONDecodeError, KeyError, ValueError) as exc:
+            logger.warning("OpenAI chat call failed: %s", exc)
+        return MockLLMProvider().generate_response(prompt, system_instruction)
+
+    def chat_with_tools(self, messages: list[dict], tools: list[dict]) -> dict | None:
+        if not self.api_key:
+            return None
+        try:
+            with httpx.Client(timeout=25.0) as client:
+                resp = client.post(
+                    f"{self.base_url}/chat/completions",
+                    headers=self._headers(),
+                    json={
+                        "model": self.chat_model,
+                        "messages": messages,
+                        "tools": tools,
+                        "tool_choice": "auto",
+                        "max_tokens": 500,
+                    },
+                )
+                if resp.status_code == 200:
+                    return resp.json()["choices"][0]["message"]
+                logger.warning("OpenAI tools error %s: %s", resp.status_code, resp.text[:200])
+        except (httpx.HTTPError, json.JSONDecodeError, KeyError, ValueError) as exc:
+            logger.warning("OpenAI tool-calling failed: %s", exc)
+        return None
+
+    def synthesize_speech(self, text: str) -> str | None:
+        if not self.api_key:
+            return None
+        try:
+            with httpx.Client(timeout=25.0) as client:
+                resp = client.post(
+                    f"{self.base_url}/audio/speech",
+                    headers=self._headers(),
+                    json={
+                        "model": self.tts_model,
+                        "voice": self.tts_voice,
+                        "input": text[:800],
+                        "response_format": "mp3",
+                    },
+                )
+                if resp.status_code == 200:
+                    b64 = base64.b64encode(resp.content).decode("ascii")
+                    return f"data:audio/mp3;base64,{b64}"
+                logger.debug("OpenAI TTS error %s", resp.status_code)
+        except httpx.HTTPError as exc:
+            logger.debug("OpenAI TTS failed: %s", exc)
+        return None
+
+    def transcribe_audio(self, audio_bytes: bytes, mime_type: str = "audio/wav") -> str:
+        if not self.api_key:
+            return ""
+        ext = mime_type.split("/")[-1].split(";")[0] or "wav"
+        try:
+            with httpx.Client(timeout=30.0) as client:
+                resp = client.post(
+                    f"{self.base_url}/audio/transcriptions",
+                    headers=self._headers(),
+                    data={"model": self.transcribe_model},
+                    files={"file": (f"audio.{ext}", audio_bytes, mime_type)},
+                )
+                if resp.status_code == 200:
+                    return resp.json().get("text", "").strip()
+                logger.warning("OpenAI STT error %s: %s", resp.status_code, resp.text[:200])
+        except (httpx.HTTPError, json.JSONDecodeError, ValueError) as exc:
+            logger.warning("OpenAI STT failed: %s", exc)
+        return ""
+
+    def moderate(self, text: str) -> bool:
+        if not self.api_key:
+            return False
+        try:
+            with httpx.Client(timeout=10.0) as client:
+                resp = client.post(
+                    f"{self.base_url}/moderations",
+                    headers=self._headers(),
+                    json={"model": self.moderation_model, "input": text},
+                )
+                if resp.status_code == 200:
+                    return bool(resp.json()["results"][0]["flagged"])
+        except (httpx.HTTPError, json.JSONDecodeError, KeyError, ValueError) as exc:
+            logger.debug("OpenAI moderation skipped: %s", exc)
+        return False
+
+
 def get_llm_provider(name: str | None = None) -> BaseLLMProvider:
-    provider_name = (name or os.getenv("BOL_KE_APPLY_LLM_PROVIDER", "gemini")).lower()
+    provider_name = (name or os.getenv("BOL_KE_APPLY_LLM_PROVIDER", "auto")).lower()
     if provider_name == "mock":
         return MockLLMProvider()
-    has_key = bool(os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"))
-    if provider_name == "gemini" or has_key:
+    if provider_name == "openai":
+        return OpenAILLMProvider()
+    if provider_name == "gemini":
+        return GeminiLLMProvider()
+    # auto: prefer OpenAI when its key exists, then Gemini, else mock (§10.4:
+    # one provider at a time — decided by configuration, not by code).
+    if os.getenv("OPENAI_API_KEY"):
+        return OpenAILLMProvider()
+    if os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY"):
         return GeminiLLMProvider()
     return MockLLMProvider()
