@@ -34,7 +34,8 @@
   --line: #e2e8f0;
   --line-strong: #cbd5e1;
 
-  --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Noto Sans Devanagari", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --focus-ring: 0 0 0 3px rgba(30, 75, 158, 0.35);
   --shadow-sm: 0 1px 2px 0 rgba(15, 23, 42, 0.05);
   --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.08), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
   --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.03);
@@ -2111,5 +2112,203 @@ input[type="checkbox"] {
   .nav-breadcrumb-inner {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* ==========================================================================
+   Refinement Layer — typography confidence, motion, focus, print
+   (appended last so it wins the cascade without disturbing section rules)
+   ========================================================================== */
+
+/* Form controls inherit the design-system face (fixes Arial-rendered chips) */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  line-height: inherit;
+}
+
+::selection {
+  background: var(--gov-blue);
+  color: #ffffff;
+}
+
+/* Confident, balanced headings */
+h1,
+h2,
+h3,
+.task-card-title,
+.persona-preset-title {
+  text-wrap: balance;
+  letter-spacing: -0.015em;
+}
+
+.task-first-hero h1 {
+  font-size: clamp(1.8rem, 3.4vw, 2.5rem);
+  font-weight: 800;
+  line-height: 1.12;
+}
+
+.task-first-hero .hero-eyebrow {
+  letter-spacing: 0.12em;
+  font-weight: 600;
+}
+
+.task-first-hero .sub,
+.task-first-hero p {
+  max-width: 62ch;
+}
+
+/* Numbers that line up: fees, dates, licence & application numbers */
+.certainty-value,
+.licence-no,
+.licence-card dd,
+.stage-detail-banner,
+.gov-app-ref {
+  font-variant-numeric: tabular-nums;
+}
+
+/* A single, consistent keyboard-focus language everywhere */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: var(--radius-sm);
+}
+
+/* Interactive surfaces: lift on hover, settle on press */
+.btn,
+.task-card,
+.persona-chip-btn,
+.slot-btn,
+.quiz-option {
+  transition:
+    transform 140ms cubic-bezier(0.2, 0.6, 0.3, 1),
+    box-shadow 140ms cubic-bezier(0.2, 0.6, 0.3, 1),
+    background-color 140ms ease,
+    border-color 140ms ease,
+    color 140ms ease;
+  will-change: transform;
+}
+
+.btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.btn:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+
+.task-card {
+  cursor: pointer;
+}
+
+.task-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--gov-blue);
+}
+
+.task-card:hover .task-card-action {
+  color: var(--gov-blue);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.task-card.featured:hover {
+  border-color: var(--gov-gold);
+}
+
+.persona-chip-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--gov-blue);
+}
+
+/* Gentle arrival: content rises in once per view, never for reduced motion */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes pv-rise {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .shell,
+  .task-first-hero,
+  .task-cards-grid,
+  .persona-preset-selector {
+    animation: pv-rise 380ms cubic-bezier(0.2, 0.6, 0.3, 1) both;
+  }
+
+  .task-cards-grid {
+    animation-delay: 70ms;
+  }
+
+  .persona-preset-selector {
+    animation-delay: 140ms;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Quiet, branded scrollbars */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--line-strong);
+  border-radius: 999px;
+  border: 2px solid var(--bg);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--muted);
+}
+
+/* The licence card prints alone — the Print button's promise stays true */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .licence-wrap,
+  .licence-wrap * {
+    visibility: visible;
+  }
+
+  .licence-wrap {
+    position: absolute;
+    inset: 1rem auto auto 1rem;
+  }
+
+  .licence-wrap .confetti,
+  .licence-wrap button {
+    display: none !important;
   }
 }
