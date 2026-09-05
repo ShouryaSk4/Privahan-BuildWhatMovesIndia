@@ -64,6 +64,25 @@ class ResetJourneyToolInput(BaseModel):
     applicant_id: str
 
 
+class SaveCitizenToolInput(BaseModel):
+    applicant_id: str | None = None
+    phone: str
+    name: str
+    dob: str
+    address: str
+    vehicle_class: str = "LMV"
+    gps_rto: str = "DL01"
+
+
+class ConfirmRtoToolInput(BaseModel):
+    applicant_id: str
+    confirmed_rto_code: str
+
+
+class NextBestActionToolInput(BaseModel):
+    applicant_id: str
+
+
 __all__ = [
     "BookSlotToolInput",
     "CheckMismatchToolInput",

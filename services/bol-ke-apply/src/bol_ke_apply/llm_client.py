@@ -109,7 +109,7 @@ class GeminiLLMProvider(BaseLLMProvider):
             or os.getenv("GOOGLE_API_KEY")
             or ""
         )
-        self.chat_model = chat_model or os.getenv("GEMINI_MODEL", "gemini-3.5-flash-lite")
+        self.chat_model = chat_model or os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
         self.tts_model = tts_model or os.getenv("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
         self.transcribe_model = transcribe_model or os.getenv("GEMINI_TRANSCRIBE_MODEL", "gemini-3.5-transcribe")
 
@@ -119,7 +119,7 @@ class GeminiLLMProvider(BaseLLMProvider):
         system_instruction: str | None = None,
     ) -> str:
         # Try distinct models in order
-        candidates = [self.chat_model, "gemini-3.5-flash-lite", "gemini-3.5-flash", "gemini-3.6-flash", "gemini-flash-lite-latest"]
+        candidates = [self.chat_model, "gemini-3.7-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"]
         seen = set()
         models_to_try = [m for m in candidates if m and not (m in seen or seen.add(m))]
 
@@ -145,6 +145,97 @@ class GeminiLLMProvider(BaseLLMProvider):
                 logger.warning("Gemini model %s call failed: %s", m, exc)
 
         return MockLLMProvider().generate_response(prompt, system_instruction)
+
+    def chat_with_tools(self, messages: list[dict], tools: list[dict]) -> dict | None:
+        """Execute multi-turn conversational tool calling using Gemini 3.7 Flash."""
+        if not self.api_key:
+            return None
+
+        # Build contents array
+        contents = []
+        system_text = ""
+        for m in messages:
+            role = m.get("role", "user")
+            content = m.get("content") or ""
+            if role == "system":
+                system_text += content + "\n"
+            elif role == "user":
+                contents.append({"role": "user", "parts": [{"text": content}]})
+            elif role == "assistant":
+                parts = []
+                if content:
+                    parts.append({"text": content})
+                for call in m.get("tool_calls") or []:
+                    fn = call.get("function", {})
+                    try:
+                        args = json.loads(fn.get("arguments") or "{}")
+                    except Exception:
+                        args = {}
+                    parts.append({"functionCall": {"name": fn.get("name", ""), "args": args}})
+                if parts:
+                    contents.append({"role": "model", "parts": parts})
+            elif role == "tool":
+                tool_name = m.get("tool_call_id") or "tool"
+                contents.append({
+                    "role": "user",
+                    "parts": [{"text": f"Tool '{tool_name}' returned: {content}"}]
+                })
+
+        # Build function declarations
+        function_declarations = []
+        for t in tools:
+            fn = t.get("function", {})
+            function_declarations.append({
+                "name": fn.get("name", ""),
+                "description": fn.get("description", ""),
+                "parameters": fn.get("parameters", {}),
+            })
+
+        payload: dict = {
+            "contents": contents,
+            "tools": [{"functionDeclarations": function_declarations}],
+        }
+        if system_text:
+            payload["systemInstruction"] = {"parts": [{"text": system_text.strip()}]}
+
+        candidates = [self.chat_model, "gemini-3.7-flash", "gemini-3.6-flash"]
+        for m in candidates:
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
+            try:
+                with httpx.Client(timeout=12.0) as client:
+                    resp = client.post(url, json=payload)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        cand = data.get("candidates", [{}])[0]
+                        parts = cand.get("content", {}).get("parts", [])
+                        
+                        tool_calls = []
+                        text_parts = []
+                        for idx, p in enumerate(parts):
+                            if "functionCall" in p:
+                                fc = p["functionCall"]
+                                tool_calls.append({
+                                    "id": f"call_{idx}_{fc.get('name')}",
+                                    "type": "function",
+                                    "function": {
+                                        "name": fc.get("name"),
+                                        "arguments": json.dumps(fc.get("args", {})),
+                                    },
+                                })
+                            elif "text" in p:
+                                text_parts.append(p["text"])
+
+                        reply_text = "\n".join(text_parts).strip()
+                        return {
+                            "content": reply_text if reply_text else None,
+                            "tool_calls": tool_calls,
+                        }
+                    else:
+                        logger.warning("Gemini %s tool calling error (%s): %s", m, resp.status_code, resp.text[:200])
+            except Exception as exc:
+                logger.warning("Gemini %s call failed: %s", m, exc)
+
+        return None
 
     def synthesize_speech(self, text: str) -> str | None:
         """Synthesize speech using Gemini TTS if available (with rapid fallback to browser TTS)."""

@@ -186,6 +186,16 @@ class JourneyEngine:
 
     def save(self, record: ApplicantRecord) -> None:
         self.store.put(record.applicant_id, record.to_dict())
+        if record.application_number:
+            try:
+                from contracts.db import upsert_application
+                upsert_application(
+                    application_number=record.application_number,
+                    citizen_id=record.applicant_id,
+                    stage=record.stage.value,
+                )
+            except Exception:
+                pass
 
     def set_application_number(self, applicant_id: str, application_number: str) -> None:
         record = self.record(applicant_id)

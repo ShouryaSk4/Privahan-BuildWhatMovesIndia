@@ -61,6 +61,40 @@ class IdentityService:
     def list_personas(self) -> list[str]:
         return [k for k in self._records if not k.startswith("applicant_00")]
 
+    def register_citizen(
+        self,
+        phone: str,
+        name: str,
+        dob: date,
+        address: str,
+        gps_rto: str = "DL01",
+        vehicle_class: str = "LMV",
+    ) -> dict:
+        """Register or update a dynamic citizen record in Supabase."""
+        try:
+            from contracts.db import upsert_citizen
+            citizen_id = f"cit_{phone[-6:]}"
+            return upsert_citizen(
+                citizen_id=citizen_id,
+                phone=phone,
+                name=name,
+                dob=dob,
+                address=address,
+                gps_rto=gps_rto,
+                vehicle_class=vehicle_class,
+            )
+        except Exception as exc:
+            logger.warning("Supabase register_citizen fallback: %s", exc)
+            return {
+                "citizen_id": f"cit_{phone[-6:]}",
+                "phone": phone,
+                "name": name,
+                "dob": dob,
+                "address": address,
+                "gps_suggested_rto": gps_rto,
+                "vehicle_class": vehicle_class,
+            }
+
     def fetch_identity(
         self,
         applicant_id: str,
@@ -68,9 +102,33 @@ class IdentityService:
     ) -> VerifiedProfile:
         """Pulls verified identity record for applicant_id.
 
-        Separates GPS location (nearest RTO convenience) from Aadhaar registered address
-        (legal jurisdiction).
+        First queries Supabase tbl_citizens; falls back to fixtures.
         """
+        # Try fetching from Supabase PostgreSQL first
+        try:
+            from contracts.db import get_citizen
+            db_citizen = get_citizen(applicant_id)
+            if db_citizen:
+                dob: date = db_citizen["dob"]
+                age = _calculate_age(dob)
+                suggested_rto = gps_suggested_rto or db_citizen.get("gps_suggested_rto") or "DL01"
+                return VerifiedProfile(
+                    applicant_id=db_citizen["citizen_id"],
+                    source=IdentitySource.DIGILOCKER_AADHAAR,
+                    name=db_citizen["name"],
+                    dob=dob,
+                    address=db_citizen["address"],
+                    photo_url=db_citizen.get("photo_url") or "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300",
+                    gps_suggested_rto=suggested_rto,
+                    aadhaar_registered_address=db_citizen["address"],
+                    addresses_match=db_citizen.get("addresses_match", True),
+                    fetched_at=datetime.now(UTC),
+                    age=age,
+                    age_eligible=age >= 18,
+                )
+        except Exception as exc:
+            logger.debug("Database fetch fallback: %s", exc)
+
         record = self._records.get(applicant_id)
         if not record:
             # Generate a realistic mock profile for arbitrary applicant IDs

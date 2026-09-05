@@ -73,10 +73,10 @@ def hermetic_journey(monkeypatch):
     monkeypatch.setattr(srv, "JOURNEY_SERVICE_URL", "http://127.0.0.1:1")
 
 
-def test_registry_covers_all_ten_tools():
+def test_registry_covers_all_tools():
     names = {t["function"]["name"] for t in TOOL_SPECS}
     assert names == set(TOOL_EXECUTORS)
-    assert len(names) == 10
+    assert len(names) == 13
     assert ACTION_TOOLS <= names
 
 
@@ -134,7 +134,7 @@ def test_agent_run_endpoint_shape():
 
 def test_tools_endpoint_marks_consequential_actions():
     tools = client.get("/tools").json()
-    assert len(tools) == 10
+    assert len(tools) == 13
     flags = {t["name"]: t["consequential"] for t in tools}
     assert flags["book_test_slot"] is True
     assert flags["whats_next"] is False

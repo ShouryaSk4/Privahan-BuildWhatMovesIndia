@@ -36,6 +36,7 @@ interface Message {
   sender: "user" | "bot";
   text: string;
   toolTag?: string;
+  options?: string[];
 }
 
 export function VoiceModal({
@@ -135,6 +136,7 @@ export function VoiceModal({
           sender: "bot",
           text: data.reply || "जानकारी प्राप्त हो गई है।",
           toolTag: data.tool_called ? `Executed MCP Tool: ${data.tool_called}` : undefined,
+          options: Array.isArray(data.options) ? data.options : undefined,
         },
       ]);
       // Speak the reply when the backend synthesized audio (OpenAI TTS).
@@ -226,6 +228,42 @@ export function VoiceModal({
                     }}
                   >
                     ⚙️ {m.toolTag}
+                  </div>
+                )}
+                {m.options && m.options.length > 0 && (
+                  <div
+                    style={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: "0.4rem",
+                      marginTop: "0.55rem",
+                    }}
+                  >
+                    {m.options.map((opt, oi) => (
+                      <button
+                        key={oi}
+                        type="button"
+                        className="btn secondary"
+                        disabled={busy}
+                        onClick={() => handleSend(opt)}
+                        style={{
+                          fontSize: "0.78rem",
+                          padding: "0.3rem 0.65rem",
+                          borderRadius: "999px",
+                          background: "#f1f5f9",
+                          border: "1px solid #cbd5e1",
+                          color: "#1e3a8a",
+                          fontWeight: 600,
+                          cursor: "pointer",
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: "0.25rem",
+                        }}
+                      >
+                        <span>⚡</span>
+                        <span>{opt}</span>
+                      </button>
+                    ))}
                   </div>
                 )}
               </div>

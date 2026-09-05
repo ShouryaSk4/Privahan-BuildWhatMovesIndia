@@ -76,9 +76,23 @@ class ToollessProvider(MockLLMProvider):
 
 def test_tool_specs_come_from_contracts():
     names = {t["function"]["name"] for t in TOOL_SPECS}
-    read_tools = {"fetch_identity", "check_mismatch", "match_video", "whats_next",
-                  "list_test_slots", "sync_status"}
-    action_tools = {"start_application", "report_event", "book_test_slot", "reset_journey"}
+    read_tools = {
+        "fetch_identity",
+        "check_mismatch",
+        "match_video",
+        "whats_next",
+        "list_test_slots",
+        "sync_status",
+        "get_journey_next_best_action",
+    }
+    action_tools = {
+        "start_application",
+        "report_event",
+        "book_test_slot",
+        "reset_journey",
+        "save_citizen_details",
+        "confirm_rto_choice",
+    }
     assert names == read_tools | action_tools
     for spec in TOOL_SPECS:
         params = spec["function"]["parameters"]

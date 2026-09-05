@@ -12,15 +12,19 @@ and executes MCP platform tools:
 import json
 import logging
 from collections import deque
+from typing import Any
 
 from contracts.mcp_tools import (
     BookSlotToolInput,
     CheckMismatchToolInput,
+    ConfirmRtoToolInput,
     FetchIdentityToolInput,
     ListSlotsToolInput,
     MatchVideoToolInput,
+    NextBestActionToolInput,
     ReportEventToolInput,
     ResetJourneyToolInput,
+    SaveCitizenToolInput,
     StartApplicationToolInput,
     WhatsNextToolInput,
 )
@@ -29,11 +33,14 @@ from bol_ke_apply.llm_client import get_llm_provider
 from bol_ke_apply.server import (
     book_test_slot,
     check_mismatch,
+    confirm_rto_choice,
     fetch_identity,
+    get_journey_next_best_action,
     list_test_slots,
     match_video,
     report_event,
     reset_journey,
+    save_citizen_details,
     start_application,
     sync_status,
     whats_next,
@@ -67,12 +74,28 @@ TOOL_EXECUTORS = {
     ),
     "sync_status": lambda args: sync_status(applicant_id=args["applicant_id"]),
     "reset_journey": lambda args: reset_journey(applicant_id=args["applicant_id"]),
+    "save_citizen_details": lambda args: save_citizen_details(
+        applicant_id=args.get("applicant_id"),
+        phone=args["phone"],
+        name=args["name"],
+        dob=args["dob"],
+        address=args["address"],
+        vehicle_class=args.get("vehicle_class", "LMV"),
+        gps_rto=args.get("gps_rto", "DL01"),
+    ),
+    "confirm_rto_choice": lambda args: confirm_rto_choice(
+        applicant_id=args["applicant_id"],
+        confirmed_rto_code=args["confirmed_rto_code"],
+    ),
+    "get_journey_next_best_action": lambda args: get_journey_next_best_action(
+        applicant_id=args["applicant_id"],
+    ),
 }
 
 # Tools with side effects: the conversational agent must get the citizen's
 # yes before calling these; the autonomous runner logs each one it takes.
 ACTION_TOOLS = frozenset(
-    {"start_application", "report_event", "book_test_slot", "reset_journey"}
+    {"start_application", "report_event", "book_test_slot", "reset_journey", "save_citizen_details", "confirm_rto_choice"}
 )
 
 _TOOL_DESCRIPTIONS = {
@@ -86,6 +109,9 @@ _TOOL_DESCRIPTIONS = {
     "book_test_slot": "Book a specific driving-test slot AFTER the citizen confirmed it.",
     "sync_status": "Refresh the journey from the government registry and return the updated state.",
     "reset_journey": "DEMO ONLY, destructive: forget this journey. Only on explicit citizen request.",
+    "save_citizen_details": "Save or register citizen demographic details (phone, name, DOB, address, vehicle_class) into the database so the application can proceed.",
+    "confirm_rto_choice": "Confirm citizen statutory jurisdiction RTO choice when address and device location differ.",
+    "get_journey_next_best_action": "Get the next logical journey action when citizen confirms to proceed.",
 }
 
 _TOOL_INPUTS = {
@@ -99,6 +125,9 @@ _TOOL_INPUTS = {
     "book_test_slot": BookSlotToolInput,
     "sync_status": ResetJourneyToolInput,
     "reset_journey": ResetJourneyToolInput,
+    "save_citizen_details": SaveCitizenToolInput,
+    "confirm_rto_choice": ConfirmRtoToolInput,
+    "get_journey_next_best_action": NextBestActionToolInput,
 }
 
 
@@ -124,18 +153,93 @@ def build_tool_specs() -> list[dict]:
 
 TOOL_SPECS = build_tool_specs()
 
-# Short per-applicant conversation memory (in-process, mirrors the service's
-# demo scope; a durable store can replace this without changing the interface).
+# Persistent per-applicant conversation memory backed by Supabase PostgreSQL
 _HISTORY: dict[str, deque] = {}
 _HISTORY_TURNS = 5  # user+assistant pairs kept
 
 
-def _history(applicant_id: str) -> deque:
-    return _HISTORY.setdefault(applicant_id, deque(maxlen=_HISTORY_TURNS * 2))
+def _history(applicant_id: str) -> list[dict]:
+    try:
+        from contracts.db import get_agent_history
+        db_history = get_agent_history(applicant_id, limit=10)
+        if db_history:
+            return [
+                {
+                    "role": "user" if h["sender"] == "citizen" else "assistant",
+                    "content": h["content"],
+                }
+                for h in db_history
+            ]
+    except Exception:
+        pass
+    mem = _HISTORY.setdefault(applicant_id, deque(maxlen=_HISTORY_TURNS * 2))
+    return list(mem)
 
 
 def reset_history(applicant_id: str) -> None:
     _HISTORY.pop(applicant_id, None)
+
+
+def _save_message(
+    session_id: str,
+    sender: str,
+    content: str,
+    tool_called: str | None = None,
+    tool_result: Any | None = None,
+    options: list[str] | None = None,
+) -> None:
+    try:
+        from contracts.db import append_agent_message
+        append_agent_message(
+            session_id=session_id,
+            sender=sender,
+            content=content,
+            tool_called=tool_called,
+            tool_result=tool_result,
+            interactive_options=options,
+        )
+    except Exception:
+        pass
+
+
+def _generate_interactive_options(
+    message: str, tool_called: str | None, tool_result: Any, lang: str
+) -> list[str]:
+    """Generate structured, clickable quick-reply option pills for the citizen."""
+    if tool_called == "check_mismatch" and tool_result:
+        mismatches = tool_result.get("mismatches", []) if isinstance(tool_result, dict) else []
+        if any(m.get("field") == "jurisdiction" for m in mismatches):
+            return ["Delhi RTO (DL-01)", "Current Location (KA-03)", "Review Details"]
+        return ["Fix Mismatch", "Proceed Anyway", "Check Rules"]
+
+    if tool_called == "start_application" and isinstance(tool_result, dict):
+        if tool_result.get("blocked"):
+            detail = tool_result.get("detail", {})
+            if isinstance(detail, dict) and detail.get("reason") == "rto_confirmation_required":
+                return ["Confirm Delhi (DL-01)", "Confirm Bangalore (KA-03)", "Explain RTO Difference"]
+            return ["Review Issues", "Contact RTO", "Try Again"]
+        elif "current_stage" in tool_result:
+            return ["Take STALL Exam", "Open Driving Academy", "Check Status"]
+
+    if tool_called == "list_test_slots" and isinstance(tool_result, dict):
+        slots = tool_result.get("slots", [])
+        if slots:
+            opts = [f"Book: {s.get('slot_id')}" for s in slots[:3]]
+            opts.append("Other Dates")
+            return opts
+
+    if tool_called == "fetch_identity" and isinstance(tool_result, dict):
+        return ["Confirm and Apply", "Change Vehicle Class", "Check Mismatches"]
+
+    m_low = message.lower()
+    if any(k in m_low for k in ["apply", "shuru", "licence", "license"]):
+        return ["Confirm and Apply", "Statutory Fees & Days", "Ask Question"]
+    if any(k in m_low for k in ["slot", "booking", "test", "track"]):
+        return ["Book Track Slot", "8-Turn Track Video", "Slot Rules"]
+    if any(k in m_low for k in ["video", "dikhao", "park", "reverse", "hill"]):
+        return ["8-Turn Video", "Reverse Parking Video", "Hill Hold Video"]
+
+    return ["Apply for Licence", "Track Application", "Driving Academy"]
 
 logger = logging.getLogger("bol_ke_apply_agent")
 
@@ -237,7 +341,34 @@ class BolKeApplyAgent:
                 "engine": "moderation",
             }
 
-        # Preferred path: native LLM function calling (OpenAI provider).
+        # Next-Best-Action Trigger when citizen confirms (e.g. 'Haan kar do')
+        msg_norm = message.lower().strip()
+        confirmation_phrases = ["haan kar do", "haan kardo", "yes", "proceed", "theek hai", "haan", "sure", "ok kar do", "kardo"]
+        if msg_norm in confirmation_phrases or any(msg_norm.startswith(p) for p in confirmation_phrases):
+            nba = get_journey_next_best_action(applicant_id)
+            act_type = nba.get("action")
+            if act_type == "start_application":
+                res = start_application(applicant_id=applicant_id)
+                tool_called, tool_result = "start_application", res
+                reply = (
+                    "मैंने आपका आवेदन जमा कर दिया है! आपका आवेदन नंबर जनरेट हो गया है। अब आप ऑनलाइन STALL परीक्षा दे सकते हैं।"
+                    if lang != "english"
+                    else "I have submitted your application! Your application number has been generated. You can now take the online STALL learner's test."
+                )
+                options = ["Take STALL Exam Now", "Driving Academy Videos", "Check Application Status"]
+                _save_message(applicant_id, "citizen", message)
+                _save_message(applicant_id, "agent", reply, tool_called, tool_result, options)
+                return {
+                    "reply": reply,
+                    "tool_called": tool_called,
+                    "tool_result": tool_result,
+                    "language": lang,
+                    "audio_url": self.provider.synthesize_speech(reply),
+                    "engine": "NextBestAction",
+                    "options": options,
+                }
+
+        # Preferred path: native LLM function calling (OpenAI / Gemini 3.7 provider).
         llm_turn = self._interact_with_tools(message, applicant_id, journey_stage, lang)
         if llm_turn is not None:
             return llm_turn
@@ -273,8 +404,9 @@ class BolKeApplyAgent:
                 reply = (assistant.get("content") or "").replace("**", "").strip()
                 if not reply:
                     return None
-                history.append({"role": "user", "content": message})
-                history.append({"role": "assistant", "content": reply})
+                options = _generate_interactive_options(message, tool_called, tool_result, lang)
+                _save_message(applicant_id, "citizen", message)
+                _save_message(applicant_id, "agent", reply, tool_called, tool_result, options)
                 return {
                     "reply": reply,
                     "tool_called": tool_called,
@@ -282,6 +414,7 @@ class BolKeApplyAgent:
                     "language": lang,
                     "audio_url": self.provider.synthesize_speech(reply),
                     "engine": type(self.provider).__name__,
+                    "options": options,
                 }
 
             messages.append(assistant)
@@ -375,6 +508,10 @@ Respond directly to the citizen in natural {lang} using the RTO knowledge base a
         # Clean markdown formatting if any excessive asterisks
         reply = reply.replace("**", "").strip()
 
+        options = _generate_interactive_options(message, tool_called, tool_result, lang)
+        _save_message(applicant_id, "citizen", message)
+        _save_message(applicant_id, "agent", reply, tool_called, tool_result, options)
+
         return {
             "reply": reply,
             "tool_called": tool_called,
@@ -382,6 +519,7 @@ Respond directly to the citizen in natural {lang} using the RTO knowledge base a
             "language": lang,
             "audio_url": self.provider.synthesize_speech(reply),
             "engine": f"{type(self.provider).__name__}+keywords",
+            "options": options,
         }
 
 
