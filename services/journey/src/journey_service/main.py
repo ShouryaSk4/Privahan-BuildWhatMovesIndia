@@ -6,13 +6,20 @@ half of the Certainty Contract), integrates Module 3's verified data, and talks
 to government systems only through Module 5.
 """
 
-from contracts.gateway import LLApplicationSubmission, SlotBookingRequest, TestSlot
+from contracts.gateway import (
+    LLApplicationSubmission,
+    SlotBookingRequest,
+    TestResultReport,
+    TestSlot,
+)
 from contracts.identity import Mismatch, MismatchCheckResult, VerifiedProfile
 from contracts.journey import JourneyStage, JourneyState
+from contracts.security import SESSION_TTL_SECONDS, cors_origins, mint_session
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
+from . import exam as exam_mod
 from .clients.gateway import (
     GatewayClient,
     GatewayRejection,
@@ -20,6 +27,7 @@ from .clients.gateway import (
     get_gateway_client,
 )
 from .clients.identity import IdentityClient, IdentityUnavailable, get_identity_client
+from .deps import rate_limit_api, rate_limit_session, require_owner
 from .engine import GateError, JourneyEngine, TransitionError, get_engine
 
 app = FastAPI(
@@ -30,10 +38,40 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # internal service; tighten when deployed
+    allow_origins=cors_origins(),
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=False,
 )
+
+# Ownership gate applied to every /journey/{applicant_id}/* route.
+OWNER = [Depends(require_owner), Depends(rate_limit_api)]
+
+
+class SessionRequest(BaseModel):
+    applicant_id: str
+
+
+class SessionResponse(BaseModel):
+    token: str
+    applicant_id: str
+    expires_in: int
+
+
+@app.post("/session", response_model=SessionResponse, dependencies=[Depends(rate_limit_session)])
+def create_session(body: SessionRequest) -> SessionResponse:
+    """Bind a browser session to one applicant_id (the demo's stand-in for login).
+
+    In production this would follow a real OTP/Aadhaar auth; here it mints the
+    session so every subsequent /journey call is ownership-checked. The prototype
+    posture (no OTP verification behind it) is documented in the README.
+    """
+    aid = body.applicant_id.strip()
+    if not aid or len(aid) > 64:
+        raise HTTPException(status_code=400, detail="Invalid applicant id.")
+    return SessionResponse(
+        token=mint_session(aid), applicant_id=aid, expires_in=SESSION_TTL_SECONDS
+    )
 
 
 # Mismatch fields that describe *jurisdiction*, not bad identity data. These are
@@ -102,13 +140,13 @@ def healthz() -> dict[str, str]:
     return {"status": "ok", "module": "journey"}
 
 
-@app.get("/journey/{applicant_id}", response_model=JourneyState)
+@app.get("/journey/{applicant_id}", response_model=JourneyState, dependencies=OWNER)
 def get_journey(applicant_id: str, engine: JourneyEngine = Depends(get_engine)) -> JourneyState:
     """What's next — the AGENTS.md §7.4 response."""
     return engine.state(applicant_id)
 
 
-@app.post("/journey/{applicant_id}/events", response_model=JourneyState)
+@app.post("/journey/{applicant_id}/events", response_model=JourneyState, dependencies=OWNER)
 def report_event(
     applicant_id: str, body: EventRequest, engine: JourneyEngine = Depends(get_engine)
 ) -> JourneyState:
@@ -119,7 +157,7 @@ def report_event(
     return engine.state(applicant_id)
 
 
-@app.get("/journey/{applicant_id}/verified-profile", response_model=VerifiedIdentityView)
+@app.get("/journey/{applicant_id}/verified-profile", response_model=VerifiedIdentityView, dependencies=OWNER)
 def verified_profile(
     applicant_id: str, identity: IdentityClient = Depends(get_identity_client)
 ) -> VerifiedIdentityView:
@@ -145,7 +183,7 @@ def verified_profile(
     )
 
 
-@app.post("/journey/{applicant_id}/apply", response_model=JourneyState)
+@app.post("/journey/{applicant_id}/apply", response_model=JourneyState, dependencies=OWNER)
 def apply(
     applicant_id: str,
     body: ApplyRequest,
@@ -219,12 +257,13 @@ def apply(
     try:
         gateway.verify_documents(result.application_number)
         engine.apply_event(applicant_id, "documents_verified")
-    except Exception:
+    except (GatewayUnavailable, GatewayRejection, TransitionError, GateError):
+        # Best-effort auto-verify; a later /sync reconciles if this didn't land.
         pass
     return engine.state(applicant_id)
 
 
-@app.post("/journey/{applicant_id}/reset", response_model=JourneyState)
+@app.post("/journey/{applicant_id}/reset", response_model=JourneyState, dependencies=OWNER)
 def reset_journey(
     applicant_id: str, engine: JourneyEngine = Depends(get_engine)
 ) -> JourneyState:
@@ -237,7 +276,7 @@ def reset_journey(
     return engine.state(applicant_id)
 
 
-@app.post("/journey/{applicant_id}/sync", response_model=JourneyState)
+@app.post("/journey/{applicant_id}/sync", response_model=JourneyState, dependencies=OWNER)
 def sync(
     applicant_id: str,
     engine: JourneyEngine = Depends(get_engine),
@@ -255,7 +294,7 @@ def sync(
     return engine.state(applicant_id)
 
 
-@app.get("/journey/{applicant_id}/dl-test/slots", response_model=list[TestSlot])
+@app.get("/journey/{applicant_id}/dl-test/slots", response_model=list[TestSlot], dependencies=OWNER)
 def dl_test_slots(
     applicant_id: str,
     rto_code: str = "DL01",
@@ -267,7 +306,7 @@ def dl_test_slots(
         raise HTTPException(status_code=503, detail=str(exc)) from exc
 
 
-@app.post("/journey/{applicant_id}/dl-test/bookings", response_model=JourneyState)
+@app.post("/journey/{applicant_id}/dl-test/bookings", response_model=JourneyState, dependencies=OWNER)
 def book_dl_test(
     applicant_id: str,
     body: BookingRequest,
@@ -304,3 +343,96 @@ def book_dl_test(
     except (TransitionError, GateError) as exc:
         raise HTTPException(status_code=409, detail=exc.message) from exc
     return engine.state(applicant_id)
+
+# ---------------------------------------------------------------------------
+# Server-authoritative STALL exam. The answer key never leaves this process;
+# the browser fetches questions, submits raw answers, and the SERVER scores
+# them and advances the stage. A citizen can no longer grade or pass themselves.
+# ---------------------------------------------------------------------------
+
+
+class ExamOutcome(BaseModel):
+    result: exam_mod.ExamResult
+    state: JourneyState
+
+
+@app.get("/journey/{applicant_id}/ll-exam", response_model=exam_mod.ExamPaper, dependencies=OWNER)
+def get_ll_exam(applicant_id: str) -> exam_mod.ExamPaper:
+    """The exam paper with the answer key stripped."""
+    return exam_mod.paper()
+
+
+@app.post("/journey/{applicant_id}/ll-exam", response_model=ExamOutcome, dependencies=OWNER)
+def submit_ll_exam(
+    applicant_id: str,
+    submission: exam_mod.ExamSubmission,
+    engine: JourneyEngine = Depends(get_engine),
+    gateway: GatewayClient = Depends(get_gateway_client),
+) -> ExamOutcome:
+    record = engine.record(applicant_id)
+    if record.stage not in (JourneyStage.LL_DOCUMENTS_VERIFIED, JourneyStage.LL_TEST_SCHEDULED):
+        raise HTTPException(
+            status_code=409,
+            detail=f"The learner's test is not open in stage '{record.stage.value}'.",
+        )
+    result = exam_mod.grade(submission)
+    if result.passed and record.application_number:
+        # Record the outcome on the government side (persists the integrity tier),
+        # then advance our own state machine. Only the server can do this.
+        try:
+            gateway.report_test_result(
+                TestResultReport(
+                    application_number=record.application_number,
+                    test_type="ll",
+                    passed=True,
+                    integrity_score=result.integrity_score,
+                    integrity_tier=result.integrity_tier,
+                    integrity_events=len(submission.integrity.events) if submission.integrity else 0,
+                )
+            )
+        except (GatewayUnavailable, GatewayRejection):
+            pass
+        try:
+            engine.apply_event(applicant_id, "ll_test_passed")
+        except (TransitionError, GateError):
+            pass
+    return ExamOutcome(result=result, state=engine.state(applicant_id))
+
+
+class DlResultRequest(BaseModel):
+    passed: bool
+    failed_checkpoint: str | None = None
+
+
+@app.post("/journey/{applicant_id}/simulate/dl-result", response_model=JourneyState, dependencies=OWNER)
+def simulate_dl_result(
+    applicant_id: str,
+    body: DlResultRequest,
+    engine: JourneyEngine = Depends(get_engine),
+    gateway: GatewayClient = Depends(get_gateway_client),
+) -> JourneyState:
+    """Demo stand-in for the RTO reporting a physical driving-test outcome.
+
+    Routed through Module 2 (token-checked) so the browser never touches the
+    government endpoints directly. In production this is an inbound RTO signal.
+    """
+    record = engine.record(applicant_id)
+    if record.application_number is None:
+        raise HTTPException(status_code=409, detail="No application on file.")
+    try:
+        gateway.report_test_result(
+            TestResultReport(
+                application_number=record.application_number,
+                test_type="dl",
+                passed=body.passed,
+                failed_checkpoint=body.failed_checkpoint,
+            )
+        )
+    except GatewayUnavailable as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    except GatewayRejection as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc
+    status = gateway.get_application_status(record.application_number)
+    engine.sync_from_gov(applicant_id, status.stage, status.failed_checkpoint)
+    return engine.state(applicant_id)
+

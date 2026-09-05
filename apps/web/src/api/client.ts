@@ -7,16 +7,16 @@ import type { components as academyComponents } from "./types/academy";
 export type JourneyState = journeyComponents["schemas"]["JourneyState"];
 export type VerifiedIdentityView = journeyComponents["schemas"]["VerifiedIdentityView"];
 export type TestSlot = journeyComponents["schemas"]["TestSlot"];
+export type ExamPaper = journeyComponents["schemas"]["ExamPaper"];
+export type ExamOutcome = journeyComponents["schemas"]["ExamOutcome"];
 export type VideoMatchResult = academyComponents["schemas"]["VideoMatchResult"];
 
 const isDev = import.meta.env.DEV;
 
 export const JOURNEY_URL =
   import.meta.env.VITE_JOURNEY_URL ?? (isDev ? "http://localhost:8002" : "");
-export const GATEWAY_URL =
-  import.meta.env.VITE_GATEWAY_URL ?? (isDev ? "http://localhost:8005" : "");
-// In dev, Vite proxies /api/academy to localhost:8004. In production (Vercel),
-// /academy routes to api/index.py.
+// Module 4 & 6 have no CORS for the browser, so dev proxies /api/* and prod
+// routes them through api/index.py.
 export const ACADEMY_URL =
   import.meta.env.VITE_ACADEMY_URL ?? (isDev ? "/api/academy" : "/academy");
 export const BOL_URL =
@@ -31,11 +31,24 @@ export class ApiError extends Error {
   }
 }
 
+// -- session token -----------------------------------------------------------
+// The government/journey endpoints are now ownership-gated: a session token
+// binds this browser to one applicant_id, and every /journey call carries it.
+let sessionToken: string | null = null;
+
+export function clearSession(): void {
+  sessionToken = null;
+}
+
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(url, {
-    headers: { "Content-Type": "application/json" },
-    ...init,
-  });
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(init?.headers as Record<string, string> | undefined),
+  };
+  if (sessionToken && url.startsWith(JOURNEY_URL)) {
+    headers.Authorization = `Bearer ${sessionToken}`;
+  }
+  const res = await fetch(url, { ...init, headers });
   const body = await res.json().catch(() => null);
   if (!res.ok) {
     throw new ApiError(
@@ -46,6 +59,15 @@ async function request<T>(url: string, init?: RequestInit): Promise<T> {
     );
   }
   return body as T;
+}
+
+/** Mint a session bound to this applicant. Call before any journey request. */
+export async function startSession(applicantId: string): Promise<void> {
+  const res = await request<{ token: string }>(`${JOURNEY_URL}/session`, {
+    method: "POST",
+    body: JSON.stringify({ applicant_id: applicantId }),
+  });
+  sessionToken = res.token;
 }
 
 export const journeyApi = {
@@ -80,33 +102,28 @@ export const journeyApi = {
       `${JOURNEY_URL}/journey/${applicantId}/dl-test/bookings`,
       { method: "POST", body: JSON.stringify({ slot_id: slotId }) },
     ),
-};
-
-// Demo-only controls that stand in for the RTO's side of the mock gateway.
-export const demoRtoApi = {
-  verifyDocuments: (applicationNumber: string) =>
-    request(`${GATEWAY_URL}/gov/applications/${applicationNumber}/verify-documents`, {
-      method: "POST",
-    }),
-  reportTestResult: (
-    applicationNumber: string,
-    testType: "ll" | "dl",
-    passed: boolean,
-    failedCheckpoint?: string,
-    integrity?: { score: number; tier: string; events: unknown[] },
+  // Server-authoritative learner's test.
+  getExam: (applicantId: string) =>
+    request<ExamPaper>(`${JOURNEY_URL}/journey/${applicantId}/ll-exam`),
+  submitExam: (
+    applicantId: string,
+    answers: (number | null)[],
+    integrity?: { camera: string; events: unknown[] },
   ) =>
-    request(`${GATEWAY_URL}/gov/test-results`, {
+    request<ExamOutcome>(`${JOURNEY_URL}/journey/${applicantId}/ll-exam`, {
       method: "POST",
-      body: JSON.stringify({
-        application_number: applicationNumber,
-        test_type: testType,
-        passed,
-        failed_checkpoint: failedCheckpoint ?? null,
-        integrity_score: integrity?.score ?? null,
-        integrity_tier: integrity?.tier ?? null,
-        integrity_events: integrity ? integrity.events.length : null,
-      }),
+      body: JSON.stringify({ answers, integrity: integrity ?? null }),
     }),
+  // Demo stand-in for the RTO reporting a physical driving-test result — routed
+  // through the token-checked journey service, never the raw gov endpoint.
+  simulateDlResult: (applicantId: string, passed: boolean, failedCheckpoint?: string) =>
+    request<JourneyState>(
+      `${JOURNEY_URL}/journey/${applicantId}/simulate/dl-result`,
+      {
+        method: "POST",
+        body: JSON.stringify({ passed, failed_checkpoint: failedCheckpoint ?? null }),
+      },
+    ),
 };
 
 export interface AcademyAskResponse {

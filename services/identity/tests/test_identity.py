@@ -1,9 +1,11 @@
 """Unit and integration tests for Identity Service (Module 3)."""
 
+from contracts.security import service_token
 from fastapi.testclient import TestClient
 from identity_service.main import app
 
 client = TestClient(app)
+client.headers.update({"X-Service-Token": service_token()})  # PII endpoints are service-gated
 
 
 def test_health():

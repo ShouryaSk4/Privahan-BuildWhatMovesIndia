@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useState } from "react";
+import { useState } from "react";
 import {
   ApiError,
-  demoRtoApi,
+  clearSession,
   journeyApi,
+  startSession,
   type JourneyState,
   type TestSlot,
   type VerifiedIdentityView,
@@ -106,15 +107,8 @@ export default function App() {
   const [onlineTestActive, setOnlineTestActive] = useState(false);
   const [bookedSlotLabel, setBookedSlotLabel] = useState("29 Sep 2026 at 10:00 AM");
 
-  const refresh = useCallback(async (id: string) => {
-    setState(await journeyApi.get(id));
-  }, []);
-
-  useEffect(() => {
-    if (applicantId) {
-      refresh(applicantId).catch((e) => setError(describeError(e)));
-    }
-  }, [applicantId, refresh]);
+  // Journey state is loaded by enter() after the session token is minted; no
+  // effect refetch here, which would race the token on first entry.
 
   async function act<T>(fn: () => Promise<T>): Promise<T | undefined> {
     setBusy(true);
@@ -136,22 +130,26 @@ export default function App() {
       return;
     }
     setIdError(null);
-    setApplicantId(targetId);
     setReview(null);
     setSlots(null);
     setError(null);
     setCategoryConfirmed(false);
     setOnlineTestActive(false);
 
-    if (resetFirst) {
-      act(async () => {
-        const fresh = await journeyApi.reset(targetId);
-        setState(fresh);
-      });
-    }
+    // Mint the session token BEFORE any journey call, then load state. Every
+    // /journey request is ownership-checked, so the token must exist first.
+    act(async () => {
+      await startSession(targetId);
+      const fresh = resetFirst
+        ? await journeyApi.reset(targetId)
+        : await journeyApi.get(targetId);
+      setApplicantId(targetId);
+      setState(fresh);
+    });
   }
 
   function resetToLanding() {
+    clearSession();
     setApplicantId("");
     setState(null);
     setReview(null);
@@ -521,22 +519,10 @@ export default function App() {
             {takingTest && state.application_number && (
               onlineTestActive ? (
                 <LLQuiz
+                  applicantId={applicantId}
                   busy={busy}
                   onBack={() => setOnlineTestActive(false)}
-                  onResult={(passed, _score, integrity) =>
-                    act(async () => {
-                      if (passed && state.application_number) {
-                        await demoRtoApi.reportTestResult(
-                          state.application_number,
-                          "ll",
-                          true,
-                          undefined,
-                          integrity,
-                        );
-                        setState(await journeyApi.sync(applicantId));
-                      }
-                    })
-                  }
+                  onResult={(nextState) => setState(nextState)}
                 />
               ) : (
                 <LLTestSelector

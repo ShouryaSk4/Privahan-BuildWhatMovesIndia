@@ -7,6 +7,7 @@ which speaks only the gateway's stable internal interface.
 
 from __future__ import annotations
 
+import logging
 import os
 
 import httpx
@@ -16,8 +17,12 @@ from contracts.gateway import (
     LLApplicationSubmission,
     SlotBookingRequest,
     SlotBookingResult,
+    TestResultReport,
     TestSlot,
 )
+from contracts.security import service_token
+
+logger = logging.getLogger("journey.gateway")
 
 
 class GatewayUnavailable(Exception):
@@ -33,12 +38,14 @@ class GatewayClient:
         self.base_url = (base_url or os.environ.get("GATEWAY_URL", "http://localhost:8005")).rstrip("/")
 
     def _request(self, method: str, path: str, **kwargs) -> httpx.Response:
+        headers = {**kwargs.pop("headers", {}), "X-Service-Token": service_token()}
         try:
             res = httpx.request(
                 method,
                 f"{self.base_url}{path}",
                 timeout=10,
                 follow_redirects=True,
+                headers=headers,
                 **kwargs,
             )
         except httpx.HTTPError as exc:
@@ -70,11 +77,19 @@ class GatewayClient:
         return SlotBookingResult.model_validate(res.json())
 
     def verify_documents(self, application_number: str) -> None:
+        # Best-effort: verification is re-driven by sync if it fails here.
         try:
             res = self._request("POST", f"/gov/applications/{application_number}/verify-documents")
             res.raise_for_status()
-        except Exception:
-            pass
+        except (GatewayUnavailable, httpx.HTTPError) as exc:
+            logger.debug("verify_documents best-effort failed: %s", exc)
+
+    def report_test_result(self, report: TestResultReport) -> GovApplicationStatus:
+        res = self._request("POST", "/gov/test-results", json=report.model_dump())
+        if res.status_code == 409:
+            raise GatewayRejection(res.json().get("detail", "Result refused by the RTO system."))
+        res.raise_for_status()
+        return GovApplicationStatus.model_validate(res.json())
 
 
 class DirectGatewayClient:
@@ -105,10 +120,18 @@ class DirectGatewayClient:
             raise GatewayRejection(str(exc)) from exc
 
     def verify_documents(self, application_number: str) -> None:
+        from gateway_service.sarathi import SarathiError
         try:
             self._client.verify_documents(application_number)
-        except Exception:
-            pass
+        except SarathiError as exc:
+            logger.debug("verify_documents best-effort failed: %s", exc)
+
+    def report_test_result(self, report: TestResultReport) -> GovApplicationStatus:
+        from gateway_service.sarathi import SarathiError
+        try:
+            return self._client.report_test_result(report)
+        except SarathiError as exc:
+            raise GatewayRejection(str(exc)) from exc
 
 
 def get_gateway_client() -> GatewayClient | DirectGatewayClient:

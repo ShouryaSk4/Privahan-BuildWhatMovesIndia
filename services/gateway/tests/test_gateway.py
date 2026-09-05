@@ -1,6 +1,7 @@
 """Module 5 local verification (AGENTS.md §8.6) — full mock journey through the gateway."""
 
 import pytest
+from contracts.security import service_token
 from fastapi.testclient import TestClient
 
 from gateway_service.main import app
@@ -11,7 +12,9 @@ from gateway_service.sarathi import reset_client
 def client(monkeypatch):
     monkeypatch.setenv("GATEWAY_DB", ":memory:")
     reset_client()
-    return TestClient(app)
+    c = TestClient(app)
+    c.headers.update({"X-Service-Token": service_token()})  # service-to-service auth
+    return c
 
 
 SUBMISSION = {
@@ -122,3 +125,14 @@ def test_ll_result_rejected_before_document_verification(client):
         json={"application_number": application_number, "test_type": "ll", "passed": True},
     )
     assert res.status_code == 409
+
+
+def test_gov_endpoints_require_service_token():
+    """A caller without the service token (e.g. a citizen's browser) is refused."""
+    from fastapi.testclient import TestClient as _TC
+
+    anon = _TC(app)  # no X-Service-Token header
+    assert anon.post("/gov/test-results", json={
+        "application_number": "DL0000000", "test_type": "ll", "passed": True,
+    }).status_code == 401
+    assert anon.get("/gov/applications/DL0000000").status_code == 401

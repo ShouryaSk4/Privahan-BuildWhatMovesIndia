@@ -217,7 +217,9 @@ export interface operations {
     list_personas_identity_personas_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-service-token"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -232,6 +234,15 @@ export interface operations {
                     "application/json": string[];
                 };
             };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
         };
     };
     fetch_identity_identity_fetch__applicant_id__get: {
@@ -240,7 +251,9 @@ export interface operations {
                 /** @description Optional GPS/device location suggested nearest RTO */
                 gps_suggested_rto?: string | null;
             };
-            header?: never;
+            header?: {
+                "x-service-token"?: string | null;
+            };
             path: {
                 applicant_id: string;
             };
@@ -271,7 +284,9 @@ export interface operations {
     check_mismatch_identity_mismatch_check__applicant_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-service-token"?: string | null;
+            };
             path: {
                 applicant_id: string;
             };

@@ -18,6 +18,7 @@ from typing import Protocol
 import httpx
 from contracts.enums import IdentitySource
 from contracts.identity import Mismatch, MismatchCheckResult, VerifiedProfile
+from contracts.security import service_token
 
 # Module 2 asks for a convenient nearby RTO; Module 3 decides jurisdiction from
 # the Aadhaar-registered address. The two are never conflated (§5.3).
@@ -125,6 +126,7 @@ class HttpIdentityClient:
                 params=params or None,
                 timeout=10,
                 follow_redirects=True,
+                headers={"X-Service-Token": service_token()},
             )
         except httpx.HTTPError as exc:
             raise IdentityUnavailable(

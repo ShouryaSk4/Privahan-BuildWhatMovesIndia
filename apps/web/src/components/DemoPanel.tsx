@@ -1,9 +1,11 @@
-// Dev-only RTO simulator: drives the mock government side of Module 5 so the
-// whole journey can be walked without real Sarathi access, then asks Module 2
-// to sync. Hidden behind a toggle; not part of the citizen experience.
+// Dev-only RTO simulator. It stands in for the government reporting a physical
+// driving-test result — routed through the token-checked journey service, never
+// the raw /gov endpoints (which now require a service token the browser lacks).
+// Document verification and the LL pass are handled server-side (auto-verify on
+// apply; the STALL exam is graded on the server), so only the DL result remains.
 
 import { useState } from "react";
-import { demoRtoApi, journeyApi, type JourneyState } from "../api/client";
+import { journeyApi, type JourneyState } from "../api/client";
 
 const CHECKPOINTS = [
   "reverse_parking",
@@ -26,12 +28,12 @@ export function DemoPanel({
   const [checkpoint, setCheckpoint] = useState(CHECKPOINTS[0]);
   const [error, setError] = useState<string | null>(null);
   const appNo = state.application_number;
+  const atDlTest = state.current_stage === "dl_test_booked";
 
-  async function run(action: () => Promise<unknown>) {
+  async function run(action: () => Promise<JourneyState>) {
     setError(null);
     try {
-      await action();
-      onUpdate(await journeyApi.sync(state.applicant_id));
+      onUpdate(await action());
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
     }
@@ -74,25 +76,17 @@ export function DemoPanel({
         </div>
       </header>
       <p className="muted">
-        Stands in for the government side (mock Module 5) until real Sarathi access exists.
+        Stands in for the RTO reporting the physical driving-test result. Document
+        verification and the learner's test are handled on the server.
       </p>
       {!appNo && <p className="muted">Submit an application first.</p>}
       {appNo && (
         <div className="demo-actions">
-          <button
-            className="btn secondary"
-            onClick={() => run(() => demoRtoApi.verifyDocuments(appNo))}
-            disabled={state.current_stage !== "ll_application_submitted"}
-          >
-            RTO verifies documents
-          </button>
-          <button
-            className="btn secondary"
-            onClick={() => run(() => demoRtoApi.reportTestResult(appNo, "ll", true))}
-            disabled={state.current_stage !== "ll_documents_verified"}
-          >
-            Pass the LL test
-          </button>
+          {!atDlTest && (
+            <p className="muted" style={{ fontSize: "0.8rem" }}>
+              Available once a driving-test slot is booked.
+            </p>
+          )}
           <div className="row">
             <select
               value={checkpoint}
@@ -105,16 +99,16 @@ export function DemoPanel({
             </select>
             <button
               className="btn secondary"
-              onClick={() => run(() => demoRtoApi.reportTestResult(appNo, "dl", false, checkpoint))}
-              disabled={state.current_stage !== "dl_test_booked"}
+              onClick={() => run(() => journeyApi.simulateDlResult(state.applicant_id, false, checkpoint))}
+              disabled={!atDlTest}
             >
               Fail DL test
             </button>
           </div>
           <button
             className="btn secondary"
-            onClick={() => run(() => demoRtoApi.reportTestResult(appNo, "dl", true))}
-            disabled={state.current_stage !== "dl_test_booked"}
+            onClick={() => run(() => journeyApi.simulateDlResult(state.applicant_id, true))}
+            disabled={!atDlTest}
           >
             Pass DL test
           </button>

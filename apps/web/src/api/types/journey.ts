@@ -4,6 +4,30 @@
  */
 
 export interface paths {
+    "/session": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create Session
+         * @description Bind a browser session to one applicant_id (the demo's stand-in for login).
+         *
+         *     In production this would follow a real OTP/Aadhaar auth; here it mints the
+         *     session so every subsequent /journey call is ownership-checked. The prototype
+         *     posture (no OTP verification behind it) is documented in the README.
+         */
+        post: operations["create_session_session_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/healthz": {
         parameters: {
             query?: never;
@@ -175,6 +199,50 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/journey/{applicant_id}/ll-exam": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Ll Exam
+         * @description The exam paper with the answer key stripped.
+         */
+        get: operations["get_ll_exam_journey__applicant_id__ll_exam_get"];
+        put?: never;
+        /** Submit Ll Exam */
+        post: operations["submit_ll_exam_journey__applicant_id__ll_exam_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/journey/{applicant_id}/simulate/dl-result": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Simulate Dl Result
+         * @description Demo stand-in for the RTO reporting a physical driving-test outcome.
+         *
+         *     Routed through Module 2 (token-checked) so the browser never touches the
+         *     government endpoints directly. In production this is an inbound RTO signal.
+         */
+        post: operations["simulate_dl_result_journey__applicant_id__simulate_dl_result_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -198,15 +266,83 @@ export interface components {
             /** Visit Count */
             visit_count: number;
         };
+        /** DlResultRequest */
+        DlResultRequest: {
+            /** Passed */
+            passed: boolean;
+            /** Failed Checkpoint */
+            failed_checkpoint?: string | null;
+        };
         /** EventRequest */
         EventRequest: {
             /** Event */
             event: string;
         };
+        /** ExamOutcome */
+        ExamOutcome: {
+            result: components["schemas"]["ExamResult"];
+            state: components["schemas"]["JourneyState"];
+        };
+        /** ExamPaper */
+        ExamPaper: {
+            /** Questions */
+            questions: components["schemas"]["ExamQuestion"][];
+            /** Pass Mark */
+            pass_mark: number;
+            /** Total */
+            total: number;
+        };
+        /** ExamQuestion */
+        ExamQuestion: {
+            /** Id */
+            id: string;
+            /** Prompt */
+            prompt: string;
+            /** Options */
+            options: string[];
+            /** Icon */
+            icon?: string | null;
+        };
+        /** ExamResult */
+        ExamResult: {
+            /** Passed */
+            passed: boolean;
+            /** Score */
+            score: number;
+            /** Total */
+            total: number;
+            /** Outcomes */
+            outcomes: components["schemas"]["QuestionOutcome"][];
+            /** Integrity Score */
+            integrity_score: number;
+            /** Integrity Tier */
+            integrity_tier: string;
+        };
+        /** ExamSubmission */
+        ExamSubmission: {
+            /** Answers */
+            answers: (number | null)[];
+            integrity?: components["schemas"]["IntegritySubmission"] | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
             detail?: components["schemas"]["ValidationError"][];
+        };
+        /** IntegritySubmission */
+        IntegritySubmission: {
+            /**
+             * Camera
+             * @default unavailable
+             */
+            camera: string;
+            /**
+             * Events
+             * @default []
+             */
+            events: {
+                [key: string]: unknown;
+            }[];
         };
         /**
          * JourneyStage
@@ -269,6 +405,17 @@ export interface components {
             /** Label */
             label: string;
         };
+        /** QuestionOutcome */
+        QuestionOutcome: {
+            /** Id */
+            id: string;
+            /** Correct Index */
+            correct_index: number;
+            /** Was Correct */
+            was_correct: boolean;
+            /** Explanation */
+            explanation: string;
+        };
         /** RequiredDocument */
         RequiredDocument: {
             /** Code */
@@ -280,6 +427,20 @@ export interface components {
              * @default false
              */
             satisfied_by_ekyc: boolean;
+        };
+        /** SessionRequest */
+        SessionRequest: {
+            /** Applicant Id */
+            applicant_id: string;
+        };
+        /** SessionResponse */
+        SessionResponse: {
+            /** Token */
+            token: string;
+            /** Applicant Id */
+            applicant_id: string;
+            /** Expires In */
+            expires_in: number;
         };
         /** TestSlot */
         TestSlot: {
@@ -395,6 +556,39 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+    create_session_session_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SessionRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SessionResponse"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     healthz_healthz_get: {
         parameters: {
             query?: never;
@@ -420,7 +614,9 @@ export interface operations {
     get_journey_journey__applicant_id__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 applicant_id: string;
             };
@@ -451,7 +647,9 @@ export interface operations {
     report_event_journey__applicant_id__events_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 applicant_id: string;
             };
@@ -486,7 +684,9 @@ export interface operations {
     verified_profile_journey__applicant_id__verified_profile_get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 applicant_id: string;
             };
@@ -517,7 +717,9 @@ export interface operations {
     apply_journey__applicant_id__apply_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 applicant_id: string;
             };
@@ -552,7 +754,9 @@ export interface operations {
     reset_journey_journey__applicant_id__reset_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 applicant_id: string;
             };
@@ -583,7 +787,9 @@ export interface operations {
     sync_journey__applicant_id__sync_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 applicant_id: string;
             };
@@ -616,7 +822,9 @@ export interface operations {
             query?: {
                 rto_code?: string;
             };
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 applicant_id: string;
             };
@@ -647,7 +855,9 @@ export interface operations {
     book_dl_test_journey__applicant_id__dl_test_bookings_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                authorization?: string | null;
+            };
             path: {
                 applicant_id: string;
             };
@@ -656,6 +866,113 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["BookingRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JourneyState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_ll_exam_journey__applicant_id__ll_exam_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                applicant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExamPaper"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    submit_ll_exam_journey__applicant_id__ll_exam_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                applicant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ExamSubmission"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExamOutcome"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    simulate_dl_result_journey__applicant_id__simulate_dl_result_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                applicant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DlResultRequest"];
             };
         };
         responses: {

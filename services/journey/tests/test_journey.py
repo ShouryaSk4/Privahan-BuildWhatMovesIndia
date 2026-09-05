@@ -18,6 +18,7 @@ from contracts.gateway import (
 from fastapi.testclient import TestClient
 
 from journey_service.clients.gateway import GatewayClient, get_gateway_client
+from journey_service.deps import rate_limit_api, rate_limit_session, require_owner
 from journey_service.engine import get_engine, reset_engine
 from journey_service.main import app
 
@@ -77,6 +78,11 @@ def client(fake_gateway, monkeypatch):
     monkeypatch.setenv("JOURNEY_DB", ":memory:")
     reset_engine()
     app.dependency_overrides[get_gateway_client] = lambda: fake_gateway
+    # These tests exercise journey LOGIC, not auth; the ownership + rate-limit
+    # gates are verified separately in test_security.py.
+    app.dependency_overrides[require_owner] = lambda: "test"
+    app.dependency_overrides[rate_limit_api] = lambda: None
+    app.dependency_overrides[rate_limit_session] = lambda: None
     yield TestClient(app)
     app.dependency_overrides.clear()
 

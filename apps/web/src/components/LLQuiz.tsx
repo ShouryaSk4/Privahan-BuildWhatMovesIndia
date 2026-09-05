@@ -1,112 +1,42 @@
 // AI-Proctored Learner's Licence Test (STALL — Screen Test for Aid of Learner's Licence).
 //
-// Every number on this screen is REAL: face presence comes from an on-device
-// MediaPipe detector (no video ever leaves the browser), the integrity score
-// comes from observed signals, and flagged sessions go to HUMAN review — the
-// machine never fails anyone (see src/proctor/engine.ts for the guardrails).
+// The exam is SERVER-AUTHORITATIVE: the browser fetches questions with the
+// answer key stripped, submits raw answers, and the server grades them and
+// advances the stage. The client can no longer score itself or self-report a
+// pass. Proctoring signals are real (on-device MediaPipe; no video leaves the
+// browser) and the server recomputes the integrity tier from the event log.
 
 import { useEffect, useRef, useState } from "react";
 
-import { describeTier, ProctorEngine, type IntegrityReport } from "../proctor/engine";
+import { type ExamOutcome, type ExamPaper, type JourneyState, journeyApi } from "../api/client";
+import { describeTier, ProctorEngine } from "../proctor/engine";
 import { FaceMonitor, type FaceStatus } from "../proctor/faceMonitor";
 
-export type QuizQuestion = {
-  id: string;
-  prompt: string;
-  options: string[];
-  correct: number; // index into options
-  explanation: string;
-  icon?: string;
-};
-
-export const QUESTIONS: QuizQuestion[] = [
-  {
-    id: "triangle",
-    prompt: "A red-bordered triangle sign with an exclamation mark means:",
-    options: [
-      "General caution — slow down and stay alert",
-      "Compulsory horn zone",
-      "No parking beyond this point",
-    ],
-    correct: 0,
-    explanation: "Triangular signs are cautionary/warning signs indicating potential road hazards ahead.",
-    icon: "⚠️",
-  },
-  {
-    id: "zebra",
-    prompt: "A pedestrian is waiting at a zebra crossing. You should:",
-    options: [
-      "Sound the horn and keep moving",
-      "Stop and let them cross",
-      "Speed up to clear the crossing first",
-    ],
-    correct: 1,
-    explanation: "Pedestrians have legal right of way at marked pedestrian and zebra crossings.",
-    icon: "🚶",
-  },
-  {
-    id: "school",
-    prompt: "Passing a school zone, the safe speed is:",
-    options: ["60 km/h", "40 km/h", "25 km/h"],
-    correct: 2,
-    explanation: "Standard regulatory speed limit in school and hospital safety zones is 25 km/h.",
-    icon: "🏫",
-  },
-  {
-    id: "overtaking",
-    prompt: "Overtaking another vehicle is strictly prohibited when approaching:",
-    options: [
-      "A bend, bridge, or pedestrian crossing",
-      "A straight, empty four-lane highway",
-      "A wide arterial road with divider",
-    ],
-    correct: 0,
-    explanation: "Under Section 112 MVA, overtaking is forbidden on blind curves, bridges, and pedestrian crossings.",
-    icon: "🚫",
-  },
-  {
-    id: "ambulance",
-    prompt: "When an emergency ambulance with sirens approaches from behind, you must:",
-    options: [
-      "Accelerate quickly to stay ahead",
-      "Pull safely to the left edge and give clear right of way",
-      "Maintain your current lane and speed",
-    ],
-    correct: 1,
-    explanation: "Rule 115 CMVR mandates pulling to the left and granting unobstructed passage to emergency vehicles.",
-    icon: "🚑",
-  },
-];
-
-export const PASS_MARK = 3;
-
-export function scoreQuiz(answers: (number | null)[]): number {
-  return QUESTIONS.reduce(
-    (score, q, i) => (answers[i] === q.correct ? score + 1 : score),
-    0,
-  );
-}
+type ExamResult = ExamOutcome["result"];
 
 export function LLQuiz({
+  applicantId,
   onResult,
   onBack,
   busy,
 }: {
-  onResult: (passed: boolean, score: number, integrity?: IntegrityReport) => void;
+  applicantId: string;
+  onResult: (state: JourneyState) => void;
   onBack?: () => void;
   busy: boolean;
 }) {
-  const [answers, setAnswers] = useState<(number | null)[]>(
-    QUESTIONS.map(() => null),
-  );
-  const [result, setResult] = useState<{ passed: boolean; score: number } | null>(null);
-  const allAnswered = answers.every((a) => a !== null);
+  const [paper, setPaper] = useState<ExamPaper | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<(number | null)[]>([]);
+  const [result, setResult] = useState<ExamResult | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const allAnswered = paper !== null && answers.length === paper.questions.length && answers.every((a) => a !== null);
 
   // Proctoring state — all of it real
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraNote, setCameraNote] = useState<string | null>(null);
   const [faceStatus, setFaceStatus] = useState<FaceStatus>({ mode: "off", faces: null });
-  const [integrity, setIntegrity] = useState({ score: 100, tier: "clear" as const });
+  const [integrity, setIntegrity] = useState({ score: 100, tier: "clear" as string });
   const [violationAlert, setViolationAlert] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -119,12 +49,28 @@ export function LLQuiz({
     return engineRef.current;
   }
 
+  // Fetch the exam paper (answer key stripped) from the server.
+  useEffect(() => {
+    let active = true;
+    journeyApi
+      .getExam(applicantId)
+      .then((p) => {
+        if (!active) return;
+        setPaper(p);
+        setAnswers(p.questions.map(() => null));
+      })
+      .catch(() => active && setLoadError("Could not load the exam. Please try again."));
+    return () => {
+      active = false;
+    };
+  }, [applicantId]);
+
   // Camera + on-device face monitor
   useEffect(() => {
     let active = true;
     const eng = engine();
     const unsubscribe = eng.onChange(() =>
-      setIntegrity({ score: eng.currentScore(), tier: eng.currentTier() as "clear" }),
+      setIntegrity({ score: eng.currentScore(), tier: eng.currentTier() }),
     );
 
     async function init() {
@@ -221,24 +167,41 @@ export function LLQuiz({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function submit() {
-    const score = scoreQuiz(answers);
-    const passed = score >= PASS_MARK;
+  async function submit() {
+    if (!paper || submitting) return;
     finishedRef.current = true;
     monitorRef.current?.stop();
-    setResult({ passed, score });
-    if (passed) {
-      streamRef.current?.getTracks().forEach((t) => t.stop());
-      onResult(true, score, engine().report());
+    setSubmitting(true);
+    const report = engine().report();
+    try {
+      const outcome = await journeyApi.submitExam(applicantId, answers, {
+        camera: report.camera,
+        events: report.events,
+      });
+      setResult(outcome.result);
+      if (outcome.result.passed) {
+        streamRef.current?.getTracks().forEach((t) => t.stop());
+        onResult(outcome.state);
+      } else {
+        finishedRef.current = false; // allow a retry
+      }
+    } catch {
+      setLoadError("Could not submit the exam. Please try again.");
+      finishedRef.current = false;
+    } finally {
+      setSubmitting(false);
     }
   }
 
   function retry() {
     finishedRef.current = false;
-    setAnswers(QUESTIONS.map(() => null));
+    setAnswers(paper ? paper.questions.map(() => null) : []);
     setResult(null);
     setViolationAlert(null);
   }
+
+  const correctIndexFor = (qi: number): number | null =>
+    result ? result.outcomes[qi]?.correct_index ?? null : null;
 
   const faceLabel =
     faceStatus.mode === "full"
@@ -259,6 +222,9 @@ export function LLQuiz({
       : integrity.tier === "review"
         ? { background: "#fffbeb", color: "#b45309" }
         : { background: "#fef2f2", color: "#b91c1c" };
+
+  const total = paper?.questions.length ?? 0;
+  const passMark = paper?.pass_mark ?? 3;
 
   return (
     <div
@@ -317,33 +283,35 @@ export function LLQuiz({
                 Screen Test for Aid of Learner's Licence (STALL)
               </h2>
               <p className="muted" style={{ margin: 0, fontSize: "0.88rem" }}>
-                Answer all {QUESTIONS.length} multiple choice questions. Passing threshold: <b>{PASS_MARK}/{QUESTIONS.length} (60%)</b>.
+                Answer all {total} multiple choice questions. Passing threshold: <b>{passMark}/{total} (60%)</b>.
+                Graded on the server.
               </p>
             </div>
           </div>
 
-          {QUESTIONS.map((q, qi) => (
-            <fieldset key={q.id} className="quiz-q proctor-q-card" disabled={result?.passed || busy}>
+          {loadError && <p className="alert alert-error">{loadError}</p>}
+          {!paper && !loadError && <p className="muted">Loading exam…</p>}
+
+          {paper?.questions.map((q, qi) => (
+            <fieldset key={q.id} className="quiz-q proctor-q-card" disabled={result?.passed || submitting}>
               <legend style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                 <span>{q.icon || "📌"}</span>
-                <span>Question {qi + 1} of {QUESTIONS.length} — {q.prompt}</span>
+                <span>Question {qi + 1} of {total} — {q.prompt}</span>
               </legend>
               {q.options.map((opt, oi) => (
-                <label key={oi} className={result && oi === q.correct ? "quiz-correct" : ""}>
+                <label key={oi} className={correctIndexFor(qi) === oi ? "quiz-correct" : ""}>
                   <input
                     type="radio"
                     name={q.id}
                     checked={answers[qi] === oi}
-                    onChange={() =>
-                      setAnswers((a) => a.map((v, i) => (i === qi ? oi : v)))
-                    }
+                    onChange={() => setAnswers((a) => a.map((v, i) => (i === qi ? oi : v)))}
                   />
                   <span>{opt}</span>
                 </label>
               ))}
-              {result && !result.passed && (
+              {result && !result.passed && result.outcomes[qi] && (
                 <p style={{ fontSize: "0.82rem", color: "var(--gov-emerald)", marginTop: "0.5rem", fontWeight: 700 }}>
-                  💡 Rule Explanation: {q.explanation}
+                  💡 Rule Explanation: {result.outcomes[qi].explanation}
                 </p>
               )}
             </fieldset>
@@ -351,25 +319,30 @@ export function LLQuiz({
 
           <div className="row" style={{ marginTop: "1.25rem" }}>
             {onBack && (
-              <button type="button" className="btn secondary" onClick={onBack} disabled={busy}>
+              <button type="button" className="btn secondary" onClick={onBack} disabled={busy || submitting}>
                 ← Back to Mode Selection
               </button>
             )}
 
             {result === null ? (
-              <button className="btn primary" disabled={!allAnswered || busy} onClick={submit} style={{ padding: "0.65rem 1.4rem" }}>
-                {busy ? "Recording result…" : "Submit answers"}
+              <button
+                className="btn primary"
+                disabled={!allAnswered || busy || submitting}
+                onClick={submit}
+                style={{ padding: "0.65rem 1.4rem" }}
+              >
+                {submitting ? "Grading on server…" : "Submit answers"}
               </button>
             ) : result.passed ? (
               <div className="alert alert-good" role="status" style={{ width: "100%" }}>
-                <strong>✅ {result.score}/{QUESTIONS.length} — passed!</strong>{" "}
-                Session integrity {engine().currentScore()}/100 · {describeTier(engine().currentTier())}.
+                <strong>✅ {result.score}/{result.total} — passed!</strong>{" "}
+                Session integrity {result.integrity_score}/100 · {describeTier(result.integrity_tier as "clear")}.
                 Issuing your official Learner's Licence Form 3…
               </div>
             ) : (
               <div className="alert alert-warn" role="status" style={{ width: "100%" }}>
                 <p>
-                  <b>Score: {result.score}/{QUESTIONS.length}</b> — The passing threshold is {PASS_MARK}/{QUESTIONS.length}.
+                  <b>Score: {result.score}/{result.total}</b> — The passing threshold is {passMark}/{result.total}.
                   The correct answers and statutory rules are now highlighted above. No fee, no penalty.
                 </p>
                 <div style={{ marginTop: "0.75rem", display: "flex", gap: "0.5rem" }}>
@@ -448,7 +421,7 @@ export function LLQuiz({
             <ul style={{ margin: 0, paddingLeft: "1.1rem", fontSize: "0.75rem", color: "var(--ink-secondary)", lineHeight: 1.45 }}>
               <li>Face detection runs on your device — no video or image is ever uploaded.</li>
               <li>Tab switches, focus loss, and copy-paste are recorded as signals.</li>
-              <li>Signals lower an integrity score; flagged sessions go to a human RTO officer. Nothing fails you automatically.</li>
+              <li>The exam is graded on the server; flagged sessions go to a human RTO officer. Nothing fails you automatically.</li>
             </ul>
           </div>
         </aside>

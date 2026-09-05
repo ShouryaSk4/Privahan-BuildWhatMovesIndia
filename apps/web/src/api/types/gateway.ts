@@ -286,7 +286,9 @@ export interface operations {
     submit_ll_application_gov_ll_applications_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-service-token"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -319,7 +321,9 @@ export interface operations {
     get_application_status_gov_applications__application_number__get: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-service-token"?: string | null;
+            };
             path: {
                 application_number: string;
             };
@@ -350,7 +354,9 @@ export interface operations {
     verify_documents_gov_applications__application_number__verify_documents_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-service-token"?: string | null;
+            };
             path: {
                 application_number: string;
             };
@@ -383,7 +389,9 @@ export interface operations {
             query: {
                 rto_code: string;
             };
-            header?: never;
+            header?: {
+                "x-service-token"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -412,7 +420,9 @@ export interface operations {
     book_dl_test_gov_dl_test_bookings_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-service-token"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };
@@ -445,7 +455,9 @@ export interface operations {
     report_test_result_gov_test_results_post: {
         parameters: {
             query?: never;
-            header?: never;
+            header?: {
+                "x-service-token"?: string | null;
+            };
             path?: never;
             cookie?: never;
         };

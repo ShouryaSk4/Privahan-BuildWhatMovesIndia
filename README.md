@@ -256,6 +256,35 @@ verification, test results) through Module 5, then asks Module 2 to sync.
   Module 4 through a Vite dev proxy rather than editing another owner's module (§11.2).
   If Module 3/4 later add CORS middleware, the proxy can simply be dropped.
 
+## Security posture
+
+The prototype now enforces real boundaries (not theatre):
+
+- **Session tokens + ownership.** `POST /session` mints an HMAC-signed token
+  bound to one `applicant_id`; every `/journey/{id}/*` route requires it and
+  checks ownership, so knowing another citizen's id gets you a 403 (IDOR closed).
+- **Server-authoritative exam.** The STALL answer key lives only in
+  `services/journey/.../exam.py`. The browser fetches questions with the key
+  stripped and posts raw answers; the server grades them and advances the stage.
+  A citizen can no longer score or pass themselves.
+- **Government + PII endpoints are service-gated.** Every `/gov/*` (Module 5)
+  and `/identity/*` (Module 3, PII) route requires the shared `X-Service-Token`
+  that only Module 2 holds — a browser cannot flip a result or harvest profiles.
+- **Server-recomputed proctoring integrity.** The exam server recomputes the
+  integrity score/tier from the submitted event log (same weights the UI shows),
+  so a client claiming "clear" while its events say otherwise is overridden; no
+  camera → capped at "review", never a score penalty.
+- **Tight CORS + rate limiting.** Services allow only configured browser origins
+  (`PARIVAHAN_CORS_ORIGINS`); journey session/API routes are per-IP rate-limited.
+
+Set the real secrets in production (see `.env.example`):
+`PARIVAHAN_SESSION_SECRET`, `PARIVAHAN_SERVICE_TOKEN`, `PARIVAHAN_CORS_ORIGINS`.
+The dev defaults let the prototype run out of the box and MUST be overridden.
+
+**Still stubbed (honest prototype boundary):** the session is minted on request
+without a real OTP/Aadhaar auth behind it, government/UIDAI integration is mocked,
+and serverless state lives in `/tmp`. These need government empanelment to harden.
+
 ## Demo-reliability features (added 28 Aug 2026)
 
 - **Journeys survive restarts.** Modules 2 and 5 persist state to SQLite
