@@ -2504,3 +2504,312 @@ textarea:focus-visible,
     animation: pv-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
   }
 }
+
+/* ==========================================================================
+   BENCHMARK LAYER — "The Road Is the Interface"
+   The portal borrows its entire visual language from Indian road
+   infrastructure: highway signboards, kilometre milestones, kerb stripes,
+   number plates, asphalt. Appended last; overrides by cascade, not surgery.
+   ========================================================================== */
+
+:root {
+  --font-signage: "Saira Condensed", "Noto Sans Devanagari", "Arial Narrow", sans-serif;
+  --asphalt: #343a46;
+  --asphalt-deep: #262b34;
+  --board-blue: #123a80;
+  --board-blue-deep: #0b2557;
+  --board-ink: #ffffff;
+  --board-muted: #c7d7f0;
+  --milestone-yellow: #f7c948;
+  --kerb-red: #b91c1c;
+}
+
+/* --- Signage typography for display surfaces ------------------------------ */
+h1,
+h2,
+.task-card-title,
+.persona-preset-title,
+.gov-portal-title,
+.landscape-step-title {
+  font-family: var(--font-signage);
+  letter-spacing: 0.01em;
+}
+
+.hero-eyebrow,
+.certainty-label-top,
+.task-card-badge {
+  font-family: var(--font-signage);
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+}
+
+/* --- Kerb stripe: the header's bottom edge is a road kerb ------------------ */
+.gov-portal-header {
+  border-bottom: none;
+  position: relative;
+  padding-bottom: 1.35rem;
+}
+
+.gov-portal-header::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 7px;
+  background: repeating-linear-gradient(90deg, var(--kerb-red) 0 22px, #ffffff 22px 44px);
+}
+
+/* --- Hero: a highway gantry board with a live road running beneath -------- */
+.task-first-hero {
+  background: linear-gradient(180deg, var(--board-blue) 0%, var(--board-blue-deep) 100%);
+  color: var(--board-ink);
+  border: none;
+  border-radius: var(--radius-xl);
+  position: relative;
+  overflow: hidden;
+  padding-bottom: 4.2rem !important;
+  box-shadow: var(--shadow-xl);
+}
+
+.task-first-hero::after {
+  content: "";
+  position: absolute;
+  inset: 12px 12px 52px 12px;
+  border: 2.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: calc(var(--radius-xl) - 8px);
+  pointer-events: none;
+}
+
+.task-first-hero h1,
+.task-first-hero .sub,
+.task-first-hero p {
+  color: var(--board-ink);
+}
+
+.task-first-hero .sub {
+  color: var(--board-muted);
+}
+
+.task-first-hero .hero-eyebrow {
+  color: var(--milestone-yellow);
+}
+
+/* the road itself: asphalt band + animated centre dashes */
+@keyframes pv-road-move {
+  from { background-position-x: 0; }
+  to   { background-position-x: -64px; }
+}
+
+.task-first-hero::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40px;
+  background:
+    repeating-linear-gradient(90deg, #ffffff 0 26px, transparent 26px 64px) 0 center / 64px 4px repeat-x,
+    linear-gradient(180deg, var(--asphalt) 0%, var(--asphalt-deep) 100%);
+  background-blend-mode: normal;
+  border-top: 3px solid #4a5160;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .task-first-hero::before {
+    animation: pv-road-move 1.6s linear infinite;
+  }
+}
+
+/* --- Task cards: highway direction boards ---------------------------------- */
+.task-card {
+  background: linear-gradient(165deg, var(--board-blue) 0%, var(--board-blue-deep) 100%);
+  border: none;
+  position: relative;
+  box-shadow: var(--shadow-lg);
+}
+
+.task-card::after {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  border-radius: calc(var(--radius-xl) - 6px);
+  pointer-events: none;
+}
+
+.task-card .task-card-title {
+  color: var(--board-ink);
+  font-size: 1.28rem;
+}
+
+.task-card .task-card-desc {
+  color: var(--board-muted);
+}
+
+.task-card .task-card-action {
+  color: var(--milestone-yellow);
+  font-weight: 700;
+}
+
+.task-card:hover {
+  border-color: transparent;
+}
+
+.task-card:hover .task-card-action {
+  color: #ffe28a;
+}
+
+.task-card.featured::after {
+  border-color: var(--milestone-yellow);
+}
+
+.task-card .task-card-badge {
+  background: var(--milestone-yellow);
+  color: #4a3403;
+}
+
+/* --- The journey is a road; the stages are kilometre milestones ------------ */
+.landscape-journey-container {
+  background: linear-gradient(180deg, var(--asphalt) 0%, var(--asphalt-deep) 100%);
+  border-radius: var(--radius-lg);
+  border: 1px solid #4a5160;
+  box-shadow: var(--shadow-md);
+}
+
+.landscape-journey-steps {
+  padding: 1.1rem 1.25rem 0.9rem;
+}
+
+.landscape-step-connector {
+  height: 4px;
+  background: repeating-linear-gradient(90deg, #d7dce6 0 12px, transparent 12px 26px);
+  border-radius: 2px;
+  opacity: 0.75;
+}
+
+.landscape-journey-step.done .landscape-step-connector {
+  background: repeating-linear-gradient(90deg, #4ade80 0 12px, transparent 12px 26px);
+  opacity: 1;
+}
+
+.landscape-step-marker {
+  width: 30px;
+  height: 36px;
+  border-radius: 15px 15px 5px 5px;
+  background: linear-gradient(180deg, var(--milestone-yellow) 0 46%, #ffffff 46% 100%);
+  color: #1f2937;
+  border: 2px solid #1f2937;
+  font-family: var(--font-signage);
+  font-weight: 800;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+}
+
+.landscape-journey-step.done .landscape-step-marker {
+  background: linear-gradient(180deg, #16a34a 0 46%, #ffffff 46% 100%);
+  color: #14532d;
+  border-color: #14532d;
+}
+
+.landscape-journey-step.current .landscape-step-marker {
+  position: relative;
+  background: linear-gradient(180deg, #ffffff 0 46%, var(--milestone-yellow) 46% 100%);
+  border-color: #92600a;
+}
+
+@keyframes pv-car-bob {
+  0%, 100% { transform: translate(-50%, 0); }
+  50%      { transform: translate(-50%, -3px); }
+}
+
+.landscape-journey-step.current .landscape-step-marker::before {
+  content: "🚗";
+  position: absolute;
+  top: -26px;
+  left: 50%;
+  transform: translate(-50%, 0);
+  font-size: 1.15rem;
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.4));
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .landscape-journey-step.current .landscape-step-marker::before {
+    animation: pv-car-bob 1.3s ease-in-out infinite;
+  }
+}
+
+.landscape-step-title {
+  color: #f3f6fb;
+  letter-spacing: 0.02em;
+}
+
+.landscape-step-sub {
+  color: #aab6c9;
+}
+
+.landscape-journey-step.current .landscape-step-title {
+  color: var(--milestone-yellow);
+}
+
+/* --- The application number is a number plate ------------------------------ */
+.breadcrumbs .current,
+.licence-no {
+  font-family: "DejaVu Sans Mono", ui-monospace, "Courier New", monospace;
+  background: #ffffff;
+  color: #111827;
+  border: 2px solid #111827;
+  border-radius: 5px;
+  padding: 0.1rem 0.55rem 0.1rem 1.5rem;
+  position: relative;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  display: inline-block;
+}
+
+.breadcrumbs .current::before,
+.licence-no::before {
+  content: "IND";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1.1rem;
+  background: var(--board-blue);
+  color: #ffffff;
+  font-size: 0.5rem;
+  font-weight: 800;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2px;
+  border-radius: 2px 0 0 2px;
+}
+
+/* --- Licence ceremony: night road, headlights on the card ------------------ */
+.licence-wrap {
+  background:
+    radial-gradient(ellipse 60% 50% at 50% 42%, rgba(247, 201, 72, 0.16), transparent 70%),
+    linear-gradient(180deg, #20242e 0%, #14171e 100%);
+  border-radius: var(--radius-xl);
+  padding: 2rem 1.5rem;
+  border: 1px solid #3a4150;
+}
+
+.licence-wrap .celebrate {
+  color: #e8edf5;
+}
+
+/* Featured board outranked the base override (.task-card.featured): it gets
+   the same signboard treatment with a gold trim instead of staying white. */
+.task-card.featured {
+  background: linear-gradient(165deg, #1a4796 0%, var(--board-blue-deep) 100%);
+  border: none;
+}
+
+.task-card.featured .task-card-title {
+  color: var(--board-ink);
+}
+
+.task-card.featured .task-card-desc {
+  color: var(--board-muted);
+}
