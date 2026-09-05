@@ -18,49 +18,88 @@
   "practice_window_days": 30,
   "retest_wait_days": 7,
   "required_documents": [
-    { "code": "aadhaar_ekyc", "label": "Aadhaar e-KYC (name, DOB, address, photo)", "satisfied_by_ekyc": true },
-    { "code": "self_declaration_form1", "label": "Form 1: Self Declaration of Physical Fitness", "satisfied_by_ekyc": false }
+    {
+      "code": "aadhaar_ekyc",
+      "label": "Aadhaar e-KYC (name, DOB, address, photo)",
+      "satisfied_by_ekyc": true
+    },
+    {
+      "code": "self_declaration_form1",
+      "label": "Form 1: Self Declaration of Physical Fitness",
+      "satisfied_by_ekyc": false
+    }
   ],
   "stages": {
     "no_licence": {
-      "next_action": { "type": "start_application", "label": "Start your licence application" },
+      "next_action": {
+        "type": "start_application",
+        "label": "Start your licence application"
+      },
       "detail": "Zero-form application: we fetch your verified details, you review and confirm."
     },
     "ll_application_submitted": {
-      "next_action": { "type": "await_document_verification", "label": "We're verifying your documents" },
+      "next_action": {
+        "type": "await_document_verification",
+        "label": "We're verifying your documents"
+      },
       "detail": "No action needed. You'll move ahead as soon as verification completes."
     },
     "ll_documents_verified": {
-      "next_action": { "type": "take_ll_test", "label": "Take your learner's licence test" },
+      "next_action": {
+        "type": "take_ll_test",
+        "label": "Take your learner's licence test"
+      },
       "detail": "Delhi supports the online test from home via Aadhaar authentication."
     },
     "ll_test_scheduled": {
-      "next_action": { "type": "take_ll_test", "label": "Take your learner's licence test" },
+      "next_action": {
+        "type": "take_ll_test",
+        "label": "Take your learner's licence test"
+      },
       "detail": "Your test slot is confirmed."
     },
     "ll_issued": {
-      "next_action": { "type": "begin_practice", "label": "Start your 30-day practice window" },
+      "next_action": {
+        "type": "begin_practice",
+        "label": "Start your 30-day practice window"
+      },
       "detail": "Your learner's licence is active. The driving test unlocks after the practice window."
     },
     "practice_window": {
-      "next_action": { "type": "book_dl_test", "label": "Book your driving test" },
+      "next_action": {
+        "type": "book_dl_test",
+        "label": "Book your driving test"
+      },
       "detail": "Practice with the Driving Academy while you wait for test eligibility."
     },
     "dl_test_booked": {
-      "next_action": { "type": "attend_dl_test", "label": "Attend your driving test" },
+      "next_action": {
+        "type": "attend_dl_test",
+        "label": "Attend your driving test"
+      },
       "detail": "Carry your learner's licence. This is your one required visit."
     },
     "dl_test_result_fail": {
-      "next_action": { "type": "rebook_dl_test", "label": "Practice the missed checkpoint, then rebook" },
+      "next_action": {
+        "type": "rebook_dl_test",
+        "label": "Practice the missed checkpoint, then rebook"
+      },
       "detail": "A retest can be booked after the waiting period."
     },
     "dl_test_result_pass": {
-      "next_action": { "type": "await_dl_issue", "label": "Your licence is being issued" },
+      "next_action": {
+        "type": "await_dl_issue",
+        "label": "Your licence is being issued"
+      },
       "detail": "Nothing more to do - the licence is on its way."
     },
     "dl_issued": {
-      "next_action": { "type": "journey_complete", "label": "Licence in hand - you're done" },
+      "next_action": {
+        "type": "journey_complete",
+        "label": "Licence in hand - you're done"
+      },
       "detail": "Congratulations. Your driving licence is issued."
     }
-  }
+  },
+  "ll_validity_days": 180
 }

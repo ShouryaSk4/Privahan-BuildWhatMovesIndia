@@ -113,6 +113,27 @@ def test_agents_md_7_4_reference_shape(client):
         assert body[key] == expected, f"§7.4 drift on '{key}'"
 
 
+def test_ll_expiry_deadline_surfaces_after_ll_issued(client):
+    """The original portal never shows the LL 6-month validity — we must."""
+    from datetime import datetime, timedelta
+
+    engine = get_engine()
+    for event in ("ll_application_submitted", "documents_verified", "ll_test_passed"):
+        engine.apply_event("applicant_001", event)
+
+    body = client.get("/journey/applicant_001").json()
+    assert body["current_stage"] == "ll_issued"
+    expected = (datetime.now(UTC) + timedelta(days=180)).date().isoformat()
+    assert body["ll_valid_till"] == expected
+
+    # Once the DL is issued the LL deadline is moot and must disappear.
+    for event in ("begin_practice", "dl_test_booked", "dl_test_passed", "dl_issued"):
+        engine.apply_event("applicant_001", event)
+    body = client.get("/journey/applicant_001").json()
+    assert body["current_stage"] == "dl_issued"
+    assert body["ll_valid_till"] is None
+
+
 def test_illegal_transition_conflicts(client):
     res = client.post("/journey/applicant_001/events", json={"event": "dl_test_passed"})
     assert res.status_code == 409

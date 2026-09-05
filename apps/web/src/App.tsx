@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ApiError,
   clearSession,
+  getStoredSession,
   journeyApi,
   startSession,
   type JourneyState,
@@ -106,6 +107,39 @@ export default function App() {
   const [categoryConfirmed, setCategoryConfirmed] = useState(false);
   const [onlineTestActive, setOnlineTestActive] = useState(false);
   const [bookedSlotLabel, setBookedSlotLabel] = useState("29 Sep 2026 at 10:00 AM");
+  // "Your application never dies": a stored session offers one-click resume.
+  const [storedSession] = useState(getStoredSession);
+  const [stageToast, setStageToast] = useState<string | null>(null);
+  const lastStageRef = useRef<string | null>(null);
+
+  function resumeJourney() {
+    const stored = getStoredSession();
+    if (stored) enter(stored.applicantId, false);
+  }
+
+  // Push, not pull: while the journey waits on the government side, poll sync
+  // quietly and announce stage changes — no more "check for updates" clicking
+  // (the original portal's captcha-gated tracking page, politely reproduced).
+  const WAITING_STAGES = ["ll_application_submitted", "dl_test_booked"];
+  useEffect(() => {
+    lastStageRef.current = state?.current_stage ?? null;
+    if (!applicantId || !state || !WAITING_STAGES.includes(state.current_stage)) return;
+    const timer = setInterval(async () => {
+      try {
+        const fresh = await journeyApi.sync(applicantId);
+        if (fresh.current_stage !== lastStageRef.current) {
+          lastStageRef.current = fresh.current_stage;
+          setState(fresh);
+          setStageToast(fresh.next_action?.label ?? "Your application moved forward.");
+          window.setTimeout(() => setStageToast(null), 7000);
+        }
+      } catch {
+        /* transient — the next tick retries */
+      }
+    }, 10000);
+    return () => clearInterval(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [applicantId, state?.current_stage]);
 
   // Journey state is loaded by enter() after the session token is minted; no
   // effect refetch here, which would race the token on first entry.
@@ -295,6 +329,18 @@ export default function App() {
 
           {/* Quick Sign-In / Demo Persona Selector */}
           <section className="card-signin" aria-label="Sign in to application">
+            {storedSession && !applicantId && (
+              <div className="resume-banner" role="note">
+                <div>
+                  <strong>Welcome back.</strong>{" "}
+                  Your application <code>{storedSession.applicantId}</code> is exactly where
+                  you left it — nothing was lost.
+                </div>
+                <button type="button" className="btn primary" onClick={resumeJourney} disabled={busy}>
+                  Continue where I left off →
+                </button>
+              </div>
+            )}
             <h2>Select Citizen Profile or Enter Reference ID</h2>
             <p className="muted" style={{ fontSize: "0.9rem" }}>
               Choose a verified persona below to experience the complete citizen journey end-to-end:
@@ -445,10 +491,31 @@ export default function App() {
       />
 
       <main className="shell">
+        {stageToast && (
+          <div className="stage-toast" role="status">
+            ✓ Status updated — <strong>{stageToast}</strong>
+          </div>
+        )}
         {state.stage_detail && (
           <div className="stage-detail-banner">
             <span>ℹ️</span>
             <span>{state.stage_detail}</span>
+            {WAITING_STAGES.includes(stage) && (
+              <span className="live-sync-note">· live — updates automatically</span>
+            )}
+          </div>
+        )}
+        {state.ll_valid_till && (
+          <div className="deadline-strip" role="note">
+            ⏳ Learner's licence valid till{" "}
+            <strong>
+              {new Date(state.ll_valid_till).toLocaleDateString("en-IN", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </strong>{" "}
+            — complete your driving test before then. We'll keep this deadline in view.
           </div>
         )}
 

@@ -129,6 +129,20 @@ export function LLQuiz({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Losing the page mid-exam was the original portal's cruellest failure —
+  // warn before an accidental refresh/close while answers are in progress.
+  useEffect(() => {
+    const guard = (e: BeforeUnloadEvent) => {
+      const inProgress = !finishedRef.current && answers.some((a) => a !== null) && !result;
+      if (inProgress) {
+        e.preventDefault();
+        e.returnValue = "";
+      }
+    };
+    window.addEventListener("beforeunload", guard);
+    return () => window.removeEventListener("beforeunload", guard);
+  }, [answers, result]);
+
   // Focus / tab / fullscreen / clipboard signals
   useEffect(() => {
     const eng = engine();

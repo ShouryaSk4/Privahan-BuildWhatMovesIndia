@@ -371,6 +371,8 @@ export interface components {
             stage_detail?: string | null;
             /** Application Number */
             application_number?: string | null;
+            /** Ll Valid Till */
+            ll_valid_till?: string | null;
         };
         /** Mismatch */
         Mismatch: {

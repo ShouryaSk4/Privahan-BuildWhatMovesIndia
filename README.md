@@ -302,6 +302,23 @@ and serverless state lives in `/tmp`. These need government empanelment to harde
   (`severity: "error" | "warning"`), Module 2 blocks only on errors and routes warnings to
   the RTO-choice flow (§5.3).
 
+## Customer-journey fixes over the original portal (added 6 Sep 2026)
+
+Three hiccups every Sarathi user knows, closed end to end:
+
+- **Your application never dies.** The session (applicant binding) persists in
+  `localStorage`; a refresh, crash, or closed tab shows a "Continue where I left off"
+  banner instead of restarting the journey. A `beforeunload` guard also warns before
+  navigating away mid-exam. (Original portal: session timeout = start over.)
+- **Status comes to you.** While an application sits in a waiting stage
+  (`ll_application_submitted`, `dl_test_booked`) the web app polls `/sync` every 10s,
+  marked "· live — updates automatically"; a stage change surfaces as a toast the moment
+  the RTO record moves. (Original portal: citizens refresh a status page for days.)
+- **The LL clock is visible.** `JourneyState.ll_valid_till` (additive; issued +
+  `ll_validity_days` from the state rules, 180 for Delhi) renders as a deadline strip —
+  "Learner's licence valid till …" — until the DL is issued. (Original portal: the
+  6-month LL validity is never surfaced; miss it and you restart from the LL test.)
+
 ## Known gaps / next steps
 
 - **`VerifiedProfile` has no jurisdiction RTO code**: Module 3 computes `jurisdiction_rto`

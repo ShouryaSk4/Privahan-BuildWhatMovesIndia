@@ -151,6 +151,7 @@ class Rules:
         self.raw = raw
         self.certainty = Certainty(**raw["certainty"])
         self.practice_window_days: int = raw["practice_window_days"]
+        self.ll_validity_days: int = raw.get("ll_validity_days", 180)
         self.retest_wait_days: int = raw["retest_wait_days"]
         self.required_documents = [RequiredDocument(**d) for d in raw["required_documents"]]
         self.stages: dict[str, dict] = raw["stages"]
@@ -286,6 +287,12 @@ class JourneyEngine:
             )
         if record.stage == JourneyStage.DL_TEST_RESULT_FAIL and record.failed_checkpoint:
             detail = f"Missed checkpoint: {record.failed_checkpoint}. {detail}"
+        # LL expiry: live from issuance until the DL is in hand.
+        ll_valid_till = None
+        if record.ll_issued_at is not None and record.stage != JourneyStage.DL_ISSUED:
+            ll_valid_till = (
+                record.ll_issued_at + timedelta(days=self.rules.ll_validity_days)
+            ).date().isoformat()
         return JourneyState(
             applicant_id=applicant_id,
             journey_type="first_time_licence",
@@ -299,6 +306,7 @@ class JourneyEngine:
             ),
             stage_detail=detail,
             application_number=record.application_number,
+            ll_valid_till=ll_valid_till,
         )
 
 

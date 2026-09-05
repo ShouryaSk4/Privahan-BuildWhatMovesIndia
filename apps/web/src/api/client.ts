@@ -32,12 +32,39 @@ export class ApiError extends Error {
 }
 
 // -- session token -----------------------------------------------------------
-// The government/journey endpoints are now ownership-gated: a session token
-// binds this browser to one applicant_id, and every /journey call carries it.
+// The government/journey endpoints are ownership-gated: a session token binds
+// this browser to one applicant_id, and every /journey call carries it.
+//
+// "Your application never dies": the session is also persisted locally, so a
+// refresh, a closed tab, or a crash resumes the journey instead of restarting
+// it — the exact failure the original portal punished with a lost session.
+const SESSION_KEY = "parivahan_session_v1";
+
 let sessionToken: string | null = null;
+
+export interface StoredSession {
+  applicantId: string;
+  savedAt: number;
+}
+
+export function getStoredSession(): StoredSession | null {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as StoredSession;
+    return parsed.applicantId ? parsed : null;
+  } catch {
+    return null;
+  }
+}
 
 export function clearSession(): void {
   sessionToken = null;
+  try {
+    localStorage.removeItem(SESSION_KEY);
+  } catch {
+    /* storage unavailable — nothing to clear */
+  }
 }
 
 async function request<T>(url: string, init?: RequestInit): Promise<T> {
@@ -68,6 +95,14 @@ export async function startSession(applicantId: string): Promise<void> {
     body: JSON.stringify({ applicant_id: applicantId }),
   });
   sessionToken = res.token;
+  try {
+    localStorage.setItem(
+      SESSION_KEY,
+      JSON.stringify({ applicantId, savedAt: Date.now() } satisfies StoredSession),
+    );
+  } catch {
+    /* storage unavailable — resume just won't survive a reload */
+  }
 }
 
 export const journeyApi = {

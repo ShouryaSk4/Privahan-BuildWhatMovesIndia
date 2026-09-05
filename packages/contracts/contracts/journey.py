@@ -47,6 +47,10 @@ class JourneyState(BaseModel):
     required_documents: list[RequiredDocument] = []
     stage_detail: str | None = None
     application_number: str | None = None
+    # Additive: the learner's licence expiry (issued + validity window). The
+    # original portal never surfaces this — citizens silently time out at 6
+    # months and must restart. Shown as a live deadline in the UI.
+    ll_valid_till: str | None = None
 
 
 class JourneyEvent(BaseModel):
