@@ -32,6 +32,7 @@ class GovApplicationStatus(BaseModel):
     stage: str  # gateway-normalized government-side status
     updated_at: datetime
     failed_checkpoint: str | None = None  # additive: set when stage == "dl_test_failed"
+    integrity_tier: str | None = None  # additive: proctoring outcome of the last online test
 
 
 class TestSlot(BaseModel):
@@ -58,3 +59,7 @@ class TestResultReport(BaseModel):
     test_type: str  # "ll" | "dl"
     passed: bool
     failed_checkpoint: str | None = None
+    # Additive: proctoring integrity (tiered human-review model — never auto-fail)
+    integrity_score: int | None = None
+    integrity_tier: str | None = None  # "clear" | "review" | "flagged"
+    integrity_events: int | None = None

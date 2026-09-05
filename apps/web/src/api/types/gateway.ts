@@ -151,6 +151,8 @@ export interface components {
             updated_at: string;
             /** Failed Checkpoint */
             failed_checkpoint?: string | null;
+            /** Integrity Tier */
+            integrity_tier?: string | null;
         };
         /** GovSubmissionResult */
         GovSubmissionResult: {
@@ -216,6 +218,12 @@ export interface components {
             passed: boolean;
             /** Failed Checkpoint */
             failed_checkpoint?: string | null;
+            /** Integrity Score */
+            integrity_score?: number | null;
+            /** Integrity Tier */
+            integrity_tier?: string | null;
+            /** Integrity Events */
+            integrity_events?: number | null;
         };
         /** TestSlot */
         TestSlot: {

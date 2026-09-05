@@ -93,6 +93,7 @@ export const demoRtoApi = {
     testType: "ll" | "dl",
     passed: boolean,
     failedCheckpoint?: string,
+    integrity?: { score: number; tier: string; events: unknown[] },
   ) =>
     request(`${GATEWAY_URL}/gov/test-results`, {
       method: "POST",
@@ -101,6 +102,9 @@ export const demoRtoApi = {
         test_type: testType,
         passed,
         failed_checkpoint: failedCheckpoint ?? null,
+        integrity_score: integrity?.score ?? null,
+        integrity_tier: integrity?.tier ?? null,
+        integrity_events: integrity ? integrity.events.length : null,
       }),
     }),
 };

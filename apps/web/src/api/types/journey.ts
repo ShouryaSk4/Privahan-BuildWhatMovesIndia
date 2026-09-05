@@ -98,6 +98,29 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/journey/{applicant_id}/reset": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Reset Journey
+         * @description Demo reset: forget this journey so the persona can be walked again.
+         *
+         *     Demo personas are shared records; without this, one visitor completing a
+         *     journey consumes the persona for everyone until a restart.
+         */
+        post: operations["reset_journey_journey__applicant_id__reset_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/journey/{applicant_id}/sync": {
         parameters: {
             query?: never;
@@ -223,6 +246,12 @@ export interface components {
             issue: string;
             /** Suggested Fix */
             suggested_fix: string;
+            /**
+             * Severity
+             * @description "error" (blocks submission) or "warning"
+             * @default error
+             */
+            severity: string;
         };
         /** MismatchCheckResult */
         MismatchCheckResult: {
@@ -346,6 +375,16 @@ export interface components {
              * Format: date-time
              */
             fetched_at: string;
+            /**
+             * Age
+             * @description Computed age in years
+             */
+            age?: number | null;
+            /**
+             * Age Eligible
+             * @description True if age >= 18 for first-time car driving licence
+             */
+            age_eligible?: boolean | null;
         };
     };
     responses: never;
@@ -489,6 +528,37 @@ export interface operations {
                 "application/json": components["schemas"]["ApplyRequest"];
             };
         };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["JourneyState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    reset_journey_journey__applicant_id__reset_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                applicant_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
         responses: {
             /** @description Successful Response */
             200: {

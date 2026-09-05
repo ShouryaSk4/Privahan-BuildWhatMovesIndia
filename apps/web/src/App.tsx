@@ -523,10 +523,16 @@ export default function App() {
                 <LLQuiz
                   busy={busy}
                   onBack={() => setOnlineTestActive(false)}
-                  onResult={(passed) =>
+                  onResult={(passed, _score, integrity) =>
                     act(async () => {
                       if (passed && state.application_number) {
-                        await demoRtoApi.reportTestResult(state.application_number, "ll", true);
+                        await demoRtoApi.reportTestResult(
+                          state.application_number,
+                          "ll",
+                          true,
+                          undefined,
+                          integrity,
+                        );
                         setState(await journeyApi.sync(applicantId));
                       }
                     })

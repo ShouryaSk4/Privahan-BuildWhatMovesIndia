@@ -27,7 +27,14 @@ describe("LLQuiz", () => {
     }
     await userEvent.click(screen.getByRole("button", { name: /Submit answers/ }));
 
-    expect(onResult).toHaveBeenCalledWith(true, QUESTIONS.length);
+    // third arg: the real integrity report (jsdom has no camera → honest "unavailable")
+    expect(onResult).toHaveBeenCalledTimes(1);
+    const [passed, score, integrity] = onResult.mock.calls[0];
+    expect(passed).toBe(true);
+    expect(score).toBe(QUESTIONS.length);
+    expect(integrity.camera).toBe("unavailable");
+    expect(integrity.tier).toBe("review"); // no camera evidence → human review, never a fail
+    expect(integrity.score).toBe(100); // equity: no punishment for missing hardware
     expect(screen.getByRole("status")).toHaveTextContent(/passed/);
   });
 

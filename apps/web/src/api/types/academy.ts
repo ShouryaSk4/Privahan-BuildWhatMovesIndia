@@ -81,10 +81,49 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/academy/ask": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ask Manual
+         * @description Answer learner questions using RAG over the official RTO Complete Driving Manual.
+         */
+        post: operations["ask_manual_academy_ask_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AcademyAskRequest */
+        AcademyAskRequest: {
+            /** Applicant Id */
+            applicant_id: string;
+            /** Query */
+            query: string;
+            /** Journey Stage */
+            journey_stage?: string | null;
+        };
+        /** AcademyAskResponse */
+        AcademyAskResponse: {
+            /** Query */
+            query: string;
+            /** Answer */
+            answer: string;
+            /** Source Sections */
+            source_sections?: string[];
+            matched_video?: components["schemas"]["VideoMatchResult"] | null;
+        };
         /**
          * AcademyVideo
          * @description Metadata model for a Driving Academy curriculum video clip.
@@ -104,6 +143,12 @@ export interface components {
             video_url: string;
             /** Tags */
             tags?: string[];
+            /** Hindi Title */
+            hindi_title?: string | null;
+            /** Hinglish Keywords */
+            hinglish_keywords?: string[];
+            /** Thumbnail Url */
+            thumbnail_url?: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -254,6 +299,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["VideoMatchResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ask_manual_academy_ask_post: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AcademyAskRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["AcademyAskResponse"];
                 };
             };
             /** @description Validation Error */

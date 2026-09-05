@@ -174,7 +174,11 @@ class MockSarathiClient:
                 )
             if report.passed:
                 self._advance(report.application_number, "ll_test_passed")
-                return self._advance(report.application_number, "ll_issued")
+                issued = self._advance(report.application_number, "ll_issued")
+                if report.integrity_tier:
+                    issued = issued.model_copy(update={"integrity_tier": report.integrity_tier})
+                    self._save_application(issued)
+                return issued
             return status
         if report.test_type == "dl":
             if status.stage != "dl_test_booked":
