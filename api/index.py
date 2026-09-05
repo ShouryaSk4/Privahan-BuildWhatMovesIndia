@@ -49,6 +49,10 @@ from identity_service.main import app as identity_app  # noqa: E402
 from journey_service.main import app as journey_app  # noqa: E402
 
 ROUTES = {
+    # /session mints the ownership token the hardened journey routes require —
+    # it MUST be routed (and rewritten in vercel.json) or the whole flow dies
+    # at sign-in with an edge 404.
+    "/session": journey_app,
     "/journey": journey_app,
     "/gov": gateway_app,
     "/identity": identity_app,

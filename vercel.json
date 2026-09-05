@@ -4,6 +4,7 @@
   "buildCommand": "pnpm --dir apps/web build",
   "outputDirectory": "apps/web/dist",
   "rewrites": [
+    { "source": "/session", "destination": "/api/index" },
     { "source": "/journey/:path*", "destination": "/api/index" },
     { "source": "/gov/:path*", "destination": "/api/index" },
     { "source": "/identity/:path*", "destination": "/api/index" },
