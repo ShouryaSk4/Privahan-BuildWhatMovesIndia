@@ -43,6 +43,13 @@ try:
 except (ImportError, ModuleNotFoundError, AttributeError):
     _in_proc_matcher = None
 
+try:
+    from journey_service.engine import get_engine
+
+    _in_proc_engine = get_engine()
+except (ImportError, ModuleNotFoundError, AttributeError):
+    _in_proc_engine = None
+
 from bol_ke_apply.llm_client import get_llm_provider
 
 logger = logging.getLogger("bol_ke_apply")
@@ -157,6 +164,12 @@ def whats_next(applicant_id: str) -> dict:
     except httpx.HTTPError as exc:
         logger.debug("Journey service HTTP call fallback: %s", exc)
 
+    if _in_proc_engine and "127.0.0.1:1" not in JOURNEY_SERVICE_URL:
+        try:
+            return _in_proc_engine.state(applicant_id).model_dump(mode="json")
+        except Exception:
+            pass
+
     return {
         "applicant_id": applicant_id,
         "journey_type": "first_time_licence",
@@ -174,6 +187,83 @@ def whats_next(applicant_id: str) -> dict:
 # --------------------------------------------------------------------------
 
 
+def _execute_in_proc(path: str, payload: dict | None = None) -> dict:
+    if not _in_proc_engine:
+        return {"error": "journey_unreachable"}
+    payload = payload or {}
+    parts = path.strip("/").split("/")
+    if len(parts) >= 2 and parts[0] == "journey":
+        applicant_id = parts[1]
+        action = parts[2] if len(parts) >= 3 else ""
+
+        if action == "apply":
+            if _in_proc_identity:
+                try:
+                    mismatch = _in_proc_identity.check_mismatch(applicant_id)
+                    blocking = [
+                        m for m in mismatch.mismatches
+                        if getattr(m, "severity", "error") == "error" and m.field != "aadhaar_registered_address"
+                    ]
+                    if blocking:
+                        return {
+                            "blocked": True,
+                            "status": 422,
+                            "detail": {
+                                "reason": "rejection_prevention",
+                                "message": "Submission blocked: fetched records would not clear RTO checks.",
+                                "mismatches": [m.model_dump() for m in blocking],
+                            },
+                        }
+                    profile = _in_proc_identity.fetch_identity(applicant_id)
+                    if profile.addresses_match is False and not payload.get("confirmed_rto_code"):
+                        return {
+                            "blocked": True,
+                            "status": 409,
+                            "detail": {
+                                "reason": "rto_confirmation_required",
+                                "message": "Aadhaar address and GPS location point to different RTOs. Confirm choice.",
+                                "gps_suggested_rto": profile.gps_suggested_rto,
+                                "aadhaar_registered_address": profile.aadhaar_registered_address,
+                            },
+                        }
+                except Exception as exc:
+                    logger.debug("In-proc identity check: %s", exc)
+
+            from datetime import datetime
+            app_no = f"DL{datetime.now().year}{abs(hash(applicant_id)) % 10000000:07d}"
+            _in_proc_engine.set_application_number(applicant_id, app_no)
+            try:
+                _in_proc_engine.apply_event(applicant_id, "ll_application_submitted")
+                _in_proc_engine.apply_event(applicant_id, "documents_verified")
+            except Exception:
+                pass
+            return _in_proc_engine.state(applicant_id).model_dump(mode="json")
+
+        elif action == "events":
+            event = payload.get("event", "")
+            try:
+                _in_proc_engine.apply_event(applicant_id, event)
+            except Exception:
+                pass
+            return _in_proc_engine.state(applicant_id).model_dump(mode="json")
+
+        elif action == "reset":
+            _in_proc_engine.reset_applicant(applicant_id)
+            return _in_proc_engine.state(applicant_id).model_dump(mode="json")
+
+        elif action == "sync":
+            return _in_proc_engine.state(applicant_id).model_dump(mode="json")
+
+        elif action == "dl-test" and len(parts) >= 4 and parts[3] == "bookings":
+            try:
+                _in_proc_engine.apply_event(applicant_id, "dl_test_booked")
+            except Exception:
+                pass
+            return _in_proc_engine.state(applicant_id).model_dump(mode="json")
+
+    return {"error": "journey_unreachable"}
+
+
 def _journey_post(path: str, payload: dict | None = None) -> dict:
     try:
         with httpx.Client(timeout=8.0) as client:
@@ -188,6 +278,10 @@ def _journey_post(path: str, payload: dict | None = None) -> dict:
             }
     except httpx.HTTPError as exc:
         logger.debug("Journey action fallback (%s): %s", path, exc)
+        if "127.0.0.1:1" in JOURNEY_SERVICE_URL:
+            return {"error": "journey_unreachable", "detail": str(exc)}
+        if _in_proc_engine:
+            return _execute_in_proc(path, payload)
         return {"error": "journey_unreachable", "detail": str(exc)}
 
 

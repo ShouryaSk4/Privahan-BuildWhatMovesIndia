@@ -206,40 +206,153 @@ def _generate_interactive_options(
     message: str, tool_called: str | None, tool_result: Any, lang: str
 ) -> list[str]:
     """Generate structured, clickable quick-reply option pills for the citizen."""
+    is_hi = lang != "english"
+
     if tool_called == "check_mismatch" and tool_result:
         mismatches = tool_result.get("mismatches", []) if isinstance(tool_result, dict) else []
         if any(m.get("field") == "jurisdiction" for m in mismatches):
-            return ["Delhi RTO (DL-01)", "Current Location (KA-03)", "Review Details"]
-        return ["Fix Mismatch", "Proceed Anyway", "Check Rules"]
+            return (
+                ["दिल्ली RTO (DL-01) चुनें", "वर्तमान पता (KA-03) चुनें", "RTO अंतर समझें"]
+                if is_hi
+                else ["Confirm Delhi (DL-01)", "Confirm Bangalore (KA-03)", "Explain RTO Difference"]
+            )
+        if tool_result.get("clear_to_submit"):
+            return (
+                ["✅ तुरंत आवेदन सबमिट करें", "📜 फीस और समय-सीमा", "🎥 अकादमी वीडियो"]
+                if is_hi
+                else ["✅ Submit Application Now", "📜 Fees & Timelines", "🎥 Academy Videos"]
+            )
+        return (
+            ["दस्तावेज़ सुधारें", "फिर भी आगे बढ़ें", "नियम देखें"]
+            if is_hi
+            else ["Fix Mismatch", "Proceed Anyway", "Check Rules"]
+        )
 
     if tool_called == "start_application" and isinstance(tool_result, dict):
         if tool_result.get("blocked"):
             detail = tool_result.get("detail", {})
             if isinstance(detail, dict) and detail.get("reason") == "rto_confirmation_required":
-                return ["Confirm Delhi (DL-01)", "Confirm Bangalore (KA-03)", "Explain RTO Difference"]
-            return ["Review Issues", "Contact RTO", "Try Again"]
-        elif "current_stage" in tool_result:
-            return ["Take STALL Exam", "Open Driving Academy", "Check Status"]
+                return (
+                    ["दिल्ली RTO (DL-01) चुनें", "वर्तमान पता (KA-03) चुनें", "RTO अंतर समझें"]
+                    if is_hi
+                    else ["Confirm Delhi (DL-01)", "Confirm Bangalore (KA-03)", "Explain RTO Difference"]
+                )
+            return (
+                ["समस्या की समीक्षा करें", "RTO से संपर्क करें", "पुनः प्रयास करें"]
+                if is_hi
+                else ["Review Issues", "Contact RTO", "Try Again"]
+            )
+        elif "current_stage" in tool_result or tool_result.get("application_number"):
+            return (
+                ["📝 ऑनलाइन STALL टेस्ट दें", "🎥 ड्राइविंग अकादमी वीडियो", "📊 स्टेटस ट्रैक करें"]
+                if is_hi
+                else ["📝 Take STALL Exam Now", "🎥 Driving Academy Videos", "📊 Check Application Status"]
+            )
 
     if tool_called == "list_test_slots" and isinstance(tool_result, dict):
         slots = tool_result.get("slots", [])
         if slots:
-            opts = [f"Book: {s.get('slot_id')}" for s in slots[:3]]
-            opts.append("Other Dates")
+            opts = [
+                f"स्लॉट बुक करें: {s.get('slot_id')}" if is_hi else f"Book: {s.get('slot_id')}"
+                for s in slots[:2]
+            ]
+            opts.extend(["अन्य तारीखें", "ट्रैक वीडियो देखें"] if is_hi else ["Other Dates", "Track Video"])
             return opts
 
+    if tool_called == "match_video":
+        return (
+            ["8-शेप ट्रैक वीडियो", "रिवर्स पार्किंग वीडियो", "ढलान (Hill Hold) वीडियो"]
+            if is_hi
+            else ["8-Turn Video", "Reverse Parking Video", "Hill Hold Video"]
+        )
+
     if tool_called == "fetch_identity" and isinstance(tool_result, dict):
-        return ["Confirm and Apply", "Change Vehicle Class", "Check Mismatches"]
+        return (
+            ["✅ तुरंत आवेदन सबमिट करें", "📜 नियम और फीस जानें", "🔍 मिसमैच जांचें"]
+            if is_hi
+            else ["Confirm and Apply", "Statutory Fees & Days", "Check Mismatches"]
+        )
+
+    if tool_called == "whats_next" and isinstance(tool_result, dict):
+        stage = tool_result.get("current_stage")
+        if stage in ("ll_application_submitted", "ll_documents_verified"):
+            return (
+                ["📝 ऑनलाइन STALL टेस्ट दें", "📚 टेस्ट की तैयारी", "📊 स्थिति देखें"]
+                if is_hi
+                else ["📝 Take STALL Exam Now", "📚 Test Prep", "📊 Check Status"]
+            )
+        elif stage == "practice_window":
+            return (
+                ["📅 टेस्ट स्लॉट बुक करें", "🎥 ट्रैक टेस्ट वीडियो", "📊 प्रैक्टिस स्थिति"]
+                if is_hi
+                else ["📅 Book Test Slot", "🎥 Track Test Video", "📊 Practice Status"]
+            )
+        elif stage == "dl_test_booked":
+            return (
+                ["📍 ट्रैक दिशा-निर्देश", "🎥 8-शेप ट्रैक वीडियो", "🔄 स्लॉट बदलें"]
+                if is_hi
+                else ["📍 Track Guidelines", "🎥 8-Turn Video", "🔄 Reschedule Slot"]
+            )
+        elif stage == "dl_issued":
+            return (
+                ["📥 डिजिटल स्मार्ट कार्ड डाउनलोड करें", "🚗 ड्राइविंग नियम", "समाप्त"]
+                if is_hi
+                else ["📥 Download Smart Card", "🚗 Driving Rules", "Done"]
+            )
 
     m_low = message.lower()
-    if any(k in m_low for k in ["apply", "shuru", "licence", "license"]):
-        return ["Confirm and Apply", "Statutory Fees & Days", "Ask Question"]
-    if any(k in m_low for k in ["slot", "booking", "test", "track"]):
-        return ["Book Track Slot", "8-Turn Track Video", "Slot Rules"]
-    if any(k in m_low for k in ["video", "dikhao", "park", "reverse", "hill"]):
-        return ["8-Turn Video", "Reverse Parking Video", "Hill Hold Video"]
+    if any(
+        k in m_low
+        for k in [
+            "apply",
+            "shuru",
+            "licence",
+            "license",
+            "lena",
+            "banwana",
+            "आवेदन",
+            "लाइसेंस",
+            "लेना",
+            "बनवाना",
+            "शुरू",
+        ]
+    ):
+        return (
+            ["✅ तुरंत आवेदन सबमिट करें", "📜 नियम और फीस बताएं", "🎥 ड्राइविंग अकादमी"]
+            if is_hi
+            else ["Confirm and Apply", "Statutory Fees & Days", "Ask Question"]
+        )
+    if any(k in m_low for k in ["slot", "booking", "test", "track", "स्लॉट", "टेस्ट", "ट्रैक"]):
+        return (
+            ["📅 ट्रैक स्लॉट बुक करें", "🎥 8-शेप ट्रैक वीडियो", "नियम देखें"]
+            if is_hi
+            else ["Book Track Slot", "8-Turn Track Video", "Slot Rules"]
+        )
+    if any(
+        k in m_low
+        for k in [
+            "video",
+            "dikhao",
+            "park",
+            "reverse",
+            "hill",
+            "वीडियो",
+            "पार्किंग",
+            "रिवर्स",
+            "चढ़ाई",
+        ]
+    ):
+        return (
+            ["8-शेप वीडियो", "रिवर्स पार्किंग वीडियो", "ढलान (Hill Hold) वीडियो"]
+            if is_hi
+            else ["8-Turn Video", "Reverse Parking Video", "Hill Hold Video"]
+        )
 
-    return ["Apply for Licence", "Track Application", "Driving Academy"]
+    return (
+        ["लाइसेंस के लिए आवेदन करें", "आवेदन की स्थिति ट्रैक करें", "ड्राइविंग अकादमी वीडियो"]
+        if is_hi
+        else ["Apply for Licence", "Track Application", "Driving Academy"]
+    )
 
 logger = logging.getLogger("bol_ke_apply_agent")
 
@@ -271,6 +384,17 @@ RTO_KNOWLEDGE_BASE = """
 
 SYSTEM_PROMPT = f"""You are the official MoRTH AI Citizen Officer for 'बोल के अप्लाई' (Parivahan Seva).
 Your role is to assist Indian citizens applying for their first-time driving licence or learning to drive.
+
+CORE PARADIGM — ZERO-FORM LICENCE (NO MANUAL FORM FILLING):
+- Parivahan Seva is completely FORM-FREE ("Zero-Form").
+- NEVER ask the citizen to manually dictate, spell out, or type their demographic details (full name, date of birth, residential address, father's name, or phone number).
+- All verified citizen identity data is pulled automatically via DigiLocker / UIDAI Aadhaar e-KYC using the `fetch_identity` tool.
+- When the citizen expresses intent to get or apply for a licence (e.g. 'लाइसेंस लेना है', 'कार का लाइसेंस बनवाना है', 'गाड़ी का लेना है', 'आधार कार्ड से बना दो', 'I want a car driving licence', 'apply for licence'):
+  1. Inspect their verified DigiLocker/Aadhaar profile using `fetch_identity`.
+  2. Check for any rejection blockers or mismatches using `check_mismatch`.
+  3. If they gave an explicit directive or affirmative phrase (e.g. 'आधार कार्ड के उपयुक्त में बना लीजिए', 'हाँ बना दो', 'आवेदन कर दो', 'apply for licence', 'हाँ', 'कर दीजिए'): call `start_application` immediately!
+  4. If they are inquiring or stating initial intent, warmly confirm what was verified (e.g. Name, DOB, RTO jurisdiction) and that there are 0 mismatches, and ask for their confirmation to submit immediately.
+- Once submitted, never ask them to apply again. Guide them directly to their next milestone (online STALL test, Driving Academy videos).
 
 Guidelines:
 1. Speak warmly, respectfully, and clearly — and ALWAYS reply in the same language the citizen used (Hindi, English, or Hinglish).
@@ -341,21 +465,28 @@ class BolKeApplyAgent:
                 "engine": "moderation",
             }
 
-        # Next-Best-Action Trigger when citizen confirms (e.g. 'Haan kar do')
+        # Action directive trigger (e.g. 'आधार कार्ड के उपयुक्त में बना लीजिए', 'बना दो', 'apply for licence', 'haan kar do')
         msg_norm = message.lower().strip()
-        confirmation_phrases = ["haan kar do", "haan kardo", "yes", "proceed", "theek hai", "haan", "sure", "ok kar do", "kardo"]
-        if msg_norm in confirmation_phrases or any(msg_norm.startswith(p) for p in confirmation_phrases):
+        action_triggers = [
+            "haan kar do", "haan kardo", "yes", "proceed", "theek hai", "haan", "sure", "ok kar do", "kardo",
+            "उपयुक्त में बना", "उपयुक्त बना", "आधार कार्ड से बना", "बना लीजिए", "बना दो", "आवेदन कर दो",
+            "कर दीजिए", "अप्लाई कर दो", "बना दीजिए", "तुरंत आवेदन सबमिट करें", "confirm and apply", "submit application"
+        ]
+        if any(trig in msg_norm for trig in action_triggers):
             nba = get_journey_next_best_action(applicant_id)
             act_type = nba.get("action")
             if act_type == "start_application":
                 res = start_application(applicant_id=applicant_id)
                 tool_called, tool_result = "start_application", res
+                app_num = res.get("application_number") or "DL2026-APP"
                 reply = (
-                    "मैंने आपका आवेदन जमा कर दिया है! आपका आवेदन नंबर जनरेट हो गया है। अब आप ऑनलाइन STALL परीक्षा दे सकते हैं।"
+                    f"मैंने आपके आधार ई-केवाईसी रिकॉर्ड के आधार पर आपका जीरो-फॉर्म ड्राइविंग लाइसेंस आवेदन सफलतापूर्वक जमा कर दिया है! "
+                    f"आपका आवेदन नंबर {app_num} जनरेट हो चुका है। अब आपका अगला कदम ऑनलाइन STALL (लर्नर) टेस्ट देना है।"
                     if lang != "english"
-                    else "I have submitted your application! Your application number has been generated. You can now take the online STALL learner's test."
+                    else f"I have submitted your Zero-Form driving licence application using your verified Aadhaar e-KYC record! "
+                    f"Your application number is {app_num}. You can now take the online STALL learner's test."
                 )
-                options = ["Take STALL Exam Now", "Driving Academy Videos", "Check Application Status"]
+                options = _generate_interactive_options(message, tool_called, tool_result, lang)
                 _save_message(applicant_id, "citizen", message)
                 _save_message(applicant_id, "agent", reply, tool_called, tool_result, options)
                 return {
@@ -495,13 +626,29 @@ class BolKeApplyAgent:
             tool_result = fetch_identity(applicant_id=applicant_id)
             tool_context = f"\n[Executed Tool fetch_identity]: Name = {tool_result.get('name')}, DOB = {tool_result.get('dob')}, Address = {tool_result.get('address')}, Suggested RTO = {tool_result.get('gps_suggested_rto')}, Address Match = {tool_result.get('addresses_match')}"
 
+
+        # 5. Intent: Licence Application / Intent
+        elif any(kw in msg_lower for kw in [
+            "apply", "license", "licence", "banwana", "chahiye", "lena", "gadi", "gaadi", "car",
+            "आवेदन", "लाइसेंस", "बनवाना", "चाहिए", "लेना", "गाड़ी", "कार", "शुरू"
+        ]):
+            action_words = ["उपयुक्त", "बना", "सबमिट", "कर दो", "कर दीजिए", "अप्लाई", "तुरंत"]
+            if any(w in msg_lower for w in action_words):
+                tool_called = "start_application"
+                tool_result = start_application(applicant_id=applicant_id)
+                tool_context = f"\n[Executed Tool start_application]: Stage = {tool_result.get('current_stage')}, Application Number = {tool_result.get('application_number')}, Blocked = {tool_result.get('blocked')}"
+            else:
+                tool_called = "fetch_identity"
+                tool_result = fetch_identity(applicant_id=applicant_id)
+                tool_context = f"\n[Executed Tool fetch_identity]: Name = {tool_result.get('name')}, DOB = {tool_result.get('dob')}, Address = {tool_result.get('address')}, Suggested RTO = {tool_result.get('gps_suggested_rto')}, Address Match = {tool_result.get('addresses_match')}"
+
         # Construct prompt for Gemini LLM
         prompt = f"""Citizen query ({lang}): "{message}"
 Active Applicant ID: {applicant_id}
 Current Journey Stage: {journey_stage or 'no_licence'}
 {tool_context}
 
-Respond directly to the citizen in natural {lang} using the RTO knowledge base and any tool results provided above. Keep your tone polite, formal yet approachable, and helpful."""
+Respond directly to the citizen in natural {lang} using the RTO knowledge base and any tool results provided above. Keep your tone polite, formal yet approachable, and helpful. Parivahan Seva is a Zero-Form system: NEVER ask the citizen to state or type their personal details (name, DOB, address)."""
 
         reply = self.provider.generate_response(prompt, system_instruction=SYSTEM_PROMPT)
 

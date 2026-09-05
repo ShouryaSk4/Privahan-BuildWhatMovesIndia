@@ -124,6 +124,22 @@ def _seed_reference_data(cur) -> None:
     # 4. Initial Citizen Profiles (Replacing static citizens.json)
     initial_citizens = [
         (
+            "applicant_clean",
+            "9876543210",
+            "Rohan Verma",
+            date(2003, 8, 15),
+            "male",
+            "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?w=300",
+            "4321",
+            "Flat 204, Palm Grove, Indiranagar, Bengaluru, KA - 560038",
+            "560038",
+            "KA03",
+            True,
+            "ABCDP1234F",
+            "Rohan Verma",
+            date(2003, 8, 15),
+        ),
+        (
             "applicant_001",
             "9876543210",
             "Rohan Verma",

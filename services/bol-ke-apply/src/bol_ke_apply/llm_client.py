@@ -124,7 +124,8 @@ class GeminiLLMProvider(BaseLLMProvider):
         models_to_try = [m for m in candidates if m and not (m in seen or seen.add(m))]
 
         for m in models_to_try:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
+            headers = {"x-goog-api-key": self.api_key, "Content-Type": "application/json"}
             payload: dict = {
                 "contents": [{"parts": [{"text": prompt}]}],
             }
@@ -133,7 +134,7 @@ class GeminiLLMProvider(BaseLLMProvider):
 
             try:
                 with httpx.Client(timeout=8.0) as client:
-                    resp = client.post(url, json=payload)
+                    resp = client.post(url, headers=headers, json=payload)
                     if resp.status_code == 200:
                         data = resp.json()
                         cand_list = data.get("candidates", [])
@@ -141,6 +142,8 @@ class GeminiLLMProvider(BaseLLMProvider):
                             parts = cand_list[0].get("content", {}).get("parts", [])
                             if parts and "text" in parts[0]:
                                 return parts[0]["text"].strip()
+                    else:
+                        logger.debug("Gemini %s response %s: %s", m, resp.status_code, resp.text[:120])
             except Exception as exc:
                 logger.warning("Gemini model %s call failed: %s", m, exc)
 
@@ -200,10 +203,11 @@ class GeminiLLMProvider(BaseLLMProvider):
 
         candidates = [self.chat_model, "gemini-3.7-flash", "gemini-3.6-flash"]
         for m in candidates:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={self.api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent"
+            headers = {"x-goog-api-key": self.api_key, "Content-Type": "application/json"}
             try:
                 with httpx.Client(timeout=12.0) as client:
-                    resp = client.post(url, json=payload)
+                    resp = client.post(url, headers=headers, json=payload)
                     if resp.status_code == 200:
                         data = resp.json()
                         cand = data.get("candidates", [{}])[0]
@@ -242,10 +246,11 @@ class GeminiLLMProvider(BaseLLMProvider):
         if not self.api_key:
             return None
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.tts_model}:generateContent?key={self.api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.tts_model}:generateContent"
+        headers = {"x-goog-api-key": self.api_key, "Content-Type": "application/json"}
         try:
             with httpx.Client(timeout=2.0) as client:
-                resp = client.post(url, json={"contents": [{"parts": [{"text": text[:200]}]}]})
+                resp = client.post(url, headers=headers, json={"contents": [{"parts": [{"text": text[:200]}]}]})
                 if resp.status_code == 200:
                     audio_b64 = resp.json().get("audioContent", "")
                     if audio_b64:
@@ -260,7 +265,8 @@ class GeminiLLMProvider(BaseLLMProvider):
         if not self.api_key:
             return MockLLMProvider().transcribe_audio(audio_bytes, mime_type)
 
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.transcribe_model}:generateContent?key={self.api_key}"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.transcribe_model}:generateContent"
+        headers = {"x-goog-api-key": self.api_key, "Content-Type": "application/json"}
         b64_data = base64.b64encode(audio_bytes).decode("utf-8")
         payload = {
             "contents": [

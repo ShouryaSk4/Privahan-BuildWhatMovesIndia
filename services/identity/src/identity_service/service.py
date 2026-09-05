@@ -108,7 +108,7 @@ class IdentityService:
         try:
             from contracts.db import get_citizen
             db_citizen = get_citizen(applicant_id)
-            if db_citizen:
+            if db_citizen and (db_citizen.get("name") != applicant_id or applicant_id not in self._records):
                 dob: date = db_citizen["dob"]
                 age = _calculate_age(dob)
                 suggested_rto = gps_suggested_rto or db_citizen.get("gps_suggested_rto") or "DL01"
