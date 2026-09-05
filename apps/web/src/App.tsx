@@ -26,6 +26,7 @@ import { ReviewConfirm } from "./components/ReviewConfirm";
 import { SlotBookingPicker } from "./components/SlotBookingPicker";
 import { TrackSupportBar } from "./components/TrackSupportBar";
 import { VoiceModal } from "./components/VoiceModal";
+import { useT } from "./i18n";
 
 const APPLICANT_ID_PATTERN = /^[A-Za-z0-9_-]{4,32}$/;
 
@@ -89,6 +90,7 @@ function getStepInfo(stage: string): string {
 }
 
 export default function App() {
+  const t = useT();
   const [applicantId, setApplicantId] = useState("");
   const [idInput, setIdInput] = useState("applicant_001");
   const [idError, setIdError] = useState<string | null>(null);
@@ -214,7 +216,7 @@ export default function App() {
           backLabel="← Return to Citizen Homepage"
           stepInfo="Step 2 of 9: Citizen Verification & Document Retrieval"
         />
-        <main className="shell">
+        <main className="shell" id="main-content">
           <AuthVerificationView
             busy={busy}
             onBack={resetToLanding}
@@ -250,79 +252,151 @@ export default function App() {
 
         <LandscapeJourneyMap currentStep="intent" />
 
-        <main className="shell">
-          {/* Hero Section */}
+        <main className="shell" id="main-content">
+          {/* Hero Section: gantry board with copy left, rule-guaranteed stats right */}
           <section className="task-first-hero" aria-label="Parivahan Seva Overview">
-            <p className="hero-eyebrow">Ministry of Road Transport &amp; Highways · Government of India</p>
-            <h1>What would you like to do today?</h1>
-            <p className="sub">
-              Access official transport and licensing services with zero paperwork, transparent statutory rules,
-              and instant verification through DigiLocker &amp; Aadhaar e-KYC.
-            </p>
+            <div className="hero-grid">
+              <div className="hero-copy">
+                <p className="hero-eyebrow">{t.heroEyebrow}</p>
+                <h1>{t.heroHeading}</h1>
+                <p className="sub">{t.heroSub}</p>
+              </div>
+              <aside className="hero-stats" aria-label={t.statsTitle}>
+                <div className="hero-stats-title">{t.statsTitle}</div>
+                <dl>
+                  <div className="hero-stat">
+                    <dt>₹1,350</dt>
+                    <dd>{t.statCost}</dd>
+                  </div>
+                  <div className="hero-stat">
+                    <dt>21</dt>
+                    <dd>{t.statDays}</dd>
+                  </div>
+                  <div className="hero-stat">
+                    <dt>1</dt>
+                    <dd>{t.statVisits}</dd>
+                  </div>
+                </dl>
+                <p className="hero-stats-note">{t.statsNote}</p>
+              </aside>
+            </div>
 
             {/* Task-First Service Cards */}
             <div className="task-cards-grid">
               <div
                 className="task-card featured"
+                role="button"
+                tabIndex={0}
                 onClick={() => setAuthFlowActive(true)}
+                onKeyDown={(e) => e.key === "Enter" && setAuthFlowActive(true)}
               >
                 <div>
-                  <div className="task-card-badge">✨ Most Popular</div>
-                  <div className="task-card-icon">🚗</div>
-                  <div className="task-card-title">Apply for New Driving Licence</div>
-                  <div className="task-card-desc">
-                    Zero-form e-KYC application. Authenticate via mobile OTP to fetch Aadhaar &amp; PAN records, take online learner's test &amp; book automated track test.
+                  <div className="task-card-badge">{t.recommendedBadge}</div>
+                  <div className="task-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="2" y="5" width="20" height="14" rx="2.5" />
+                      <circle cx="8" cy="11" r="2.2" />
+                      <path d="M4.8 17c.6-1.9 1.8-2.8 3.2-2.8s2.6.9 3.2 2.8" />
+                      <path d="M14 9.5h6M14 12.5h6M14 15.5h3.5" />
+                    </svg>
                   </div>
+                  <h3 className="task-card-title">{t.card1Title}</h3>
+                  <ul className="task-card-points">
+                    {t.card1Points.map((pt) => (
+                      <li key={pt}>{pt}</li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="task-card-action">Start Zero-Form Application →</div>
+                <span className="task-card-action">{t.card1Cta} →</span>
               </div>
 
               <div
                 className="task-card"
+                role="button"
+                tabIndex={0}
                 onClick={() => {
                   setIdInput("applicant_student");
                   enter("applicant_student", true);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setIdInput("applicant_student");
+                    enter("applicant_student", true);
+                  }
+                }}
               >
                 <div>
-                  <div className="task-card-icon">📍</div>
-                  <div className="task-card-title">Inter-State Mover / Student Application</div>
-                  <div className="task-card-desc">
-                    Living away from your home state? Choose seamlessly between your legal Aadhaar jurisdiction and local convenience RTO.
+                  <div className="task-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 21s-6.5-5.4-6.5-10.2a6.5 6.5 0 1 1 13 0C18.5 15.6 12 21 12 21Z" />
+                      <circle cx="12" cy="10.5" r="2.4" />
+                    </svg>
                   </div>
+                  <h3 className="task-card-title">{t.card2Title}</h3>
+                  <ul className="task-card-points">
+                    {t.card2Points.map((pt) => (
+                      <li key={pt}>{pt}</li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="task-card-action">Apply with Location Choice →</div>
+                <span className="task-card-action">{t.card2Cta} →</span>
               </div>
 
               <div
                 className="task-card"
+                role="button"
+                tabIndex={0}
                 onClick={() => {
                   setIdInput("applicant_mismatch");
                   enter("applicant_mismatch", true);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setIdInput("applicant_mismatch");
+                    enter("applicant_mismatch", true);
+                  }
+                }}
               >
                 <div>
-                  <div className="task-card-icon">🛡️</div>
-                  <div className="task-card-title">Check Rejection Risk (Pre-Screen)</div>
-                  <div className="task-card-desc">
-                    Run automated cross-checks against PAN &amp; Aadhaar databases before submission to prevent RTO document rejections.
+                  <div className="task-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 3l7.5 3v5.2c0 4.6-3.1 7.6-7.5 9.8-4.4-2.2-7.5-5.2-7.5-9.8V6l7.5-3Z" />
+                      <path d="M8.8 12.2l2.2 2.2 4.2-4.6" />
+                    </svg>
                   </div>
+                  <h3 className="task-card-title">{t.card3Title}</h3>
+                  <ul className="task-card-points">
+                    {t.card3Points.map((pt) => (
+                      <li key={pt}>{pt}</li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="task-card-action">Pre-Screen My Records →</div>
+                <span className="task-card-action">{t.card3Cta} →</span>
               </div>
 
               <div
                 className="task-card"
+                role="button"
+                tabIndex={0}
                 onClick={() => setVoiceOpen(true)}
+                onKeyDown={(e) => e.key === "Enter" && setVoiceOpen(true)}
               >
                 <div>
-                  <div className="task-card-icon">🎙️</div>
-                  <div className="task-card-title">बोल के अप्लाई (Voice Assistant)</div>
-                  <div className="task-card-desc">
-                    Speak in Hindi, English, or Hinglish to check your application status, verify identity, or ask RTO rule questions.
+                  <div className="task-card-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="9" y="3" width="6" height="11" rx="3" />
+                      <path d="M5.5 11.5a6.5 6.5 0 0 0 13 0" />
+                      <path d="M12 18v3M8.5 21h7" />
+                    </svg>
                   </div>
+                  <h3 className="task-card-title">{t.card4Title}</h3>
+                  <ul className="task-card-points">
+                    {t.card4Points.map((pt) => (
+                      <li key={pt}>{pt}</li>
+                    ))}
+                  </ul>
                 </div>
-                <div className="task-card-action">Open Voice Assistant →</div>
+                <span className="task-card-action">{t.card4Cta} →</span>
               </div>
             </div>
           </section>
@@ -332,22 +406,21 @@ export default function App() {
             {storedSession && !applicantId && (
               <div className="resume-banner" role="note">
                 <div>
-                  <strong>Welcome back.</strong>{" "}
-                  Your application <code>{storedSession.applicantId}</code> is exactly where
-                  you left it — nothing was lost.
+                  <strong>{t.welcomeBack}</strong> <code>{storedSession.applicantId}</code>{" "}
+                  {t.resumeBody}
                 </div>
                 <button type="button" className="btn primary" onClick={resumeJourney} disabled={busy}>
-                  Continue where I left off →
+                  {t.resumeCta}
                 </button>
               </div>
             )}
-            <h2>Select Citizen Profile or Enter Reference ID</h2>
+            <h2>{t.signinHeading}</h2>
             <p className="muted" style={{ fontSize: "0.9rem" }}>
-              Choose a verified persona below to experience the complete citizen journey end-to-end:
+              {t.signinSub}
             </p>
 
             <div className="persona-preset-selector">
-              <div className="persona-preset-title">Verified Demo Citizen Profiles:</div>
+              <div className="persona-preset-title">{t.personaTitle}</div>
               <div className="persona-chips">
                 {DEMO_PERSONAS.map((p) => (
                   <button
@@ -363,7 +436,7 @@ export default function App() {
                       <div className="persona-chip-name">{p.name}</div>
                       <div className="persona-chip-tag">{p.tag} • {p.location}</div>
                     </div>
-                    <span style={{ fontSize: "0.85rem", color: "var(--gov-blue)", fontWeight: 800 }}>Start Fresh →</span>
+                    <span style={{ fontSize: "0.85rem", color: "var(--gov-blue)", fontWeight: 800 }}>{t.startFresh}</span>
                   </button>
                 ))}
               </div>
@@ -371,7 +444,7 @@ export default function App() {
 
             <div style={{ marginTop: "1.25rem" }}>
               <label htmlFor="applicant" style={{ fontSize: "0.88rem", fontWeight: 700, color: "var(--gov-navy)" }}>
-                Or enter custom Citizen Reference ID:
+                {t.customIdLabel}
               </label>
               <div style={{ display: "flex", gap: "0.65rem", marginTop: "0.4rem", flexWrap: "wrap" }}>
                 <input
@@ -384,11 +457,11 @@ export default function App() {
                   style={{ flex: 1, minWidth: "16rem" }}
                 />
                 <button className="btn primary" onClick={() => enter(undefined, false)} style={{ whiteSpace: "nowrap" }}>
-                  Continue Application →
+                  {t.continueCta}
                 </button>
               </div>
               <p className="muted small" style={{ marginTop: "0.4rem" }}>
-                Format hint: 4–32 letters, numbers, or underscores (e.g. <code>applicant_001</code>)
+                {t.formatHint} <code>applicant_001</code>)
               </p>
             </div>
             {idError && <p className="alert alert-error">{idError}</p>}
@@ -436,7 +509,7 @@ export default function App() {
           onBack={resetToLanding}
           backLabel="← Return to Citizen Homepage"
         />
-        <main className="shell narrow">
+        <main className="shell narrow" id="main-content">
           {error ? (
             <div className="alert alert-error" role="alert">
               <strong>Error loading application:</strong> {error}
@@ -490,7 +563,7 @@ export default function App() {
         stepInfo={getStepInfo(stage)}
       />
 
-      <main className="shell">
+      <main className="shell" id="main-content">
         {stageToast && (
           <div className="stage-toast" role="status">
             ✓ Status updated — <strong>{stageToast}</strong>

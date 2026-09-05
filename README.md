@@ -319,6 +319,29 @@ Three hiccups every Sarathi user knows, closed end to end:
   "Learner's licence valid till …" — until the DL is issued. (Original portal: the
   6-month LL validity is never surfaced; miss it and you restart from the LL test.)
 
+## Landing-page UX audit fixes (added 6 Sep 2026)
+
+A 16-point heuristic audit of the landing page (contrast, hierarchy, navigation
+overload, terminology, accessibility) drove one coherent pass:
+
+- **Bilingual chrome with a real toggle** — EN / हिंदी switch in the utility bar
+  (`src/i18n.tsx`); every landing/journey chrome string flips, persisted locally,
+  `<html lang>` kept in sync.
+- **Accessibility toolbar** — A− / A / A+ text sizing, high-contrast mode, and a
+  skip-to-content link; preferences persist and apply portal-wide via `<html>`
+  attributes. Visible `:focus-visible` rings everywhere; cards are keyboard-operable.
+- **"You are here" progress strip** — the nine-step wall is now a compact strip
+  (current step, what's next, % complete) with the full milestone road one tap away.
+- **Rebalanced hero** — statutory certainty stats (₹1,350 · 21 days · 1 visit) fill
+  the previously empty right side; the low-contrast subtitle bug (a stale
+  `p.sub { color:#334155 }` rule winning by specificity) is fixed at the root.
+- **Unified cards** — one design, scannable ✓-bullet benefits instead of paragraphs,
+  identical pill-button CTAs, descriptive stroke-icon SVGs, and a badge that says
+  *why* the featured card is recommended. Terminology normalised (one naming style
+  across "application / pre-check / voice assistant").
+- **Slimmer header** — utility bar (helpline as `tel:` link) separated from a
+  compact branding row; thinner signboard trims for a lighter, modern look.
+
 ## Known gaps / next steps
 
 - **`VerifiedProfile` has no jurisdiction RTO code**: Module 3 computes `jurisdiction_rto`

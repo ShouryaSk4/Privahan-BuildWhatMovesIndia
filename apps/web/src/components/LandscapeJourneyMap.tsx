@@ -1,4 +1,11 @@
-// Landscape Journey Progression Map inspired by MoRTH User Journey Architecture
+// Journey progression map. The original portal shows all nine steps at once
+// with no "you are here" — overwhelming and directionless. This renders a
+// compact progress strip (current step, what's next, % complete) and keeps
+// the full milestone road one tap away.
+
+import { useState } from "react";
+
+import { fmt, useT } from "../i18n";
 
 export type JourneyStepKey =
   | "intent"
@@ -11,17 +18,19 @@ export type JourneyStepKey =
   | "dl_booking"
   | "dl_test";
 
-const STEPS: { key: JourneyStepKey; num: number; title: string; subtitle: string; icon: string }[] = [
-  { key: "intent", num: 1, title: "Discover & Intent", subtitle: "Portal landing", icon: "🌐" },
-  { key: "login", num: 2, title: "e-KYC & Auth", subtitle: "Aadhaar / OTP", icon: "🆔" },
-  { key: "category", num: 3, title: "License Class", subtitle: "LMV / MCWG", icon: "🚗" },
-  { key: "application", num: 4, title: "Zero-Form Dossier", subtitle: "DigiLocker verified", icon: "📋" },
-  { key: "ll_test", num: 5, title: "LL Test", subtitle: "Online or Center", icon: "💻" },
-  { key: "ll_issued", num: 6, title: "LL Issued", subtitle: "Digital Permit", icon: "📜" },
-  { key: "practice", num: 7, title: "30-Day Practice", subtitle: "Safety Academy", icon: "🎯" },
-  { key: "dl_booking", num: 8, title: "Track Slot", subtitle: "ADTT Booking", icon: "📅" },
-  { key: "dl_test", num: 9, title: "DL Issued", subtitle: "Form 7 Smart Card", icon: "🏆" },
+const STEP_KEYS: JourneyStepKey[] = [
+  "intent",
+  "login",
+  "category",
+  "application",
+  "ll_test",
+  "ll_issued",
+  "practice",
+  "dl_booking",
+  "dl_test",
 ];
+
+const STEP_ICONS = ["🌐", "🆔", "🚗", "📋", "💻", "📜", "🎯", "📅", "🏆"];
 
 export function getActiveStepKey(stage: string, reviewOpen: boolean, categorySelected: boolean): JourneyStepKey {
   if (reviewOpen) return "application";
@@ -49,34 +58,90 @@ export function getActiveStepKey(stage: string, reviewOpen: boolean, categorySel
   }
 }
 
+const EXPAND_KEY = "parivahan_journeymap_expanded";
+
 export function LandscapeJourneyMap({ currentStep }: { currentStep: JourneyStepKey }) {
-  const currentIdx = STEPS.findIndex((s) => s.key === currentStep);
+  const t = useT();
+  const [expanded, setExpanded] = useState(() => {
+    try {
+      return localStorage.getItem(EXPAND_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  const currentIdx = Math.max(0, STEP_KEYS.indexOf(currentStep));
+  const total = STEP_KEYS.length;
+  const current = t.steps[currentIdx];
+  const next = currentIdx + 1 < total ? t.steps[currentIdx + 1] : null;
+  const pct = Math.round(((currentIdx + 1) / total) * 100);
+
+  function toggle() {
+    setExpanded((v) => {
+      try {
+        localStorage.setItem(EXPAND_KEY, v ? "0" : "1");
+      } catch {
+        /* fine */
+      }
+      return !v;
+    });
+  }
 
   return (
-    <nav className="landscape-journey-container" aria-label="Citizen Journey Roadmap">
-      <div className="landscape-journey-scroll">
-        <ol className="landscape-journey-steps">
-          {STEPS.map((step, idx) => {
-            const isDone = idx < currentIdx;
-            const isCurrent = idx === currentIdx;
-            return (
-              <li
-                key={step.key}
-                className={`landscape-journey-step ${isDone ? "done" : ""} ${isCurrent ? "current" : ""}`}
-              >
-                <div className="landscape-step-marker">
-                  {isDone ? "✓" : step.num}
-                </div>
-                <div className="landscape-step-content">
-                  <span className="landscape-step-title">{step.title}</span>
-                  <span className="landscape-step-sub">{step.subtitle}</span>
-                </div>
-                {idx < STEPS.length - 1 && <div className="landscape-step-connector" />}
-              </li>
-            );
-          })}
-        </ol>
+    <nav className="journey-progress" aria-label="Citizen journey progress">
+      <div className="journey-progress-row">
+        <span className="you-are-here">📍 {t.youAreHere}</span>
+        <div className="journey-progress-text">
+          <strong>
+            {fmt(t.stepProgress, { n: currentIdx + 1, total })}: {current.title}
+          </strong>
+          <span className="journey-progress-next">
+            {next ? `${t.nextWord}: ${next.title}` : `🏆 ${t.journeyDone}`}
+          </span>
+        </div>
+        <div
+          className="journey-progress-track"
+          role="progressbar"
+          aria-valuemin={1}
+          aria-valuemax={total}
+          aria-valuenow={currentIdx + 1}
+          aria-label={fmt(t.stepProgress, { n: currentIdx + 1, total })}
+        >
+          <div className="journey-progress-fill" style={{ width: `${pct}%` }} />
+        </div>
+        <button type="button" className="journey-progress-toggle" onClick={toggle} aria-expanded={expanded}>
+          {expanded ? t.hideAllSteps : t.showAllSteps}
+        </button>
       </div>
+
+      {expanded && (
+        <div className="landscape-journey-container">
+          <div className="landscape-journey-scroll">
+            <ol className="landscape-journey-steps">
+              {t.steps.map((step, idx) => {
+                const isDone = idx < currentIdx;
+                const isCurrent = idx === currentIdx;
+                return (
+                  <li
+                    key={STEP_KEYS[idx]}
+                    className={`landscape-journey-step ${isDone ? "done" : ""} ${isCurrent ? "current" : ""}`}
+                    aria-current={isCurrent ? "step" : undefined}
+                  >
+                    <div className="landscape-step-marker">{isDone ? "✓" : idx + 1}</div>
+                    <div className="landscape-step-content">
+                      <span className="landscape-step-title">
+                        <span aria-hidden="true">{STEP_ICONS[idx]}</span> {step.title}
+                      </span>
+                      <span className="landscape-step-sub">{step.subtitle}</span>
+                    </div>
+                    {idx < total - 1 && <div className="landscape-step-connector" />}
+                  </li>
+                );
+              })}
+            </ol>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

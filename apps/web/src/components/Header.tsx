@@ -1,4 +1,24 @@
-// National MoRTH Portal Header Component with Helpline and Citizen Context
+// National MoRTH portal header: slim utility bar (helpline, accessibility,
+// language) + compact branding row. The original portal's header buries key
+// info under dense text; this one keeps one job per row.
+
+import { useEffect, useState } from "react";
+
+import { setLang, useLang, useT } from "../i18n";
+
+type FontScale = "sm" | "md" | "lg";
+
+const PREF_KEY = "parivahan_a11y_v1";
+
+function loadPrefs(): { fontScale: FontScale; highContrast: boolean } {
+  try {
+    const raw = localStorage.getItem(PREF_KEY);
+    if (raw) return JSON.parse(raw) as { fontScale: FontScale; highContrast: boolean };
+  } catch {
+    /* fall through to defaults */
+  }
+  return { fontScale: "md", highContrast: false };
+}
 
 export function Header({
   applicantId,
@@ -17,30 +37,117 @@ export function Header({
   onReset?: () => void;
   onSwitchCitizen?: () => void;
 }) {
+  const t = useT();
+  const lang = useLang();
+  const [prefs, setPrefs] = useState(loadPrefs);
+
+  // Apply accessibility preferences to the document root so every screen —
+  // not just this component — respects them.
+  useEffect(() => {
+    document.documentElement.dataset.fontScale = prefs.fontScale;
+    document.documentElement.classList.toggle("hc", prefs.highContrast);
+    try {
+      localStorage.setItem(PREF_KEY, JSON.stringify(prefs));
+    } catch {
+      /* storage unavailable — prefs apply for this visit only */
+    }
+  }, [prefs]);
+
   return (
     <header>
-      {/* Top National Support & Branding Strip */}
+      <a className="skip-link" href="#main-content">
+        {t.skipToContent}
+      </a>
+
+      {/* Utility bar: identity left; helpline + accessibility + language right */}
       <div className="gov-top-bar">
         <div className="gov-top-bar-inner">
           <div className="gov-branding-strip">
             <span>भारत सरकार | Government of India</span>
-            <span>•</span>
-            <span>सड़क परिवहन और राजमार्ग मंत्रालय (MoRTH)</span>
-          </div>
-          <div className="gov-branding-strip">
-            <span className="gov-helpline-tag">
-              📞 24x7 Citizen Helpline: 1800-180-0147 (Toll-Free)
+            <span className="gov-top-sep" aria-hidden="true">
+              •
             </span>
-            <span>•</span>
-            <span>Digital India Initiative</span>
+            <span className="gov-ministry">{t.ministry}</span>
+          </div>
+          <div className="gov-utility-strip">
+            <a className="gov-helpline-tag" href="tel:18001800147">
+              📞 {t.helpline}
+            </a>
+            <span className="gov-top-sep" aria-hidden="true">
+              |
+            </span>
+            <div className="a11y-controls" role="group" aria-label="Accessibility">
+              <button
+                type="button"
+                onClick={() => setPrefs((p) => ({ ...p, fontScale: "sm" }))}
+                aria-label={t.fontSmaller}
+                aria-pressed={prefs.fontScale === "sm"}
+              >
+                A−
+              </button>
+              <button
+                type="button"
+                onClick={() => setPrefs((p) => ({ ...p, fontScale: "md" }))}
+                aria-label={t.fontReset}
+                aria-pressed={prefs.fontScale === "md"}
+              >
+                A
+              </button>
+              <button
+                type="button"
+                onClick={() => setPrefs((p) => ({ ...p, fontScale: "lg" }))}
+                aria-label={t.fontLarger}
+                aria-pressed={prefs.fontScale === "lg"}
+              >
+                A+
+              </button>
+              <button
+                type="button"
+                className="a11y-contrast"
+                onClick={() => setPrefs((p) => ({ ...p, highContrast: !p.highContrast }))}
+                aria-label={t.highContrast}
+                aria-pressed={prefs.highContrast}
+                title={t.highContrast}
+              >
+                ◐
+              </button>
+            </div>
+            <span className="gov-top-sep" aria-hidden="true">
+              |
+            </span>
+            <div className="lang-toggle" role="group" aria-label="Language / भाषा">
+              <button
+                type="button"
+                onClick={() => setLang("en")}
+                aria-pressed={lang === "en"}
+                className={lang === "en" ? "active" : ""}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => setLang("hi")}
+                aria-pressed={lang === "hi"}
+                className={lang === "hi" ? "active" : ""}
+              >
+                हिंदी
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Main Portal Header */}
+      {/* Branding row: compact emblem + name; actions on the right */}
       <div className="gov-portal-header">
         <div className="gov-portal-header-inner">
-          <div className="gov-title-wrap" onClick={onReset} title="Return to Citizen Portal Home">
+          <div
+            className="gov-title-wrap"
+            onClick={onReset}
+            title="Parivahan Seva — Home"
+            role="link"
+            tabIndex={0}
+            onKeyDown={(e) => e.key === "Enter" && onReset?.()}
+          >
             <svg
               className="gov-emblem-main"
               viewBox="0 0 100 100"
@@ -54,13 +161,8 @@ export function Header({
               <circle cx="50" cy="50" r="6" fill="#f59e0b" />
             </svg>
             <div className="gov-title-text">
-              <h1>
-                Parivahan Seva
-                <span style={{ fontSize: "0.75rem", background: "rgba(255,255,255,0.15)", padding: "0.15rem 0.5rem", borderRadius: "4px" }}>
-                  Official Citizen Portal
-                </span>
-              </h1>
-              <p className="tagline">Unified Portal for Driving Licence Issuance, Road Safety &amp; Transport Services</p>
+              <h1>Parivahan Seva</h1>
+              <p className="tagline">{t.tagline}</p>
             </div>
           </div>
 
@@ -77,20 +179,19 @@ export function Header({
                   onClick={onSwitchCitizen || onReset}
                   title="Switch citizen persona or return to portal home"
                 >
-                  Switch / Exit ✕
+                  {t.switchExit} ✕
                 </button>
               </div>
             ) : (
               <>
-                <span className="badge-official">e-KYC Ready</span>
+                <span className="badge-official">{t.ekycReady}</span>
                 {onOpenLogin && (
                   <button
                     type="button"
-                    className="btn secondary"
+                    className="btn secondary btn-signin"
                     onClick={onOpenLogin}
-                    style={{ minHeight: "36px", padding: "0.35rem 0.85rem", fontSize: "0.82rem" }}
                   >
-                    🔐 Sign-In (OTP)
+                    🔐 {t.signIn}
                   </button>
                 )}
               </>
@@ -101,9 +202,9 @@ export function Header({
                 type="button"
                 className="btn-bol-ke-apply-nav"
                 onClick={onOpenVoice}
-                title="बोल के अप्लाई — Voice Assistant (Hindi / English / Hinglish)"
+                title={t.voiceTitle}
               >
-                🎙️ बोल के अप्लाई
+                {t.voiceButton}
               </button>
             )}
           </div>
