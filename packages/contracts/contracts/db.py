@@ -441,6 +441,16 @@ def get_agent_history(session_id: str, limit: int = 10) -> list[dict[str, Any]]:
             ]
 
 
+def _placeholder_phone(citizen_id: str) -> str:
+    """Stable pseudo-phone for the UNIQUE tbl_citizens.phone column — a
+    constant placeholder collides on the second citizen and the mirror then
+    silently fails for every applicant after the first."""
+    import hashlib
+
+    digest = int(hashlib.md5(citizen_id.encode()).hexdigest()[:12], 16)
+    return f"9{digest % 10**9:09d}"
+
+
 def upsert_application(
     application_number: str,
     citizen_id: str,
@@ -457,10 +467,10 @@ def upsert_application(
                 cur.execute(
                     """
                     INSERT INTO tbl_citizens (citizen_id, phone, full_name, dob, registered_address)
-                    VALUES (%s, '0000000000', %s, '2000-01-01', 'India')
+                    VALUES (%s, %s, %s, '2000-01-01', 'India')
                     ON CONFLICT (citizen_id) DO NOTHING;
                     """,
-                    (citizen_id, citizen_id),
+                    (citizen_id, _placeholder_phone(citizen_id), citizen_id),
                 )
                 cur.execute(
                     """
