@@ -130,7 +130,7 @@ export function VoiceWidget({
         {turns.map((turn, i) => (
           <div key={i} className={turn.who === "user" ? "academy-user" : "voice-bot"}>
             <p>{turn.text}</p>
-            {turn.tool && <span className="chip">tool: {turn.tool}</span>}
+
           </div>
         ))}
         {busy && <p className="muted">…</p>}

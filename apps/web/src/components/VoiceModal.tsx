@@ -35,7 +35,6 @@ declare global {
 interface Message {
   sender: "user" | "bot";
   text: string;
-  toolTag?: string;
   options?: string[];
 }
 
@@ -135,7 +134,6 @@ export function VoiceModal({
         {
           sender: "bot",
           text: data.reply || "जानकारी प्राप्त हो गई है।",
-          toolTag: data.tool_called ? `Executed MCP Tool: ${data.tool_called}` : undefined,
           options: Array.isArray(data.options) ? data.options : undefined,
         },
       ]);
@@ -214,22 +212,6 @@ export function VoiceModal({
                 }}
               >
                 {m.text}
-                {m.toolTag && (
-                  <div
-                    style={{
-                      fontSize: "0.68rem",
-                      background: "#e0e7ff",
-                      color: "#3730a3",
-                      padding: "0.15rem 0.45rem",
-                      borderRadius: "4px",
-                      marginTop: "0.35rem",
-                      display: "inline-block",
-                      fontWeight: 700,
-                    }}
-                  >
-                    ⚙️ {m.toolTag}
-                  </div>
-                )}
                 {m.options && m.options.length > 0 && (
                   <div
                     style={{

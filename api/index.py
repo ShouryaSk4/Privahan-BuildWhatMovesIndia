@@ -29,6 +29,9 @@ for p in src_paths:
 # reached directly in-process or over HTTP.
 os.environ["IDENTITY_MODE"] = "direct"
 os.environ["GATEWAY_MODE"] = "direct"
+# Bol Ke Apply shares this process with the journey app — call it in-process
+# instead of over HTTPS back to our own deployment URL (which stalls the agent).
+os.environ["JOURNEY_MODE"] = "direct"
 os.environ.setdefault("JOURNEY_DB", "/tmp/journey.sqlite3")
 os.environ.setdefault("GATEWAY_DB", "/tmp/gateway.sqlite3")
 os.environ.setdefault("JOURNEY_FAST_FORWARD", "1")  # demo: collapse waiting periods

@@ -104,13 +104,93 @@ def _journey_headers(applicant_id: str, fresh: bool = False) -> dict:
     return {"Authorization": f"Bearer {token}"}
 
 
+# On Vercel the journey app is imported into the SAME process as this agent
+# (api/index.py), but JOURNEY_SERVICE_URL points at the deployment's own public
+# URL. Calling it over HTTPS makes the serverless function request itself — slow,
+# and it stalls behind the platform edge, surfacing to the citizen as the
+# "Failed to fetch" / journey-blocked loop. In this mode we invoke the journey
+# ASGI app in-process instead: no network hop, the real journey logic, and a
+# session token minted locally with the shared secret.
+JOURNEY_MODE = os.getenv("JOURNEY_MODE", "http")
+
+
+class _DirectResponse:
+    """Minimal httpx.Response stand-in for in-process ASGI journey calls."""
+
+    def __init__(self, status_code: int, body: bytes) -> None:
+        self.status_code = status_code
+        self.content = body
+        self.text = body.decode("utf-8", "replace")
+
+    def json(self):
+        import json as _json
+
+        return _json.loads(self.content) if self.content else {}
+
+
+def _journey_asgi(
+    method: str,
+    path: str,
+    applicant_id: str,
+    payload: dict | None = None,
+    params: dict | None = None,
+) -> _DirectResponse:
+    import asyncio
+    import json as _json
+    import urllib.parse
+
+    from contracts.security import mint_session
+    from journey_service.main import app as journey_app
+
+    token = mint_session(applicant_id)
+    body = _json.dumps(payload).encode() if payload is not None else b""
+    qs = urllib.parse.urlencode(params).encode() if params else b""
+    scope = {
+        "type": "http",
+        "http_version": "1.1",
+        "method": method,
+        "path": path,
+        "raw_path": path.encode(),
+        "query_string": qs,
+        "root_path": "",
+        "scheme": "https",
+        "server": ("bol-ke-apply", 443),
+        "client": ("127.0.0.1", 0),
+        "headers": [
+            (b"authorization", f"Bearer {token}".encode()),
+            (b"content-type", b"application/json"),
+            (b"host", b"bol-ke-apply"),
+        ],
+    }
+    result: dict = {"status": 500, "chunks": []}
+
+    async def _run() -> None:
+        pending = [{"type": "http.request", "body": body, "more_body": False}]
+
+        async def receive() -> dict:
+            return pending.pop(0) if pending else {"type": "http.disconnect"}
+
+        async def send(message: dict) -> None:
+            if message["type"] == "http.response.start":
+                result["status"] = message["status"]
+            elif message["type"] == "http.response.body":
+                result["chunks"].append(message.get("body", b""))
+
+        await journey_app(scope, receive, send)
+
+    asyncio.run(_run())
+    return _DirectResponse(result["status"], b"".join(result["chunks"]))
+
+
 def _journey_request(
     method: str,
     path: str,
     applicant_id: str,
     payload: dict | None = None,
     params: dict | None = None,
-) -> httpx.Response:
+):
+    if JOURNEY_MODE == "direct":
+        return _journey_asgi(method, path, applicant_id, payload=payload, params=params)
     with httpx.Client(timeout=8.0) as client:
         headers = _journey_headers(applicant_id)
         resp = client.request(
@@ -433,6 +513,7 @@ def save_citizen_details(
     """
     try:
         from datetime import date
+
         from contracts.db import upsert_citizen
         dob_date = date.fromisoformat(dob) if "-" in dob else date(2000, 1, 1)
         cid = applicant_id or f"cit_{phone[-6:]}"
