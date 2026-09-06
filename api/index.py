@@ -85,9 +85,10 @@ async def app(scope, receive, send):
         storage = get_engine().store.backend_name
     except Exception:  # noqa: BLE001 — health must answer even if the store cannot
         storage = "unknown"
+    commit = os.environ.get("VERCEL_GIT_COMMIT_SHA", "local")[:7]
     body = (
         '{"status":"ok","modules":["journey","gateway","identity","academy","bol-ke-apply"],'
-        f'"storage":"{storage}"}}'
+        f'"storage":"{storage}","commit":"{commit}"}}'
     ).encode()
     await send(
         {
