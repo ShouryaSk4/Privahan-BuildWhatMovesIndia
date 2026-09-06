@@ -279,8 +279,13 @@ class GeminiLLMProvider(BaseLLMProvider):
         Gemini TTS models require responseModalities=["AUDIO"] and a voice, and
         return raw PCM (audio/L16) — which browsers can't play from a data URI,
         so we wrap it in a WAV header before returning.
+
+        Opt-in: the preview TTS model adds several seconds per reply and isn't
+        enabled on every key, so by default we return None immediately and let
+        the browser speak the reply instantly (frontend speechSynthesis). Set
+        BOL_SERVER_TTS=1 once a working TTS model/voice is configured.
         """
-        if not self.api_key:
+        if not self.api_key or os.getenv("BOL_SERVER_TTS", "").lower() not in ("1", "true", "yes"):
             return None
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.tts_model}:generateContent"
