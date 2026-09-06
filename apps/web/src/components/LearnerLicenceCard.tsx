@@ -31,7 +31,7 @@ export function LearnerLicenceCard({
     <div className="card" style={{ padding: "1.75rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.5rem" }}>
         <div>
-          <span className="badge-official">Step 6 of 9 • Ministry of Road Transport &amp; Highways</span>
+          <span className="badge-official">Ministry of Road Transport &amp; Highways</span>
           <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0.4rem 0 0.2rem" }}>
             Learner's Licence Issued (Form 3)
           </h2>

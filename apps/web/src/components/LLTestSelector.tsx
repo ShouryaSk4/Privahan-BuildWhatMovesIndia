@@ -1,4 +1,4 @@
-// Step 5: Learner License Test Mode Selection (Online AI Proctored vs RTO Center)
+// Learner licence test mode selection (Online AI Proctored vs RTO Center)
 
 import { useState } from "react";
 
@@ -17,7 +17,7 @@ export function LLTestSelector({
     <div className="card" style={{ padding: "1.75rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.5rem" }}>
         <div>
-          <span className="badge-official">Step 5 of 9 • STALL Computerized Knowledge Test</span>
+          <span className="badge-official">STALL Computerized Knowledge Test</span>
           <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0.4rem 0 0.2rem" }}>
             Learner's Licence Test (Online or RTO Center)
           </h2>

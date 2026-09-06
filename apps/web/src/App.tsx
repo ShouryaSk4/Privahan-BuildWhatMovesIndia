@@ -64,31 +64,6 @@ function describeError(e: unknown): string {
   return e instanceof Error ? e.message : String(e);
 }
 
-function getStepInfo(stage: string): string {
-  switch (stage) {
-    case "no_licence":
-      return "Step 3/4: License Class & Zero-Form Dossier";
-    case "ll_application_submitted":
-      return "Step 4: Application Submitted";
-    case "ll_documents_verified":
-    case "ll_test_scheduled":
-      return "Step 5: Online/Center Learner's Test (STALL)";
-    case "ll_issued":
-      return "Step 6: Digital Learner's Licence Issued";
-    case "practice_window":
-      return "Step 7: 30-Day Practice & Road Safety Academy";
-    case "dl_test_booked":
-      return "Step 8: Automated Track Test Scheduled (ADTT)";
-    case "dl_test_result_fail":
-      return "Step 7: Maneuver Remediation & Retest";
-    case "dl_test_result_pass":
-    case "dl_issued":
-      return "Step 9: Form 7 Permanent Driving Licence";
-    default:
-      return "Citizen Application Journey";
-  }
-}
-
 export default function App() {
   const t = useT();
   const [applicantId, setApplicantId] = useState("");
@@ -210,11 +185,10 @@ export default function App() {
         <NavigationBar
           breadcrumbs={[
             { label: "Citizen Home", onClick: resetToLanding },
-            { label: "Step 2: e-KYC & Mobile Auth", active: true },
+            { label: "e-KYC & Mobile Auth", active: true },
           ]}
           onBack={resetToLanding}
           backLabel="← Return to Citizen Homepage"
-          stepInfo="Step 2 of 9: Citizen Verification & Document Retrieval"
         />
         <main className="shell" id="main-content">
           <AuthVerificationView
@@ -560,7 +534,6 @@ export default function App() {
         ]}
         onBack={review ? () => setReview(null) : resetToLanding}
         backLabel={review ? "← Return to Category Selection" : "← Return to Citizen Homepage"}
-        stepInfo={getStepInfo(stage)}
       />
 
       <main className="shell" id="main-content">
@@ -729,7 +702,7 @@ export default function App() {
             {(stage === "dl_test_result_pass" || stage === "dl_issued") && (
               <section className="card" aria-label="Issued Licence">
                 <div style={{ textAlign: "center", marginBottom: "1.5rem" }}>
-                  <span className="badge-official">Step 9 of 9 • National Transport Registry</span>
+                  <span className="badge-official">National Transport Registry</span>
                   <div className="celebrate" style={{ marginTop: "0.4rem" }}>
                     🎉 Permanent Driving Licence Issued!
                   </div>

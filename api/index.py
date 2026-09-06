@@ -42,11 +42,11 @@ if _self:
     os.environ.setdefault("ACADEMY_SERVICE_URL", base)
     os.environ.setdefault("JOURNEY_SERVICE_URL", base)
 
-from academy_service.main import app as academy_app  # noqa: E402
-from bol_ke_apply.api import app as bol_app  # noqa: E402
-from gateway_service.main import app as gateway_app  # noqa: E402
-from identity_service.main import app as identity_app  # noqa: E402
-from journey_service.main import app as journey_app  # noqa: E402
+from academy_service.main import app as academy_app
+from bol_ke_apply.api import app as bol_app
+from gateway_service.main import app as gateway_app
+from identity_service.main import app as identity_app
+from journey_service.main import app as journey_app
 
 ROUTES = {
     # /session mints the ownership token the hardened journey routes require —
@@ -76,7 +76,16 @@ async def app(scope, receive, send):
         await bol_app(scope, receive, send)
         return
 
-    body = b'{"status":"ok","modules":["journey","gateway","identity","academy","bol-ke-apply"]}'
+    try:
+        from journey_service.engine import get_engine
+
+        storage = get_engine().store.backend_name
+    except Exception:  # noqa: BLE001 — health must answer even if the store cannot
+        storage = "unknown"
+    body = (
+        '{"status":"ok","modules":["journey","gateway","identity","academy","bol-ke-apply"],'
+        f'"storage":"{storage}"}}'
+    ).encode()
     await send(
         {
             "type": "http.response.start",

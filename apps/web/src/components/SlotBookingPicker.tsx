@@ -35,7 +35,7 @@ export function SlotBookingPicker({
     <div className="card" style={{ padding: "1.75rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.5rem" }}>
         <div>
-          <span className="badge-official">Step 7 of 9 • Automated Driving Test Track (ADTT)</span>
+          <span className="badge-official">Automated Driving Test Track (ADTT)</span>
           <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0.4rem 0 0.2rem" }}>
             Select Driving Test Appointment Date &amp; Time
           </h2>

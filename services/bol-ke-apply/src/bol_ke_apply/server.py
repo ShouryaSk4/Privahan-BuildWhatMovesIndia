@@ -8,6 +8,8 @@ Does NOT expose Module 2 journey-state tools until Module 2 exists.
 
 import logging
 import os
+import threading
+import time
 
 import httpx
 from contracts.academy import VideoMatchRequest
@@ -57,6 +59,86 @@ IDENTITY_SERVICE_URL = os.getenv("IDENTITY_SERVICE_URL", "http://127.0.0.1:8003"
 ACADEMY_SERVICE_URL = os.getenv("ACADEMY_SERVICE_URL", "http://127.0.0.1:8004")
 JOURNEY_SERVICE_URL = os.getenv("JOURNEY_SERVICE_URL", "http://127.0.0.1:8002")
 llm = get_llm_provider()
+
+# ---------------------------------------------------------------------------
+# Journey auth. The security layer put every /journey route behind an
+# ownership-bound session token; without one every action tool 401s and the
+# agent spins in a "blocked" loop with the form never submitted. The agent
+# acts AS the citizen, so it mints the same citizen session the web app does,
+# caches it, and refreshes once on a 401.
+# ---------------------------------------------------------------------------
+
+_session_cache: dict[str, tuple[str, float]] = {}
+_session_lock = threading.Lock()
+
+
+def _mint_session(applicant_id: str) -> str | None:
+    try:
+        with httpx.Client(timeout=5.0) as client:
+            resp = client.post(
+                f"{JOURNEY_SERVICE_URL}/session", json={"applicant_id": applicant_id}
+            )
+            if resp.status_code == 200:
+                return resp.json().get("token")
+            logger.warning(
+                "journey session mint failed %s: %s", resp.status_code, resp.text[:120]
+            )
+    except (httpx.HTTPError, ValueError) as exc:
+        logger.debug("journey session mint unreachable: %s", exc)
+    return None
+
+
+def _journey_headers(applicant_id: str, fresh: bool = False) -> dict:
+    ttl = float(os.getenv("PARIVAHAN_SESSION_TTL", "3600"))
+    now = time.time()
+    if not fresh:
+        with _session_lock:
+            cached = _session_cache.get(applicant_id)
+        if cached and cached[1] > now:
+            return {"Authorization": f"Bearer {cached[0]}"}
+    token = _mint_session(applicant_id)
+    if not token:
+        return {}
+    with _session_lock:
+        _session_cache[applicant_id] = (token, now + ttl * 0.8)
+    return {"Authorization": f"Bearer {token}"}
+
+
+def _journey_request(
+    method: str,
+    path: str,
+    applicant_id: str,
+    payload: dict | None = None,
+    params: dict | None = None,
+) -> httpx.Response:
+    with httpx.Client(timeout=8.0) as client:
+        headers = _journey_headers(applicant_id)
+        resp = client.request(
+            method,
+            f"{JOURNEY_SERVICE_URL}{path}",
+            json=payload,
+            params=params,
+            headers=headers,
+        )
+        if resp.status_code == 401:
+            # token expired or secret rotated — mint fresh and retry once
+            headers = _journey_headers(applicant_id, fresh=True)
+            if headers:
+                resp = client.request(
+                    method,
+                    f"{JOURNEY_SERVICE_URL}{path}",
+                    json=payload,
+                    params=params,
+                    headers=headers,
+                )
+        return resp
+
+
+def _safe_json(resp: httpx.Response) -> dict | list:
+    try:
+        return resp.json() if resp.content else {}
+    except ValueError:
+        return {"raw": resp.text[:200]}
 
 
 @mcp.tool()
@@ -157,10 +239,10 @@ def whats_next(applicant_id: str) -> dict:
     Module 2 merged on 28 Aug 2026, so this tool is now live.
     """
     try:
-        with httpx.Client(timeout=3.0) as client:
-            resp = client.get(f"{JOURNEY_SERVICE_URL}/journey/{applicant_id}")
-            if resp.status_code == 200:
-                return resp.json()
+        resp = _journey_request("GET", f"/journey/{applicant_id}", applicant_id)
+        if resp.status_code == 200:
+            return resp.json()
+        logger.warning("whats_next got %s: %s", resp.status_code, resp.text[:120])
     except httpx.HTTPError as exc:
         logger.debug("Journey service HTTP call fallback: %s", exc)
 
@@ -264,18 +346,17 @@ def _execute_in_proc(path: str, payload: dict | None = None) -> dict:
     return {"error": "journey_unreachable"}
 
 
-def _journey_post(path: str, payload: dict | None = None) -> dict:
+def _journey_post(path: str, applicant_id: str, payload: dict | None = None) -> dict:
     try:
-        with httpx.Client(timeout=8.0) as client:
-            resp = client.post(f"{JOURNEY_SERVICE_URL}{path}", json=payload)
-            body = resp.json() if resp.content else {}
-            if resp.status_code < 400:
-                return body
-            return {
-                "blocked": True,
-                "status": resp.status_code,
-                "detail": body.get("detail", body) if isinstance(body, dict) else body,
-            }
+        resp = _journey_request("POST", path, applicant_id, payload=payload)
+        body = _safe_json(resp)
+        if resp.status_code < 400:
+            return body if isinstance(body, dict) else {"value": body}
+        return {
+            "blocked": True,
+            "status": resp.status_code,
+            "detail": body.get("detail", body) if isinstance(body, dict) else body,
+        }
     except httpx.HTTPError as exc:
         logger.debug("Journey action fallback (%s): %s", path, exc)
         if "127.0.0.1:1" in JOURNEY_SERVICE_URL:
@@ -294,29 +375,30 @@ def start_application(applicant_id: str, confirmed_rto_code: str | None = None) 
     means Rejection-Prevention blocked it; relay the mismatches and fixes.
     """
     return _journey_post(
-        f"/journey/{applicant_id}/apply", {"confirmed_rto_code": confirmed_rto_code}
+        f"/journey/{applicant_id}/apply", applicant_id, {"confirmed_rto_code": confirmed_rto_code}
     )
 
 
 @mcp.tool()
 def report_event(applicant_id: str, event: str) -> dict:
     """Advance the journey state machine (e.g. "begin_practice") via Module 2."""
-    return _journey_post(f"/journey/{applicant_id}/events", {"event": event})
+    return _journey_post(f"/journey/{applicant_id}/events", applicant_id, {"event": event})
 
 
 @mcp.tool()
 def list_test_slots(applicant_id: str, rto_code: str | None = None) -> dict:
     """List available automated driving-test track slots (via Module 2 -> Module 5)."""
     try:
-        with httpx.Client(timeout=8.0) as client:
-            params = {"rto_code": rto_code} if rto_code else None
-            resp = client.get(
-                f"{JOURNEY_SERVICE_URL}/journey/{applicant_id}/dl-test/slots", params=params
-            )
-            if resp.status_code == 200:
-                slots = resp.json()
-                return {"slots": slots[:8], "total": len(slots)}
-            return {"blocked": True, "status": resp.status_code, "detail": resp.json().get("detail")}
+        params = {"rto_code": rto_code} if rto_code else None
+        resp = _journey_request(
+            "GET", f"/journey/{applicant_id}/dl-test/slots", applicant_id, params=params
+        )
+        if resp.status_code == 200:
+            slots = resp.json()
+            return {"slots": slots[:8], "total": len(slots)}
+        body = _safe_json(resp)
+        detail = body.get("detail", body) if isinstance(body, dict) else body
+        return {"blocked": True, "status": resp.status_code, "detail": detail}
     except httpx.HTTPError as exc:
         logger.debug("Slot listing fallback: %s", exc)
         return {"error": "journey_unreachable", "detail": str(exc)}
@@ -325,13 +407,13 @@ def list_test_slots(applicant_id: str, rto_code: str | None = None) -> dict:
 @mcp.tool()
 def book_test_slot(applicant_id: str, slot_id: str) -> dict:
     """Book a driving-test slot. Only call after the citizen confirmed the slot."""
-    return _journey_post(f"/journey/{applicant_id}/dl-test/bookings", {"slot_id": slot_id})
+    return _journey_post(f"/journey/{applicant_id}/dl-test/bookings", applicant_id, {"slot_id": slot_id})
 
 
 @mcp.tool()
 def sync_status(applicant_id: str) -> dict:
     """Refresh the journey from the government side (Module 5) and return it."""
-    return _journey_post(f"/journey/{applicant_id}/sync")
+    return _journey_post(f"/journey/{applicant_id}/sync", applicant_id)
 
 
 @mcp.tool()
@@ -422,7 +504,7 @@ def reset_journey(applicant_id: str) -> dict:
 
     Destructive — only call when the citizen explicitly asked for a reset.
     """
-    return _journey_post(f"/journey/{applicant_id}/reset")
+    return _journey_post(f"/journey/{applicant_id}/reset", applicant_id)
 
 
 def main():

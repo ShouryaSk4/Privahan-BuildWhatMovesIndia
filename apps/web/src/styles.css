@@ -3313,3 +3313,20 @@ html.hc *::after {
     transition: background 160ms ease, transform 160ms ease;
   }
 }
+
+/* --- 13 (cont.): breadcrumb consistency ------------------------------------
+   The IND number-plate treatment is for actual numbers (.licence-no); the
+   current breadcrumb is ordinary text and had inherited the plate by accident. */
+.breadcrumbs .current {
+  font-family: var(--font-sans);
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: normal;
+}
+
+.breadcrumbs .current::before {
+  content: none;
+}

@@ -4,12 +4,10 @@ export function NavigationBar({
   breadcrumbs,
   onBack,
   backLabel = "← Return to Previous Step",
-  stepInfo,
 }: {
   breadcrumbs: { label: string; onClick?: () => void; active?: boolean }[];
   onBack?: () => void;
   backLabel?: string;
-  stepInfo?: string;
 }) {
   return (
     <nav className="nav-breadcrumb-bar" aria-label="Breadcrumb and page navigation">
@@ -47,11 +45,6 @@ export function NavigationBar({
           </div>
         </div>
 
-        {stepInfo && (
-          <div style={{ fontSize: "0.78rem", fontWeight: 700, color: "var(--gov-blue)", background: "var(--gov-blue-subtle)", padding: "0.25rem 0.65rem", borderRadius: "999px" }}>
-            {stepInfo}
-          </div>
-        )}
       </div>
     </nav>
   );

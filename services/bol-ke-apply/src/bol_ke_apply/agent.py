@@ -572,7 +572,29 @@ class BolKeApplyAgent:
                         "content": json.dumps(result, default=str)[:4000],
                     }
                 )
-        return None  # model kept calling tools without answering → fallback
+
+        # Turn budget exhausted mid-tool-use: ask for a prose wrap-up rather
+        # than silently dropping to the keyword fallback (which masks errors).
+        messages.append({
+            "role": "user",
+            "content": f"Answer the citizen now in {lang} using what you learned. No more tools.",
+        })
+        final = self.provider.chat_with_tools(messages, [])
+        reply = ((final or {}).get("content") or "").replace("**", "").strip()
+        if not reply:
+            return None
+        options = _generate_interactive_options(message, tool_called, tool_result, lang)
+        _save_message(applicant_id, "citizen", message)
+        _save_message(applicant_id, "agent", reply, tool_called, tool_result, options)
+        return {
+            "reply": reply,
+            "tool_called": tool_called,
+            "tool_result": tool_result,
+            "language": lang,
+            "audio_url": self.provider.synthesize_speech(reply),
+            "engine": type(self.provider).__name__,
+            "options": options,
+        }
 
     def _interact_keyword(
         self, message: str, applicant_id: str, journey_stage: str | None, lang: str
@@ -724,8 +746,26 @@ def run_goal(
         {"role": "system", "content": AUTONOMY_PROMPT},
         {"role": "user", "content": f"[applicant_id={applicant_id} · language={lang}]\nGOAL: {goal}"},
     ]
-    last_failed: tuple | None = None
+    # Hard rails against loops: every failed (tool, args) signature is
+    # remembered for the whole run — not just the last one — and a streak of
+    # failures ends the run with a summary instead of burning the step budget.
+    failed_signatures: set[tuple] = set()
+    consecutive_failures = 0
     stopped = "completed"
+
+    def _final_summary(reason: str, fallback: str) -> dict:
+        messages.append({
+            "role": "user",
+            "content": (
+                f"STOP ({reason}). Do not call any more tools. In {lang}, summarise for the "
+                "citizen in 2-3 sentences: what was completed, what is blocked and why, and "
+                "the one next step they should take."
+            ),
+        })
+        final = agent.provider.chat_with_tools(messages, [])
+        reply = ((final or {}).get("content") or "").replace("**", "").strip()
+        return {"reply": reply or fallback, "steps": run.steps, "language": lang,
+                "engine": type(agent.provider).__name__, "stopped": reason}
 
     for _ in range(max_steps):
         assistant = agent.provider.chat_with_tools(messages, TOOL_SPECS)
@@ -751,16 +791,19 @@ def run_goal(
             args.setdefault("applicant_id", applicant_id)
 
             signature = (name, json.dumps(args, sort_keys=True))
-            if signature == last_failed:
+            if signature in failed_signatures:
                 result = {"error": "repeat_of_failed_call",
-                          "detail": "Same call just failed — change approach or stop."}
+                          "detail": "This exact call already failed in this run — "
+                                    "change the arguments, pick another tool, or stop and summarise."}
+                consecutive_failures += 1
             else:
                 executor = TOOL_EXECUTORS.get(name)
                 result = executor(args) if executor else {"error": f"unknown tool '{name}'"}
                 if isinstance(result, dict) and (result.get("blocked") or result.get("error")):
-                    last_failed = signature
+                    failed_signatures.add(signature)
+                    consecutive_failures += 1
                 else:
-                    last_failed = None
+                    consecutive_failures = 0
             run.log(name, args, result if isinstance(result, dict) else {"value": result})
             logger.info("autonomous step: %s(%s) ok=%s", name, args, run.steps[-1]["ok"])
             messages.append({
@@ -769,6 +812,13 @@ def run_goal(
                 "content": json.dumps(result, default=str)[:4000],
             })
 
-    return {"reply": "Step budget reached — stopping safely. Review the step log.",
-            "steps": run.steps, "language": lang,
-            "engine": type(agent.provider).__name__, "stopped": "max_steps"}
+        if consecutive_failures >= 3:
+            return _final_summary(
+                "blocked",
+                "The run hit repeated blocks and stopped safely. Review the step log for the reason.",
+            )
+
+    return _final_summary(
+        "max_steps",
+        "Step budget reached — stopping safely. Review the step log.",
+    )

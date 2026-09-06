@@ -84,7 +84,7 @@ export function AuthVerificationView({
     <div className="card" style={{ maxWidth: "680px", margin: "0 auto" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", flexWrap: "wrap", gap: "0.5rem" }}>
         <div>
-          <span className="badge-official">Step 2 of 9 • Identity &amp; e-KYC Verification</span>
+          <span className="badge-official">Identity &amp; e-KYC Verification</span>
           <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0.4rem 0 0.2rem" }}>
             Citizen Authentication &amp; Document Fetch
           </h2>

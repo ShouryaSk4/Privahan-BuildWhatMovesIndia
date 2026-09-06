@@ -83,7 +83,7 @@ export function CategorySelector({
     <div className="category-selection-card">
       <div className="category-header">
         <div>
-          <span className="badge-official">Step 3 of 9 • National Vehicle Classification &amp; Licence Endorsement</span>
+          <span className="badge-official">National Vehicle Classification &amp; Licence Endorsement</span>
           <h2 style={{ fontSize: "1.35rem", fontWeight: 700, margin: "0.4rem 0 0.2rem" }}>
             Select Licence Class to Add
           </h2>

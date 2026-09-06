@@ -194,10 +194,11 @@ class GeminiLLMProvider(BaseLLMProvider):
                 "parameters": fn.get("parameters", {}),
             })
 
-        payload: dict = {
-            "contents": contents,
-            "tools": [{"functionDeclarations": function_declarations}],
-        }
+        payload: dict = {"contents": contents}
+        # Gemini rejects an empty functionDeclarations list; an empty tools
+        # argument means "reply in prose now" (the final summarise turn).
+        if function_declarations:
+            payload["tools"] = [{"functionDeclarations": function_declarations}]
         if system_text:
             payload["systemInstruction"] = {"parts": [{"text": system_text.strip()}]}
 
@@ -344,18 +345,22 @@ class OpenAILLMProvider(BaseLLMProvider):
     def chat_with_tools(self, messages: list[dict], tools: list[dict]) -> dict | None:
         if not self.api_key:
             return None
+        payload: dict = {
+            "model": self.chat_model,
+            "messages": messages,
+            "max_tokens": 500,
+        }
+        # An empty tool list means "reply in prose now" (the loop's final
+        # summarise turn); the API rejects tools=[] so omit the keys entirely.
+        if tools:
+            payload["tools"] = tools
+            payload["tool_choice"] = "auto"
         try:
             with httpx.Client(timeout=25.0) as client:
                 resp = client.post(
                     f"{self.base_url}/chat/completions",
                     headers=self._headers(),
-                    json={
-                        "model": self.chat_model,
-                        "messages": messages,
-                        "tools": tools,
-                        "tool_choice": "auto",
-                        "max_tokens": 500,
-                    },
+                    json=payload,
                 )
                 if resp.status_code == 200:
                     return resp.json()["choices"][0]["message"]
