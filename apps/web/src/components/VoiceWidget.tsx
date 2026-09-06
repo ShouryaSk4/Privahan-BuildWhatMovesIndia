@@ -8,7 +8,6 @@ import { BOL_URL } from "../api/client";
 type ChatTurn = {
   who: "user" | "bot";
   text: string;
-  tool?: string | null;
 };
 
 type SpeechRecognitionLike = {
@@ -62,8 +61,8 @@ export function VoiceWidget({
         }),
       });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const body = (await res.json()) as { reply: string; tool_called?: string | null };
-      setTurns((t) => [...t, { who: "bot", text: body.reply, tool: body.tool_called }]);
+      const body = (await res.json()) as { reply: string };
+      setTurns((t) => [...t, { who: "bot", text: body.reply }]);
     } catch {
       setTurns((t) => [
         ...t,
