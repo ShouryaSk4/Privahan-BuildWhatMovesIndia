@@ -35,6 +35,35 @@ for p in [Path(".env"), Path(__file__).resolve().parents[4] / ".env", Path(__fil
         break
 
 
+def _pcm_to_wav_data_uri(b64_pcm: str, mime: str) -> str | None:
+    """Wrap Gemini's raw PCM (audio/L16;rate=NNNNN) in a WAV header so a browser
+    <audio> element can play it from a data URI."""
+    import re
+    import struct
+
+    try:
+        pcm = base64.b64decode(b64_pcm)
+    except (ValueError, TypeError):
+        return None
+    if not pcm:
+        return None
+    m = re.search(r"rate=(\d+)", mime or "")
+    rate = int(m.group(1)) if m else 24000
+    channels, bits = 1, 16
+    byte_rate = rate * channels * bits // 8
+    block_align = channels * bits // 8
+    header = (
+        b"RIFF"
+        + struct.pack("<I", 36 + len(pcm))
+        + b"WAVE"
+        + b"fmt "
+        + struct.pack("<IHHIIHH", 16, 1, channels, rate, byte_rate, block_align, bits)
+        + b"data"
+        + struct.pack("<I", len(pcm))
+    )
+    return "data:audio/wav;base64," + base64.b64encode(header + pcm).decode("ascii")
+
+
 class BaseLLMProvider(ABC):
     """Abstract interface for conversational LLM and voice operations."""
 
@@ -111,6 +140,7 @@ class GeminiLLMProvider(BaseLLMProvider):
         )
         self.chat_model = chat_model or os.getenv("GEMINI_MODEL", "gemini-3.7-flash")
         self.tts_model = tts_model or os.getenv("GEMINI_TTS_MODEL", "gemini-2.5-flash-preview-tts")
+        self.tts_voice = os.getenv("GEMINI_TTS_VOICE", "Kore")
         self.transcribe_model = transcribe_model or os.getenv("GEMINI_TRANSCRIBE_MODEL", "gemini-3.5-transcribe")
 
     def generate_response(
@@ -243,20 +273,45 @@ class GeminiLLMProvider(BaseLLMProvider):
         return None
 
     def synthesize_speech(self, text: str) -> str | None:
-        """Synthesize speech using Gemini TTS if available (with rapid fallback to browser TTS)."""
+        """Synthesize speech with Gemini TTS. Returns a playable WAV data URI, or
+        None so the browser speaks the reply itself (frontend speechSynthesis).
+
+        Gemini TTS models require responseModalities=["AUDIO"] and a voice, and
+        return raw PCM (audio/L16) — which browsers can't play from a data URI,
+        so we wrap it in a WAV header before returning.
+        """
         if not self.api_key:
             return None
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.tts_model}:generateContent"
         headers = {"x-goog-api-key": self.api_key, "Content-Type": "application/json"}
+        payload = {
+            "contents": [{"parts": [{"text": text[:400]}]}],
+            "generationConfig": {
+                "responseModalities": ["AUDIO"],
+                "speechConfig": {
+                    "voiceConfig": {"prebuiltVoiceConfig": {"voiceName": self.tts_voice}}
+                },
+            },
+        }
         try:
-            with httpx.Client(timeout=2.0) as client:
-                resp = client.post(url, headers=headers, json={"contents": [{"parts": [{"text": text[:200]}]}]})
-                if resp.status_code == 200:
-                    audio_b64 = resp.json().get("audioContent", "")
-                    if audio_b64:
-                        return f"data:audio/mp3;base64,{audio_b64}"
-        except Exception as exc:
+            with httpx.Client(timeout=6.0) as client:
+                resp = client.post(url, headers=headers, json=payload)
+                if resp.status_code != 200:
+                    logger.debug("Gemini TTS %s: %s", resp.status_code, resp.text[:160])
+                    return None
+                parts = (
+                    resp.json()
+                    .get("candidates", [{}])[0]
+                    .get("content", {})
+                    .get("parts", [])
+                )
+                for part in parts:
+                    inline = part.get("inlineData") or part.get("inline_data")
+                    if inline and inline.get("data"):
+                        mime = inline.get("mimeType") or inline.get("mime_type") or ""
+                        return _pcm_to_wav_data_uri(inline["data"], mime)
+        except (httpx.HTTPError, ValueError, KeyError, IndexError) as exc:
             logger.debug("Gemini TTS fallback to browser speech synthesis: %s", exc)
 
         return None
@@ -281,7 +336,7 @@ class GeminiLLMProvider(BaseLLMProvider):
         }
         try:
             with httpx.Client(timeout=12.0) as client:
-                resp = client.post(url, json=payload)
+                resp = client.post(url, headers=headers, json=payload)
                 if resp.status_code == 200:
                     data = resp.json()
                     candidates = data.get("candidates", [])

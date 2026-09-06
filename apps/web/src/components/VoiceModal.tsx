@@ -38,6 +38,35 @@ interface Message {
   options?: string[];
 }
 
+// Speak a reply out loud. Uses server-synthesised audio when the backend
+// returned it; otherwise the browser's built-in speechSynthesis speaks the
+// text in the detected language — so the voice assistant is never silent,
+// with no dependency on a working server TTS.
+function speakReply(text: string, audioUrl: string | null, language: string): void {
+  if (audioUrl && audioUrl.length > 100) {
+    try {
+      void new Audio(audioUrl).play().catch(() => browserSpeak(text, language));
+      return;
+    } catch {
+      /* fall through to browser speech */
+    }
+  }
+  browserSpeak(text, language);
+}
+
+function browserSpeak(text: string, language: string): void {
+  if (!text || typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  try {
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = language === "english" ? "en-IN" : "hi-IN";
+    u.rate = 0.98;
+    window.speechSynthesis.speak(u);
+  } catch {
+    /* speech synthesis unavailable — the text reply is already on screen */
+  }
+}
+
 export function VoiceModal({
   applicantId,
   journeyStage,
@@ -89,6 +118,13 @@ export function VoiceModal({
     }
   }, [messages, isOpen]);
 
+  // Stop any spoken reply when the assistant is closed.
+  useEffect(() => {
+    if (!isOpen && typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+  }, [isOpen]);
+
   const toggleListen = () => {
     if (!recognitionRef.current) {
       alert("Speech recognition is not supported in this browser. You can type your question.");
@@ -137,14 +173,14 @@ export function VoiceModal({
           options: Array.isArray(data.options) ? data.options : undefined,
         },
       ]);
-      // Speak the reply when the backend synthesized audio (OpenAI TTS).
-      if (data.audio_url && typeof data.audio_url === "string" && data.audio_url.length > 100) {
-        try {
-          void new Audio(data.audio_url).play().catch(() => {});
-        } catch {
-          /* autoplay blocked or unsupported — text reply is already shown */
-        }
-      }
+      // Speak the reply: prefer server-synthesised audio (Gemini/OpenAI TTS);
+      // otherwise fall back to the browser's own speech synthesis so the
+      // assistant is never silent, in the citizen's language.
+      speakReply(
+        data.reply || "",
+        typeof data.audio_url === "string" ? data.audio_url : null,
+        typeof data.language === "string" ? data.language : "hindi",
+      );
     } catch (err) {
       setMessages((prev) => [
         ...prev,
