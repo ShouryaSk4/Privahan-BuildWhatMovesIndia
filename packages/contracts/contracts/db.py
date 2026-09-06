@@ -29,8 +29,23 @@ SUPABASE_DBNAME = os.getenv("SUPABASE_DBNAME", "postgres")
 SCHEMA_FILE = Path(__file__).parent / "db_schema.sql"
 
 
+_db_down_until = 0.0  # circuit breaker: after a failure, skip attempts for a while
+
+
 def get_db_connection():
-    """Create a new direct connection to Supabase PostgreSQL."""
+    """Create a new direct connection to Supabase PostgreSQL.
+
+    A failed connect opens a 5-minute circuit breaker — every caller is a
+    best-effort mirror wrapped in try/except, and without the breaker each
+    journey save would stall up to the connect timeout when the DB is
+    unreachable (tests went 1s -> 30s; a blocked network would feel like a
+    frozen portal).
+    """
+    global _db_down_until
+    import time as _time
+
+    if _time.time() < _db_down_until:
+        raise ConnectionError("Supabase circuit breaker open (recent connect failure)")
     try:
         import psycopg
         conn = psycopg.connect(
@@ -39,11 +54,13 @@ def get_db_connection():
             user=SUPABASE_USER,
             password=SUPABASE_PASSWORD,
             dbname=SUPABASE_DBNAME,
-            connect_timeout=10,
+            connect_timeout=4,
             autocommit=True,
         )
+        _db_down_until = 0.0
         return conn
     except Exception as exc:
+        _db_down_until = _time.time() + 300
         logger.error("Failed to connect to Supabase PostgreSQL: %s", exc)
         raise
 

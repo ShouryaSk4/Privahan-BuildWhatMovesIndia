@@ -64,6 +64,21 @@ class _SqliteBackend:
             self._conn.execute("DELETE FROM kv WHERE key = ?", (key,))
             self._conn.commit()
 
+    def next_seq(self, name: str) -> int:
+        """Atomic incrementing counter (application / booking numbers)."""
+        with self._lock:
+            row = self._conn.execute(
+                "SELECT value FROM kv WHERE key = ?", (f"seq:{name}",)
+            ).fetchone()
+            current = json.loads(row[0])["n"] if row else 0
+            self._conn.execute(
+                "INSERT INTO kv (key, value) VALUES (?, ?) "
+                "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                (f"seq:{name}", json.dumps({"n": current + 1})),
+            )
+            self._conn.commit()
+        return current + 1
+
 
 class _PostgresBackend:
     """Postgres over pg8000 (pure Python; in requirements.txt for Vercel)."""
@@ -121,6 +136,16 @@ class _PostgresBackend:
     def delete(self, key: str) -> None:
         self._exec(f"DELETE FROM {_TABLE} WHERE key = %s", (key,))
 
+    def next_seq(self, name: str) -> int:
+        rows = self._exec(
+            f"INSERT INTO {_TABLE} (key, value) VALUES (%s, %s) "
+            f"ON CONFLICT (key) DO UPDATE SET value = json_build_object("
+            f"'n', ((({_TABLE}.value)::json->>'n')::int + 1))::text "
+            f"RETURNING (value)::json->>'n'",
+            (f"seq:{name}", '{"n": 1}'),
+        )
+        return int(rows[0][0])
+
 
 class _UpstashBackend:
     """Upstash-compatible Redis over REST (plain HTTPS; httpx is already a dep)."""
@@ -167,9 +192,24 @@ class _UpstashBackend:
     def delete(self, key: str) -> None:
         self._cmd("DEL", _NS + key)
 
+    def next_seq(self, name: str) -> int:
+        return int(self._cmd("INCR", f"{_NS}seq:{name}"))
+
 
 def _external_backend():
     pg_url = os.environ.get("POSTGRES_URL") or os.environ.get("DATABASE_URL")
+    if not pg_url:
+        # Supabase-style env (the attached hackathon DB): synthesize a URL.
+        host = os.environ.get("SUPABASE_HOST")
+        user = os.environ.get("SUPABASE_USER")
+        password = os.environ.get("SUPABASE_PASSWORD")
+        if host and user and password:
+            port = os.environ.get("SUPABASE_PORT", "5432")
+            name = os.environ.get("SUPABASE_DBNAME", "postgres")
+            pg_url = (
+                f"postgres://{urllib.parse.quote(user)}:{urllib.parse.quote(password)}"
+                f"@{host}:{port}/{name}"
+            )
     if pg_url:
         try:
             backend = _PostgresBackend(pg_url)
@@ -209,3 +249,7 @@ class KeyValueStore:
 
     def delete(self, key: str) -> None:
         self._backend.delete(key)
+
+    def next_seq(self, name: str) -> int:
+        """Atomic incrementing counter (application / booking numbers)."""
+        return self._backend.next_seq(name)
