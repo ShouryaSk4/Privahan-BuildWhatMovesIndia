@@ -11,6 +11,7 @@ and executes MCP platform tools:
 
 import json
 import logging
+import threading
 from collections import deque
 from typing import Any
 
@@ -188,18 +189,29 @@ def _save_message(
     tool_result: Any | None = None,
     options: list[str] | None = None,
 ) -> None:
-    try:
-        from contracts.db import append_agent_message
-        append_agent_message(
-            session_id=session_id,
-            sender=sender,
-            content=content,
-            tool_called=tool_called,
-            tool_result=tool_result,
-            interactive_options=options,
-        )
-    except Exception:
-        pass
+    """Persist a turn to Supabase WITHOUT blocking the reply.
+
+    The write is best-effort history; making the citizen wait on a
+    cross-region DB round-trip (×2 per turn) before seeing the answer was pure
+    latency. Fire it on a background daemon thread instead.
+    """
+
+    def _write() -> None:
+        try:
+            from contracts.db import append_agent_message
+
+            append_agent_message(
+                session_id=session_id,
+                sender=sender,
+                content=content,
+                tool_called=tool_called,
+                tool_result=tool_result,
+                interactive_options=options,
+            )
+        except Exception:  # noqa: BLE001, S110 — best-effort mirror, never surfaces
+            pass
+
+    threading.Thread(target=_write, daemon=True).start()
 
 
 def _generate_interactive_options(
@@ -356,31 +368,17 @@ def _generate_interactive_options(
 
 logger = logging.getLogger("bol_ke_apply_agent")
 
-RTO_KNOWLEDGE_BASE = """
-=== OFFICIAL MINISTRY OF ROAD TRANSPORT & HIGHWAYS (MoRTH) & RTO KNOWLEDGE BASE ===
-
-1. JOURNEY TIMELINES & RULES:
-- Zero-Form Application: Demographic data is pulled directly from UIDAI Aadhaar e-KYC / DigiLocker. Fields typed: 0.
-- Learner's Licence (LL) Validity: Valid for 6 months across India.
-- Mandatory Practice Window: Minimum 30-day practice period required before citizen can book practical driving test slot.
-- Processing Window: Approx 21 days from online submission to permanent digital licence.
-- Physical Visit Guarantee: Only 1 physical visit required in the entire journey (to the automated driving test track).
-
-2. AUTOMATED DRIVING TEST TRACK (ADTT) STANDARDS & MANEUVERS:
-- Track 1 (8-Shape Track): Evaluates forward steering coordination, turn radius control, continuous lane keeping. Do not stop or touch boundary kerbs.
-- Track 2 (Reverse S / Parallel Parking): Evaluates spatial estimation and reverse maneuvering into a standard bay within 3 minutes without touching side kerbs.
-- Track 3 (Gradient / Hill Start): Tests clutch bite-point control on an 18-degree incline. Vehicle must stop at marker and accelerate forward without rolling back more than 6 inches (15 cm).
-- Track 4 (Emergency Braking & Overtaking): Accelerate to 30 km/h and stop smoothly within marked sensor lines.
-
-3. JURISDICTION & REJECTION PREVENTION:
-- Aadhaar registered permanent address determines statutory RTO jurisdiction.
-- Current device GPS location suggests convenience RTO. When they differ (e.g. students, recent movers), the citizen has the statutory right to choose either jurisdiction.
-- Rejection Prevention: Cross-checks Aadhaar vs PAN records (name spelling, DOB) before submission to avoid RTO document rejection.
-
-4. ELIGIBILITY:
-- Age 18+ for Light Motor Vehicle (LMV - Cars).
-- Age 16+ for Gearless 2-wheelers up to 50cc with parental consent.
-"""
+# Kept deliberately compact: this rides on every model turn, so only the facts
+# the agent itself reasons with live here. Detailed driving-track technique is
+# coaching content — that routes to the Driving Academy videos via match_video.
+RTO_KNOWLEDGE_BASE = """KEY FACTS (general rules only; citizen-specific facts must come from tools):
+- Zero-Form: demographic data comes from Aadhaar e-KYC/DigiLocker — the citizen types nothing.
+- Learner's Licence is valid 6 months across India. 30-day practice before the driving test.
+- ~21 days online-submission to permanent licence; only 1 physical visit (the test track).
+- Jurisdiction: Aadhaar address sets the statutory RTO; GPS suggests a convenience RTO. If they differ, the citizen may choose either.
+- Rejection prevention cross-checks Aadhaar vs PAN (name/DOB) before submission.
+- Eligibility: 18+ for LMV (cars); 16+ for gearless 2-wheelers ≤50cc with parental consent.
+- For driving-technique questions (8-track, reverse park, hill start), use match_video — do not narrate technique."""
 
 SYSTEM_PROMPT = f"""You are the official MoRTH AI Citizen Officer for 'बोल के अप्लाई' (Parivahan Seva).
 Your role is to assist Indian citizens applying for their first-time driving licence or learning to drive.
@@ -402,6 +400,7 @@ Guidelines:
 3. Use the platform tools to look things up — never invent journey stages, fees, dates, application numbers or personal data. Every factual claim about the citizen must come from a tool result. General rules may come from the Knowledge Base below.
 4. When the request is ambiguous, ask one short clarifying question instead of guessing.
 5. Keep answers concise (2-4 sentences), free of bureaucratic jargon and markdown. Do not discuss fees unless asked.
+5a. For a greeting, thanks, or small talk (e.g. "namaste", "hello", "thank you"), reply directly in one short sentence — do NOT call any tool. Only use tools when the citizen asks about their application/identity or wants an action.
 6. You can ACT, not just answer: submitting the application, advancing stages, listing and
    booking test slots, syncing the registry. Policy for actions:
    - Before any consequential action (start_application, book_test_slot, report_event,
