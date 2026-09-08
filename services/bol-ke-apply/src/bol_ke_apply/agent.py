@@ -385,17 +385,14 @@ Your role is to assist Indian citizens applying for their first-time driving lic
 
 CORE PARADIGM — ZERO-FORM LICENCE (NO MANUAL FORM FILLING):
 - Parivahan Seva is completely FORM-FREE ("Zero-Form").
-- NEVER ask the citizen to manually dictate, spell out, or type their demographic details (full name, date of birth, residential address, father's name, or phone number).
-- All verified citizen identity data is pulled automatically via DigiLocker / UIDAI Aadhaar e-KYC using the `fetch_identity` tool.
-- When the citizen expresses intent to get or apply for a licence (e.g. 'लाइसेंस लेना है', 'कार का लाइसेंस बनवाना है', 'गाड़ी का लेना है', 'आधार कार्ड से बना दो', 'I want a car driving licence', 'apply for licence'):
-  1. Inspect their verified DigiLocker/Aadhaar profile using `fetch_identity`.
-  2. Check for any rejection blockers or mismatches using `check_mismatch`.
-  3. If they gave an explicit directive or affirmative phrase (e.g. 'आधार कार्ड के उपयुक्त में बना लीजिए', 'हाँ बना दो', 'आवेदन कर दो', 'apply for licence', 'हाँ', 'कर दीजिए'): call `start_application` immediately!
-  4. If they are inquiring or stating initial intent, warmly confirm what was verified (e.g. Name, DOB, RTO jurisdiction) and that there are 0 mismatches, and ask for their confirmation to submit immediately.
-- Once submitted, never ask them to apply again. Guide them directly to their next milestone (online STALL test, Driving Academy videos).
+- NEVER ask the citizen to say, spell, or type their demographic details (full name, date of birth, address, father's name, phone number) — NOT EVEN if they are frustrated, demand it, or offer it themselves. All such data comes automatically from DigiLocker / UIDAI Aadhaar e-KYC via `fetch_identity`. If they try to give these details, reassure them it is already fetched automatically — you do not need them.
+- READING is free; SUBMITTING needs an explicit yes. You may call `fetch_identity` and `check_mismatch` to inspect the verified profile and tell the citizen what was found.
+- You must NOT call `start_application` until the citizen's MOST RECENT message is a clear, unambiguous yes to submitting (e.g. "haan submit kar do", "yes apply now", "हाँ जमा कर दो"). A vague intent ("licence chahiye", "मुझे लाइसेंस बनवाना है"), a greeting, an off-topic line, an empty message, or garbled speech-to-text is NOT consent. In those cases, say what is verified (name, RTO, 0 mismatches) and ASK for a clear yes first — do not submit.
+- Once an application is submitted, never submit again and never ask them to apply again; read the current stage with `whats_next` and guide them to the next milestone (online STALL test, Driving Academy videos).
 
 Guidelines:
-1. Speak warmly, respectfully, and clearly — and ALWAYS reply in the same language the citizen used (Hindi, English, or Hinglish).
+1. LANGUAGE — reply in the SAME language and script as the citizen's CURRENT message, regardless of what earlier turns used. English message → reply in English. Hindi in Devanagari → Hindi. Hinglish (Hindi written in Roman letters) → Hinglish. Do NOT drift back to Hindi just because the conversation began in Hindi. The quick-reply option chips must be in that same language too.
+1b. If the citizen's message is empty, unintelligible, or looks like a speech-to-text error (random disconnected words that do not form a request), do NOT guess or act — briefly say you did not catch that and ask them to repeat, in their language.
 2. Answer only about the driving-licence journey and road safety. Politely decline anything else.
 3. Use the platform tools to look things up — never invent journey stages, fees, dates, application numbers or personal data. Every factual claim about the citizen must come from a tool result. General rules may come from the Knowledge Base below.
 4. When the request is ambiguous, ask one short clarifying question instead of guessing.
@@ -422,16 +419,38 @@ def _detect_language(text: str) -> str:
         if "\u0900" <= ch <= "\u097f":
             return "hindi"
 
-    hinglish_markers = [
-        "kaise", "karo", "mera", "meri", "gadi", "gaadi", "peeche",
-        "chadhai", "dhalan", "nahi", "hogi", "kya", "batao", "dikhao",
-        "chhodna", "aath", "lagana", "swagat", "jana", "hai", "paise", "kitna"
-    ]
-    words = text.lower().split()
+    hinglish_markers = {
+        # actions / intent
+        "kaise", "karo", "karna", "kijiye", "kijiyega", "kardo", "kar", "banwana",
+        "banana", "banwa", "bana", "chahiye", "chahta", "chahti", "chahoon", "lena",
+        "dena", "batao", "bata", "dikhao", "suno", "sunn", "bol", "bolo",
+        # pronouns / possessives
+        "mera", "meri", "mujhe", "mujhko", "hum", "hamara", "apna", "aap", "aapka",
+        "aapko", "tum",
+        # common particles / affirmations
+        "hai", "hain", "haan", "nahi", "nahin", "kya", "kyun", "kyu", "matlab",
+        "theek", "thik", "acha", "accha", "bhai", "ji", "abhi", "phir",
+        # domain words citizens use in roman
+        "gadi", "gaadi", "peeche", "chadhai", "dhalan", "hogi", "hoga",
+        "chhodna", "aath", "lagana", "swagat", "jana", "paise", "kitna",
+        "laisan", "gaadiyon", "namaste", "shukriya", "dhanyavaad",
+    }
+    words = text.lower().replace("?", " ").replace(",", " ").replace(".", " ").split()
     if any(w in hinglish_markers for w in words):
         return "hinglish"
 
     return "english"
+
+
+def _reply_directive(lang: str) -> str:
+    """An emphatic, per-message reply-language instruction. Placed right before
+    the citizen's text so the model matches THIS message's language instead of
+    drifting to the language the conversation opened in."""
+    return {
+        "english": "[Reply ONLY in English. Do not use Hindi.]",
+        "hinglish": "[Reply ONLY in Hinglish — Hindi written in Roman/English letters, not Devanagari.]",
+        "hindi": "[Reply ONLY in Hindi using Devanagari script.]",
+    }.get(lang, "[Reply in the same language as this message.]")
 
 
 class BolKeApplyAgent:
@@ -516,8 +535,8 @@ class BolKeApplyAgent:
             {
                 "role": "user",
                 "content": (
-                    f"[applicant_id={applicant_id} · journey_stage={journey_stage or 'no_licence'} "
-                    f"· language={lang}]\n{message}"
+                    f"[applicant_id={applicant_id} · journey_stage={journey_stage or 'no_licence'}]\n"
+                    f"{_reply_directive(lang)}\n{message}"
                 ),
             },
         ]

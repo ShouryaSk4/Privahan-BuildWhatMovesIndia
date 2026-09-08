@@ -81,7 +81,7 @@ export function VoiceModal({
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: "bot",
-      text: "नमस्ते! मैं 'बोल के अप्लाई' सहायक हूँ। आप बोलकर या लिखकर RTO नियम, ड्राइविंग टेस्ट ट्रैक तकनीक या अपना आवेदन स्टेटस पूछ सकते हैं।",
+      text: "नमस्ते! Welcome to Bol Ke Apply. मैं आपकी उसी भाषा में मदद करूँगा जिसमें आप बात करेंगे — हिंदी, English, or Hinglish. Ask about your application, RTO rules, or the driving test.",
     },
   ]);
   const [inputText, setInputText] = useState("");
